@@ -1,0 +1,130 @@
+---
+title: "Projekt BI 2023/24 - grupa (wpisać numer zgodny z moodle)"
+format: 
+  html:
+    self-contained: true
+    table-of-contents: true
+    number-sections: true
+    df-print: kable
+editor: source
+execute: 
+  eval: true
+  warning: false
+  message: false
+toc-title: Spis treści
+lang: pl
+---
+
+## Autorzy
+
+Maciej Beręsewicz
+
+## Wprowadzenie
+
+Celem projektu jest porównanie kilku estymatorów na podstawie danych dotyczących gospodarstw domowych. 
+
+(oczywiście to krótkie wprowadzenie powinno być dłuższe w ostatecznym projekcie).
+
+## Symulacja
+
+### Założenia
+
++ próba losowa o wielkość 1000 obserwacji
++ próba nielosowa: prawdopodobieństwo inkluzji zależy od dochodu 
++ zmienna celu: wydatki (zakładamy, że ich nie znamy)
+
+### Ocena estymatorów
+
+W tym raporcie przedstawiam tylko obciążenie wyznaczone w następujący sposób
+
+$$
+Bias(\hat{\mu})  = \hat{\bar{\mu}} - \mu,
+$$
+
+gdzie $\hat{\bar{\mu}}$ to oszacowanie średniej na podstawie określonego estymatora, a $\mu$ to wartość prawdziwa (z populacji) tego estymatora.
+
+### Kod do symulacji
+
+Instalacja pakietów
+
+```{r, eval=FALSE}
+install.packages("pak")
+pak::pkg_install(c("readxl", "survey", "data.table"))
+pak::pkg_install("nonprobsvy/nonprobsvy@dev")
+```
+
+Ładowanie pakietów
+```{r}
+library(readxl)
+library(nonprobsvy)
+library(data.table)
+```
+
+Wczytanie danych
+
+```{r}
+dane <- read_excel("gospodarstwa.xlsx")
+dane <- subset(dane, !is.na(dochg) & dochg > 0)
+head(dane)
+```
+
+Symulacja
+
+```{r}
+wyniki_symulacji <- list()
+
+R <- 50
+for (r in 1:R) {
+  ## seed
+  set.seed(r)
+  ## próba losowa
+  proba_los <- dane[sample(1:NROW(dane), 1000), ]
+  proba_los$weight <- NROW(dane)/NROW(proba_los)
+  proba_nielos <- dane[sample(1:NROW(dane), 5000, prob = plogis(-10 + dane$dochg/mean(dane$dochg))), ]
+  
+  ## deklaracja obiektów
+  proba_los_svy <- svydesign(ids=~1, weights = ~ weight, data = proba_los)
+  
+  ## estymacja 
+  ### estymator naiwny
+  wydg_naive <- mean(proba_nielos$wydg)
+  
+  ### estymator mi
+  wydg_mi <- nonprob(data = proba_nielos,
+                     outcome = wydg ~ log(dochg),
+                     svydesign =  proba_los_svy)
+  wyniki_symulacji[[r]] <- data.frame(naive = wydg_naive, mi = wydg_mi$output$mean)
+}
+
+wyniki_symulacji_df <- rbindlist(wyniki_symulacji, idcol = "r")
+head(wyniki_symulacji_df)
+```
+
+Ocena estymatorów
+
+```{r}
+tab_res <- wyniki_symulacji_df[, .(naive=mean(naive)-mean(dane$wydg), mi = mean(mi)-mean(mean(dane$wydg)))]
+```
+
+
+## Wyniki symulacji
+
+Obciążenie estymatorów przedstawia się następująco:
+
+```{r}
+tab_res
+```
+
+Redukujemy obciążenie znacząco
+
+```{r}
+boxplot(wyniki_symulacji_df[, -1] - mean(dane$wydg), 
+        main = "Rozkład ocen estymatorów", xlab = "Estymator" , ylab= "Obciązenie")
+abline(a = 0, b = 0, col = "red")
+```
+
+
+## Podsumowanie
+
+-   estymator naiwy -- zdecydowanie obciążony (jak można było się tego spodziewać)
+- estymator masowej imputacji -- redukuje obciążenie przy założonym modelu.

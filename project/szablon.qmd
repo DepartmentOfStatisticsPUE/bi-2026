@@ -1,0 +1,66 @@
+---
+title: "Projekt BI 2025/26 - grupa (wpisać numer zgodny z moodle)"
+format: 
+  html:
+    self-contained: true
+    table-of-contents: true
+    number-sections: true
+    df-print: kable
+editor: source
+execute: 
+  eval: true
+  warning: false
+  message: false
+toc-title: Spis treści
+lang: pl
+---
+
+## Autorzy
+
+-   należy wymienic autorów projektu oraz ich wkład w realizację projektu
+
+## Wprowadzenie
+
+-   zwięzły opis projektu dotyczący wyboru danych oraz estimatorów
+
+
+## Symulacja
+
+### Założenia
+
+-   zwięzły opis symulacji, jak były generowane dane, może być w postaci pseudokodu np.
+
+1.  ustalono wielkość próby losowej na $n_a=1000$ i próby nielosowej na $n_b=5000$,
+2.  jaką zmienną celu ustalono, a może ją wygenerowano na podstawie zbioru danych? 
+
+$$
+Y = \beta_1 + \beta_2 X_1 + \beta_3 X_3 + \epsilon; \quad \epsilon \sim N(0,1)
+$$
+
+4.  Próbę losową wygenerowano na podstawie losowania prostego / prostego warstwowego / ...
+5.  Próbę nielosową wygenerowano zgodnie z poniższym modelem
+
+$$
+R = 
+\begin{cases}
+1 & \text{ jeżeli $X_1 < x_1$ lub $X_2 > x_2$},\\
+0 & \text{ w przeciwnym przypadku}
+\end{cases}
+$$
+
+### Ocena estymatorów
+
+-   trzeba podać miary oceny estymatorów (np. obciążenie, wariancję, MSE, RMSE)
+
+### Kod do symulacji
+
+-- kod wraz z komentarzami i opisem co ten kod robi
+
+## Wyniki symulacji
+
+-   opis wyników symulacji (tabela i wykresy)
+-   interpretacja wyników
+
+## Podsumowanie
+
+-   zwięzłe podsumowanie projektu
