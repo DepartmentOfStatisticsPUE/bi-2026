@@ -1,0 +1,304 @@
+---
+title: "Pakiet `survey` i `sampling` w R i `samplics` w Pythonie"
+format: 
+  html:
+    self-contained: true
+    table-of-contents: true
+    number-sections: false
+    df-print: kable
+editor: source
+execute: 
+  eval: true
+  warning: false
+  message: false
+toc-title: Spis treści
+lang: pl
+---
+
+## Setup
+
+::: panel-tabset
+
+## R
+
+Packages
+
+```{r}
+library(survey)
+library(sampling)
+```
+
+Declare population
+
+```{r}
+# Define parameters
+regions <- c("North", "South", "East")
+cities_per_region <- 4
+individuals_per_city <- c(20, 40, 60, 80)*1000
+city_labels <- paste0(rep(regions, each = cities_per_region), 1:cities_per_region)
+
+# Create cities data frame
+cities_df <- data.frame(
+  region = rep(regions, each = cities_per_region),
+  city = city_labels,
+  num_individuals = rep(individuals_per_city, times = 3)
+)
+
+# Create population data frame
+population <- do.call(rbind, lapply(1:nrow(cities_df), function(i) {
+  data.frame(
+    region = cities_df$region[i],
+    city = cities_df$city[i],
+    individual_id = 1:cities_df$num_individuals[i]
+  )
+}))
+
+# Add target variable Y (income)
+mean_income <- c(North = 50000, South = 40000, East = 45000)
+set.seed(123)
+population$Y <- rnorm(nrow(population), mean = mean_income[population$region], sd = 10000)
+
+# Check population size
+head(population)  # Should be 600
+```
+
+## Python
+
+```python
+import pandas as pd
+import numpy as np
+from samplics.sampling import SampleSelection
+from samplics.estimation import SurveyEstimation
+```
+
+```python
+regions = ['North', 'South', 'East']
+cities_per_region = 4
+individuals_per_city = [20, 40, 60, 80]*1000
+city_labels = [f"{region}{i+1}" for region in regions for i in range(cities_per_region)]
+
+# Create population list
+population_list = []
+for region in regions:
+    for city in [f"{region}{i+1}" for i in range(cities_per_region)]:
+        num_ind = individuals_per_city[int(city[-1]) - 1]
+        for ind in range(1, num_ind + 1):
+            population_list.append({'region': region, 'city': city, 'individual_id': ind})
+
+population = pd.DataFrame(population_list)
+
+# Add target variable Y (income)
+mean_income = {'North': 50000, 'South': 40000, 'East': 45000}
+np.random.seed(123)
+population['Y'] = np.random.normal(loc=population['region'].map(mean_income), scale=10000)
+
+# Check population size
+population.head()
+```
+
+:::
+
+
+## Simple Random Sampling (SRS)
+
+::: panel-tabset
+
+## R
+
+Packages
+
+```{r}
+set.seed(123)
+sample_indices <- sample(1:nrow(population), size = 100, replace = FALSE)
+srs_sample <- population[sample_indices, ]
+
+# Declare design
+design <- svydesign(ids = ~1, data = srs_sample, fpc = ~rep(600, 100))
+
+# Estimate mean of Y
+svymean(~Y, design)
+
+cat("True Y:", mean(population$Y))
+```
+
+## Python
+
+```python
+# Draw SRS sample (n = 100)
+srs_sample = population.sample(n=100, random_state=123)
+
+sample = SampleSelection(method='srs', sample_size=100)
+srs_sample['_fpc'] = 600  # Finite population correction
+design = SurveyEstimation(srs_sample, sample_weight=None, psu=None, stratum=None, fpc='_fpc')
+
+# Estimate mean of Y (adjust per samplics documentation)
+design.estimate(variable='Y', stat='mean')
+```
+
+:::
+
+
+
+## Stratified Random Sampling
+
+::: panel-tabset
+
+## R
+
+Packages
+
+```{r}
+# Draw stratified sample
+set.seed(123)
+strat_sample <- sampling::strata(data = population, stratanames = "region", 
+                                 size = c(33, 33, 33), method = "srswor")
+sample_indices <- strat_sample$ID_unit
+strat_sample_data <- population[sample_indices, ]
+
+# Declare design
+strat_sample_data$stratum_size <- 200  # Each region has 200 individuals
+design <- svydesign(ids = ~1, strata = ~region, data = strat_sample_data, fpc = ~stratum_size)
+
+# Estimate mean of Y
+svymean(~Y, design)
+cat("True Y:", mean(population$Y))
+```
+
+## Python
+
+```python
+strat_sample = population.groupby('region').apply(
+    lambda x: x.sample(n=33, random_state=123)).reset_index(drop=True)
+
+# Declare design
+strat_sample['_fpc'] = 200  # Stratum size
+design = SurveyEstimation(strat_sample, sample_weight=None, psu=None, stratum='region', fpc='_fpc')
+
+# Estimate mean of Y
+design.estimate(variable='Y', stat='mean')
+```
+
+:::
+
+
+## Cluster Random Sampling
+
+::: panel-tabset
+
+## R
+
+Packages
+
+```{r}
+set.seed(123)
+selected_cities <- sample(unique(population$city), size = 4)
+cluster_sample <- population[population$city %in% selected_cities, ]
+
+# Declare design (12 total clusters)
+design <- svydesign(ids = ~city, data = cluster_sample, fpc = ~rep(12, nrow(cluster_sample)))
+
+# Estimate mean of Y
+svymean(~Y, design)
+```
+
+## Python
+
+```python
+# Draw cluster sample
+selected_cities = np.random.choice(population['city'].unique(), size=4, replace=False)
+cluster_sample = population[population['city'].isin(selected_cities)]
+
+# Declare design
+cluster_sample['_fpc'] = 12  # Total number of clusters
+design = SurveyEstimation(cluster_sample, sample_weight=None, psu='city', stratum=None, fpc='_fpc')
+
+# Estimate mean of Y
+design.estimate(variable='Y', stat='mean')
+```
+
+:::
+
+
+## Cluster Stratified Random Sampling
+
+::: panel-tabset
+
+## R
+
+Packages
+
+```{r}
+set.seed(123)
+city_by_region <- split(unique(population$city), population$region[match(unique(population$city), population$city)])
+selected_cities <- unlist(lapply(city_by_region, function(x) sample(x, size = 2)))
+cluster_strat_sample <- population[population$city %in% selected_cities, ]
+
+# Declare design (4 cities per stratum)
+cluster_strat_sample$cluster_fpc <- 4
+design <- svydesign(ids = ~city, strata = ~region, data = cluster_strat_sample, fpc = ~cluster_fpc)
+
+# Estimate mean of Y
+svymean(~Y, design)
+```
+
+## Python
+
+```python
+# Draw cluster stratified sample
+selected_cities = population.groupby('region')['city'].unique().apply(
+    lambda x: np.random.choice(x, size=2, replace=False))
+cluster_strat_sample = population[population['city'].isin(selected_cities.explode())]
+
+# Declare design
+cluster_strat_sample['_fpc'] = 4  # Clusters per stratum
+design = SurveyEstimation(cluster_strat_sample, sample_weight=None, psu='city', stratum='region', fpc='_fpc')
+
+# Estimate mean of Y
+design.estimate(variable='Y', stat='mean')
+```
+
+:::
+
+
+
+
+## Poisson Sampling
+
+::: panel-tabset
+
+## R
+
+Packages
+
+```{r}
+# Draw Poisson sample
+set.seed(123)
+pi_i <- 100 / 600
+include <- rbinom(nrow(population), size = 1, prob = pi_i)
+poisson_sample <- population[include == 1, ]
+
+# Declare design
+design <- svydesign(ids = ~1, data = poisson_sample, probs = ~rep(pi_i, nrow(poisson_sample)))
+
+# Estimate mean of Y
+svymean(~Y, design)
+```
+
+## Python
+
+```python
+pi_i = 100 / 600
+include = np.random.binomial(1, pi_i, size=len(population))
+poisson_sample = population[include == 1]
+
+# Declare design
+poisson_sample['_prob'] = pi_i
+design = SurveyEstimation(poisson_sample, sample_weight=None, psu=None, stratum=None, prob='_prob')
+
+# Estimate mean of Y
+design.estimate(variable='Y', stat='mean')
+```
+
+:::
+
+

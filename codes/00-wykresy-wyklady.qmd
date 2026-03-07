@@ -1,0 +1,163 @@
+---
+title: "Kody do wykresów z wykładów"
+format: 
+  html:
+    self-contained: true
+    table-of-contents: true
+    number-sections: false
+editor: editor
+execute: 
+  eval: true
+  warning: false
+  message: false
+toc-title: Spis treści
+---
+
+## Pakiety
+
+```{r}
+library(tidyverse)
+library(eurostat)
+library(lubridate)
+library(gghighlight)
+library(countrycode)
+```
+
+## Wykłady dot. internetu
+
+```{r}
+internet <- search_eurostat(pattern  = 'internet')
+```
+
+```{r}
+dane <- get_eurostat(id = 'isoc_ci_ifp_iu', type = 'label')
+```
+
+```{r}
+dane %>% 
+  mutate(eu = countrycode(geo, origin = "country.name", destination = "eu28")) %>%
+  filter(!is.na(eu)) %>%
+  filter(indic_is == 'Last internet use: in last 3 months' , 
+         year(TIME_PERIOD) %in% 2005:2025,
+         #geo %in% c('Poland', "Czechia", "Hungary", "Slovakia", "Slovenia"),
+         ind_type %in% c('All Individuals', 'Individuals, 16 to 24 years old',
+           'Individuals, 25 to 34 years old',
+           'Individuals, 35 to 44 years old',
+           'Individuals, 45 to 54 years old',
+           'Individuals, 55 to 74 years old'),
+         unit == 'Percentage of individuals') %>%
+  mutate(ind_type = case_when(ind_type == "All Individuals"  ~ "Ogółem",
+            ind_type ==  "Individuals, 16 to 24 years old" ~ "16-24",
+            ind_type ==  "Individuals, 25 to 34 years old" ~ "25-34",
+            ind_type ==  "Individuals, 35 to 44 years old" ~ "35-44",
+            ind_type ==  "Individuals, 45 to 54 years old" ~ "45-54",
+            ind_type ==  "Individuals, 55 to 74 years old" ~ "55-74"),
+         ind_type = factor(ind_type, levels = c("Ogółem", "16-24", "25-34", "35-44", "45-54", "55-74"), 
+                           ordered = TRUE)) %>%
+  select(ind_type, TIME_PERIOD, values, geo) %>%
+  #mutate(time = as.integer(time)) %>%
+  ggplot(data = .,
+         aes(x = TIME_PERIOD,
+             y = values,
+             group = geo)) + 
+  geom_line() +
+  gghighlight(geo %in% c("Poland"), 
+              calculate_per_facet = TRUE, 
+               label_params = list(fill = NA)) + 
+  xlab('Okres badania') +
+  ylab('Odsetek osób') +
+  scale_colour_brewer(name = 'Przekrój', palette = 'Set1') +
+  scale_x_date(breaks = seq(as.Date("2005-01-01"), as.Date("2025-01-01"), by = "5 years"),
+               date_labels = format("%Y"),
+               limits = c(as.Date("2005-01-01"), as.Date("2025-01-01"))) +
+  ggtitle('Odsetek korzystających z Internetu w ostatnich 3 miesiącach w Polsce i UE') +
+  facet_wrap(~ind_type)  -> p
+
+ggsave(filename = "../additional/6-eurostat-wiek.png", width = 10, height = 5)
+p
+
+```
+
+```{r}
+dane %>% 
+  mutate(eu = countrycode(geo, origin = "country.name", destination = "eu28")) %>%
+  filter(!is.na(eu)) %>%
+  filter(indic_is == 'Last internet use: in last 3 months' , 
+         year(TIME_PERIOD) %in% 2005:2026,
+         geo %in% c('Poland', "Czechia", "Hungary", "Slovakia", "Slovenia"),
+         ind_type %in% c('All Individuals', 'Individuals, 16 to 24 years old',
+           'Individuals, 25 to 34 years old',
+           'Individuals, 35 to 44 years old',
+           'Individuals, 45 to 54 years old',
+           'Individuals, 55 to 74 years old'),
+         unit == 'Percentage of individuals') %>%
+  mutate(ind_type = case_when(ind_type == "All Individuals"  ~ "Ogółem",
+            ind_type ==  "Individuals, 16 to 24 years old" ~ "16-24",
+            ind_type ==  "Individuals, 25 to 34 years old" ~ "25-34",
+            ind_type ==  "Individuals, 35 to 44 years old" ~ "35-44",
+            ind_type ==  "Individuals, 45 to 54 years old" ~ "45-54",
+            ind_type ==  "Individuals, 55 to 74 years old" ~ "55-74"),
+         ind_type = factor(ind_type, levels = c("Ogółem", "16-24", "25-34", "35-44", "45-54", "55-74"), 
+                           ordered = TRUE)) %>%
+  select(ind_type, TIME_PERIOD, values, geo) %>%
+  ggplot(data = .,
+         aes(x = TIME_PERIOD,
+             y = values,
+             group = geo,
+             color = geo)) + 
+  geom_line() +
+  xlab('Okres badania') +
+  ylab('Odsetek osób') +
+  scale_colour_brewer(name = 'Przekrój', palette = 'Paired') +
+    scale_x_date(breaks = seq(as.Date("2005-01-01"), as.Date("2025-01-01"), by = "5 years"),
+               date_labels = format("%Y"),
+               limits = c(as.Date("2005-01-01"), as.Date("2025-01-01"))) +
+  ggtitle('Odsetek korzystających z Internetu w ostatnich 3 miesiącach w Polsce i wybrane kraje') +
+  facet_wrap(~ind_type)  -> p
+
+ggsave(filename = "../additional/6-eurostat-sasiedzi.png", width = 8, height = 4)
+p
+
+```
+
+```{r}
+dane %>% 
+  mutate(eu = countrycode(geo, origin = "country.name", destination = "eu28")) %>%
+  filter(!is.na(eu)) %>%
+  filter(indic_is == 'Last internet use: in last 3 months' , 
+         year(TIME_PERIOD) %in% 2005:2025,
+         geo %in% c('Poland', "Estonia", "Netherlands", "France", "Italy", "Spain", "Finland"),
+         ind_type %in% c('All Individuals', 'Individuals, 16 to 24 years old',
+           'Individuals, 25 to 34 years old',
+           'Individuals, 35 to 44 years old',
+           'Individuals, 45 to 54 years old',
+           'Individuals, 55 to 74 years old'),
+         unit == 'Percentage of individuals') %>%
+  mutate(ind_type = case_when(ind_type == "All Individuals"  ~ "Ogółem",
+            ind_type ==  "Individuals, 16 to 24 years old" ~ "16-24",
+            ind_type ==  "Individuals, 25 to 34 years old" ~ "25-34",
+            ind_type ==  "Individuals, 35 to 44 years old" ~ "35-44",
+            ind_type ==  "Individuals, 45 to 54 years old" ~ "45-54",
+            ind_type ==  "Individuals, 55 to 74 years old" ~ "55-74"),
+         ind_type = factor(ind_type, levels = c("Ogółem", "16-24", "25-34", "35-44", "45-54", "55-74"), 
+                           ordered = TRUE)) %>%
+  select(ind_type, TIME_PERIOD, values, geo) %>%
+  ggplot(data = .,
+         aes(x = TIME_PERIOD,
+             y = values,
+             group = geo,
+             color = geo)) + 
+  geom_line() +
+  xlab('Okres badania') +
+  ylab('Odsetek osób') +
+  scale_colour_brewer(name = 'Przekrój', palette = 'Paired') +
+    scale_x_date(breaks = seq(as.Date("2005-01-01"), as.Date("2025-01-01"), by = "5 years"),
+               date_labels = format("%Y"),
+               limits = c(as.Date("2005-01-01"), as.Date("2025-01-01"))) +
+  ggtitle('Odsetek korzystających z Internetu w ostatnich 3 miesiącach w Polsce i wybrane kraje') +
+  facet_wrap(~ind_type)  -> p
+
+ggsave(filename = "../additional/6-eurostat-inne.png", width = 8, height = 4)
+p
+
+```
