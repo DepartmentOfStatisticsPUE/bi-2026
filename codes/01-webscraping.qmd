@@ -1,0 +1,51 @@
+---
+title: "Web-scraping"
+author: "Maciej Beręsewicz"
+format: 
+  html:
+    code-fold: true
+    self-contained: true
+    code-summary: "Show the code"
+execute:
+  message: false
+  warning: false
+---
+
+# Pakiety
+
+```{r}
+library(rvest)
+library(stringi)
+library(xml2)
+library(jsonlite)
+```
+
+## Archiwum pracuj.pl
+
+```{r}
+read_html("https://archiwum.pracuj.pl/archive/offers?Year=2021&Month=1&PageNumber=1") %>%
+  html_nodes("div.offers_item_link_cnt") %>%
+  html_nodes("span:first-child") %>%
+  html_text() 
+```
+
+## Zadanie (na rozgrzewkę)
+
+1. Proszę wejść na stronę: https://nabory.kprm.gov.pl
+2. Proszę nacisnąć "szukaj" aby uzyskać dostęp do wszystkich ofert pracy.
+3. Proszę zbadać strukturę strony
+4. Proszę napisać program, który pobierze następujące informacje z wyświetlonych ogłoszeń:
+    + link do ogłoszenia
+    + numer ogłoszenia
+    + datę umieszczenia ogłoszenia 
+    + miejsce pracy ("Urząd")
+5. Wynik proszę zapisać do ramki danych
+    
+
+## Bardziej zaawansowane przykłady
+
+1. Pobieranie danych z zawartych w formacie `xml`
+2. Pobieranie danych z zawartych w formacie `json`
+3. "Dobieranie się" do ukrytych API (Zbadaj -> Network/Sieć)
+4.  `read_html` vs `read_html_live` (przykład: Emperor (NOR) `https://www.metal-archives.com/bands/emperor/30`)
+
