@@ -74,7 +74,7 @@ from samplics.estimation import SurveyEstimation
 ```python
 regions = ['North', 'South', 'East']
 cities_per_region = 4
-individuals_per_city = [20, 40, 60, 80]*1000
+individuals_per_city = [x * 1000 for x in [20, 40, 60, 80]]
 city_labels = [f"{region}{i+1}" for region in regions for i in range(cities_per_region)]
 
 # Create population list
