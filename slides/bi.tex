@@ -1287,6 +1287,69 @@ ddc(
 \end{frame}
 
 
+\begin{frame}{Zadanie 1: Oblicz Data Defect Correlation (15 min)}
+
+Ankieta internetowa szacowała frekwencję wyborczą w 6 województwach. Poniżej oficjalne wyniki (PKW) i szacunki z ankiety. Przyjmij $\sigma_G = 0.49$.
+
+\begin{table}
+    \centering
+    \small
+    \begin{tabular}{lrrcc}
+    \hline
+    Województwo & $N$ & $n$ & $\mu$ (PKW) & $\hat{\mu}$ (ankieta) \\
+    \hline
+    mazowieckie   & 4 200 000 & 12 000 & 0.68 & 0.79 \\
+    śląskie       & 3 500 000 &  8 500 & 0.58 & 0.71 \\
+    wielkopolskie & 2 700 000 &  5 200 & 0.62 & 0.73 \\
+    małopolskie   & 2 600 000 &  6 800 & 0.65 & 0.74 \\
+    dolnośląskie  & 2 300 000 &  4 900 & 0.60 & 0.72 \\
+    podkarpackie  & 1 600 000 &  1 200 & 0.55 & 0.63 \\
+    \hline
+    \end{tabular}
+\end{table}
+
+\begin{enumerate}
+    \item Oblicz błąd estymacji $\hat{\mu} - \mu$ dla każdego województwa.
+    \item Oblicz $\rho_{R,G} = \frac{\hat{\mu} - \mu}{\sigma_G \cdot \sqrt{(1-f)/f}}$, gdzie $f = n/N$.
+    \item Czy ankieta zawyża czy zaniża frekwencję? Dlaczego?
+    \item W którym województwie autoselekcja jest najsilniejsza?
+\end{enumerate}
+
+\end{frame}
+
+
+\begin{frame}{Zadanie 2: 1\% próba losowa vs.\ 80\% rejestr (15 min)}
+
+Cel: oszacować odsetek osób popierających partię X w~Polsce ($N = 30$ mln). Dysponujemy dwoma źródłami. Przyjmij $p = 0.5$.
+
+\begin{table}
+    \centering
+    \begin{tabular}{lcc}
+    \hline
+    Parametr & Próba losowa & Rejestr \\
+    \hline
+    $n$           & 300 000 (1\%) & 24 000 000 (80\%) \\
+    $\rho_{R,G}$  & 0.001         & 0.005 \\
+    \hline
+    \end{tabular}
+\end{table}
+
+Wzór na statystykę testową (przy $p = 0.5$):
+
+\begin{equation*}
+    Z_n = \sqrt{n} \cdot \sqrt{\frac{D_0 \cdot \rho_{R,G}^2}{1 - D_0 \cdot \rho_{R,G}^2}}, \quad \text{gdzie } D_0 = \frac{1-f}{f}.
+\end{equation*}
+
+\begin{enumerate}
+    \item Oblicz $f$, $D_0$ i $Z_n$ dla obu źródeł.
+    \item Które źródło daje większy błąd (w odchyleniach standardowych)?
+    \item O ile musielibyśmy zmniejszyć $\rho_{R,G}$ w rejestrze, żeby $Z_n < 2$?
+    \item Jaki wniosek płynie z tego porównania?
+\end{enumerate}
+
+\end{frame}
+
+
 % % \section{Badania symulacyjne}
 
 
