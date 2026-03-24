@@ -2,11 +2,11 @@
 
 ## Notatniki z kodami
 
-| # | Temat | HTML | QMD |
-|---|-------|------|-----|
-| 0 | Pakiety `sampling`, `survey` w R i `samplics` w Python | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/00-survey.html) | [qmd](codes/00-survey.qmd) |
-| 1 | Web-scraping | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/01-webscraping.html) | [qmd](codes/01-webscraping.qmd) |
-| 2 | Reprezentatywność -- miary i przykłady | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/02-reprezentatywnosc.html) | [qmd](codes/02-reprezentatywnosc.qmd) |
+| # | Temat | HTML | QMD | R |
+|---|-------|------|-----|---|
+| 0 | Pakiety `sampling`, `survey` w R i `samplics` w Python | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/00-survey.html) | [qmd](codes/00-survey.qmd) | [.R](codes/R/00-survey.R) |
+| 1 | Web-scraping | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/01-webscraping.html) | [qmd](codes/01-webscraping.qmd) | [.R](codes/R/01-webscraping.R) |
+| 2 | Reprezentatywność -- miary i przykłady | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/02-reprezentatywnosc.html) | [qmd](codes/02-reprezentatywnosc.qmd) | [.R](codes/R/02-reprezentatywnosc.R) |
 
 ## Zadania domowe
 
