@@ -1337,11 +1337,13 @@ Cel: oszacować odsetek osób popierających partię X w~Polsce ($N = 30$ mln). 
 Wzór na statystykę testową (przy $p = 0.5$):
 
 \begin{equation*}
-    Z_n = \sqrt{n} \cdot \sqrt{\frac{D_0 \cdot \rho_{R,G}^2}{1 - D_0 \cdot \rho_{R,G}^2}}, \quad \text{gdzie } D_0 = \frac{1-f}{f}.
+    Z_n = \sqrt{n} \cdot \sqrt{\frac{D_0 \cdot \rho_{R,G}^2}{1 - D_0 \cdot \rho_{R,G}^2}} \approx \sqrt{N - n} \cdot \rho_{R,G}, \quad \text{gdzie } D_0 = \frac{1-f}{f}.
 \end{equation*}
 
+\textbf{Wskazówka:} $\sqrt{n} \cdot \sqrt{D_0} = \sqrt{n \cdot \frac{N-n}{n}} = \sqrt{N-n}$, więc $Z_n$ zależy od wielkości \textbf{populacji}, nie próby.
+
 \begin{enumerate}
-    \item Oblicz $f$, $D_0$ i $Z_n$ dla obu źródeł.
+    \item Oblicz $f$, $N - n$ i $Z_n$ dla obu źródeł.
     \item Które źródło daje większy błąd (w odchyleniach standardowych)?
     \item O ile musielibyśmy zmniejszyć $\rho_{R,G}$ w rejestrze, żeby $Z_n < 2$?
     \item Jaki wniosek płynie z tego porównania?

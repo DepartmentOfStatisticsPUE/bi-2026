@@ -82,7 +82,10 @@ rho <- ddc(
 cat("ddc:", rho, "\nddi:", rho^2, "\n")
 ```
 
-Interpretacja: $\hat{\rho} \approx -0.004$ -- wyborcy Trumpa byli niedoreprezentowani w CCES. Ujemna korelacja oznacza, że osoby, które głosowały na Trumpa, miały niższe prawdopodobieństwo udziału w badaniu CCES.
+Interpretacja:
+
+- **DDC** $\hat{\rho} \approx -0.004$ -- ujemna korelacja oznacza, że wyborcy Trumpa byli **niedoreprezentowani** w CCES (osoby głosujące na Trumpa miały niższe prawdopodobieństwo udziału w badaniu).
+- **DDI** $\approx 1.5 \times 10^{-5}$ -- choć wygląda na znikomą wartość, przy populacji $N \approx 137$ mln nawet tak mała korelacja generuje istotny błąd. DDI jest kluczowym składnikiem rozkładu błędu średniokwadratowego: $\text{MSE} = \text{DDI} \times \frac{1-f}{f} \times \sigma_G^2$.
 
 ### DDC dla każdego stanu
 
@@ -164,8 +167,10 @@ Interpretacja: ujemne $\hat{\rho}_{R,G}$ oznacza, że wyborcy Trumpa byli niedor
 Obliczmy statystykę $Z_n$ dla każdego stanu (jak u Menga, Fig. 7):
 
 $$
-Z_n = \frac{\hat{p} - p}{\sqrt{\hat{p}(1-\hat{p})/n}}
+Z_n = \frac{\hat{p} - p}{\sqrt{\hat{p}(1-\hat{p})/n}} = \sqrt{n} \cdot \sqrt{\frac{D_0 \rho_{R,G}^2}{1 - D_0 \rho_{R,G}^2}} \approx \sqrt{N - n} \cdot \rho_{R,G}
 $$
+
+Kluczowe przekształcenie: $\sqrt{n} \cdot \sqrt{D_0} = \sqrt{n \cdot \frac{N-n}{n}} = \sqrt{N-n}$, więc $Z_n$ zależy od wielkości **populacji** $N$, nie próby $n$. To jest **prawo wielkich populacji** Menga.
 
 ```{r, fig.width = 7, fig.height = 5}
 g2016$z_n <- with(g2016, (cces_pct_djt_vv - pct_djt_voters) /
