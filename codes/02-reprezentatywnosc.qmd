@@ -1,0 +1,457 @@
+---
+title: "Reprezentatywność -- miary i przykłady"
+author: "Maciej Beręsewicz"
+format:
+  html:
+    embed-resources: true
+    df-print: kable
+    table-of-contents: true
+execute:
+  eval: true
+  message: false
+  warning: false
+lang: pl
+---
+
+## Pakiety
+
+```{r, eval = FALSE}
+install.packages(c("ddi", "nonprobsvy", "cobalt", "WeightIt"))
+```
+
+```{r}
+library(ddi)
+library(nonprobsvy) ## tylko do wczytania danych jvs i admin
+library(cobalt)
+library(WeightIt)
+```
+
+# Data Defect Index (Meng 2018)
+
+## Tożsamość Menga
+
+Błąd estymacji ze źródła danych o liczebności $n$ z populacji o liczebności $N$ można rozłożyć na trzy składniki:
+
+$$
+\overline{G}_{n}-\overline{G}_{N}=\underbrace{\rho_{R, G}}_{\text{Jakość danych}} \times \underbrace{\sqrt{\frac{1-f}{f}}}_{\text{Ilość danych}} \times \underbrace{\sigma_{G}}_{\text{Złożoność problemu}},
+$$
+
+gdzie:
+
+- $\rho_{R,G} = \text{Corr}(R_j, G_j)$ -- korelacja między zmienną indykatorową włączenia do próby $R$ a wartościami cechy $G$ (**data defect correlation**; ddc),
+- $f = n/N$ -- odsetek w próbie,
+- $\sigma_G$ -- odchylenie standardowe cechy $G$ w populacji.
+
+**Data defect index** (ddi) to $\rho_{R,G}^2$.
+
+## Wybory w USA 2016 (pakiet `ddi`)
+
+Pakiet `ddi` zawiera zbiór danych `g2016` z wynikami wyborów prezydenckich 2016. Dane porównują oficjalne wyniki z szacunkami z *Cooperative Congressional Election Study* (CCES) -- dużego badania ankietowego ($n \approx 65$ tys.).
+
+```{r}
+data(g2016)
+```
+
+### Opis kolumn
+
+| Kolumna | Opis |
+|---------|------|
+| `state`, `st` | Nazwa stanu (pełna i skrót) |
+| `pct_djt_voters` | Oficjalny odsetek głosów na Trumpa (populacja, $\mu$) |
+| `cces_pct_djt_vv` | Odsetek głosów na Trumpa w CCES wśród zweryfikowanych wyborców (próba, $\hat{\mu}$) |
+| `votes_djt` | Łączna liczba głosów na Trumpa |
+| `tot_votes` | Frekwencja -- łączna liczba oddanych głosów ($N$) |
+| `cces_totdjt_vv` | Liczba zweryfikowanych wyborców Trumpa w CCES |
+| `cces_n_vv` | Liczba zweryfikowanych wyborców w próbie CCES ($n$) |
+| `vap` | Populacja w wieku wyborczym (*Voting Age Population*) |
+| `vep` | Populacja uprawniona do głosowania (*Voting Eligible Population*) |
+
+```{r}
+head(g2016[, c("st", "pct_djt_voters", "cces_pct_djt_vv", "tot_votes", "cces_n_vv")])
+```
+
+### DDC dla całego USA
+
+```{r}
+rho <- ddc(
+  mu    = 62984824 / 136639786,
+  muhat = 12284 / 35829,
+  N     = 136639786,
+  n     = 35829
+)
+cat("ddc:", rho, "\nddi:", rho^2, "\n")
+```
+
+Interpretacja: $\hat{\rho} \approx -0.004$ -- wyborcy Trumpa byli niedoreprezentowani w CCES. Ujemna korelacja oznacza, że osoby, które głosowały na Trumpa, miały niższe prawdopodobieństwo udziału w badaniu CCES.
+
+### DDC dla każdego stanu
+
+```{r}
+g2016$ddc <- with(g2016, ddc(
+  mu    = pct_djt_voters,
+  muhat = cces_pct_djt_vv,
+  N     = tot_votes,
+  n     = cces_n_vv
+))
+g2016$blad <- g2016$cces_pct_djt_vv - g2016$pct_djt_voters
+summary(g2016$ddc)
+```
+
+Stany z największym $|\rho|$ (najgorsza jakość danych):
+
+```{r}
+top10 <- g2016[order(-abs(g2016$ddc)),
+               c("st", "pct_djt_voters", "cces_pct_djt_vv", "blad", "ddc")]
+top10[1:10, ]
+```
+
+### Wykresy
+
+#### Oficjalny wynik vs. szacunek CCES
+
+```{r, fig.width = 7, fig.height = 6}
+par(mar = c(4.5, 4.5, 2, 1))
+plot(g2016$pct_djt_voters, g2016$cces_pct_djt_vv,
+     xlab = "Oficjalny odsetek głosów na Trumpa",
+     ylab = "Szacunek CCES",
+     pch = 19, col = adjustcolor("steelblue", 0.7),
+     xlim = c(0, 1), ylim = c(0, 1),
+     main = "Oficjalny wynik vs. CCES (2016)")
+abline(0, 1, lty = 2, col = "red", lwd = 2)
+text(g2016$pct_djt_voters[abs(g2016$blad) > 0.05],
+     g2016$cces_pct_djt_vv[abs(g2016$blad) > 0.05],
+     g2016$st[abs(g2016$blad) > 0.05],
+     pos = 4, cex = 0.7)
+legend("topleft", legend = "linia y = x", lty = 2, col = "red", lwd = 2)
+```
+
+Interpretacja: punkty poniżej linii $y = x$ oznaczają, że CCES **niedoszacowało** poparcie dla Trumpa w danym stanie. Większość stanów leży poniżej linii -- CCES systematycznie zaniżało poparcie dla Trumpa.
+
+#### Błąd estymacji po stanach
+
+```{r, fig.width = 8, fig.height = 5}
+g2016_sorted <- g2016[order(g2016$blad), ]
+par(mar = c(4.5, 5, 2, 1))
+barplot(g2016_sorted$blad,
+        names.arg = g2016_sorted$st,
+        las = 2, cex.names = 0.6,
+        col = ifelse(g2016_sorted$blad < 0, "steelblue", "coral"),
+        ylab = "Błąd (CCES - oficjalny)",
+        main = "Błąd estymacji CCES po stanach")
+abline(h = 0, lwd = 1)
+```
+
+Interpretacja: niebieskie słupki (ujemne) -- CCES zaniżało poparcie Trumpa; koralowe (dodatnie) -- CCES zawyżało. Dominacja niebieskich słupków potwierdza systematyczne niedoszacowanie.
+
+#### DDC po stanach
+
+```{r, fig.width = 8, fig.height = 5}
+g2016_sorted2 <- g2016[order(g2016$ddc), ]
+par(mar = c(4.5, 5, 2, 1))
+barplot(g2016_sorted2$ddc,
+        names.arg = g2016_sorted2$st,
+        las = 2, cex.names = 0.6,
+        col = ifelse(g2016_sorted2$ddc < 0, "steelblue", "coral"),
+        ylab = expression(hat(rho)[R*","*G]),
+        main = "Data Defect Correlation po stanach")
+abline(h = 0, lwd = 1)
+```
+
+Interpretacja: ujemne $\hat{\rho}_{R,G}$ oznacza, że wyborcy Trumpa byli niedoreprezentowani w próbie CCES. Im bardziej ujemna wartość, tym silniejsza autoselekcja w danym stanie.
+
+#### Wielkość próby vs. błąd -- paradoks big data
+
+```{r, fig.width = 7, fig.height = 5}
+par(mar = c(4.5, 4.5, 2, 1))
+plot(g2016$cces_n_vv, abs(g2016$blad),
+     xlab = "Wielkość próby CCES (n)",
+     ylab = "|Błąd estymacji|",
+     pch = 19, col = adjustcolor("steelblue", 0.7),
+     main = "Większa próba ≠ mniejszy błąd")
+text(g2016$cces_n_vv[abs(g2016$blad) > 0.06],
+     abs(g2016$blad[abs(g2016$blad) > 0.06]),
+     g2016$st[abs(g2016$blad) > 0.06],
+     pos = 4, cex = 0.7)
+
+## regresja liniowa
+abline(lm(abs(blad) ~ cces_n_vv, data = g2016), col = "red", lwd = 2, lty = 2)
+
+## loess
+lo <- loess(abs(blad) ~ cces_n_vv, data = g2016)
+ox <- order(g2016$cces_n_vv)
+lines(g2016$cces_n_vv[ox], predict(lo)[ox], col = "darkgreen", lwd = 2)
+
+legend("topright", legend = c("OLS", "LOESS"),
+       col = c("red", "darkgreen"), lwd = 2, lty = c(2, 1),
+       bg = adjustcolor("white", 0.8))
+```
+
+Interpretacja: brak wyraźnej zależności malejącej -- większa próba nie gwarantuje mniejszego błędu. To empiryczna ilustracja paradoksu big data Menga: przy autoselekcji zwiększanie $n$ nie redukuje obciążenia.
+
+## Ilustracja paradoksu big data
+
+Porównanie statystyki $Z_n$ dla próby 80% (rejestr) vs 1% (losowa) z populacji $N = 38$ mln (Polska):
+
+```{r}
+N <- 38e6
+
+par(mar = c(4, 4, 3, 1))
+
+## rejestr 80%
+f_share <- 0.8
+bias_80 <- function(x, n_size = N * f_share, D0 = (1-f_share)/f_share) {
+  sqrt(n_size) * sqrt(D0 * x^2 / (1 - D0 * x^2))
+}
+
+curve(bias_80, from = 0.0001, to = 0.006, ylim = c(0, 15),
+      ylab = "Błąd standardowy (Z_n)", xlab = expression(rho[R*","*G]),
+      main = "Paradoks Big Data (Meng 2018, N = 38 mln)", lwd = 2)
+
+## próba losowa 1%
+f_share <- 0.01
+bias_01 <- function(x, n_size = N * f_share, D0 = (1-f_share)/f_share) {
+  sqrt(n_size) * sqrt(D0 * x^2 / (1 - D0 * x^2))
+}
+
+curve(bias_01, from = 0.0001, to = 0.006, add = TRUE, col = "red", lwd = 2)
+abline(v = 0.001, h = 6.13, lty = 3, col = "red")
+abline(v = 0.005, h = 13.78, lty = 3, col = "black")
+legend("bottomright", legend = c("próba losowa (1%)", "rejestr (80%)"),
+       lty = 1, col = c("red", "black"), lwd = 2, bg = adjustcolor("white", 0.8))
+```
+
+Wniosek: mimo 80-krotnie większej próby, rejestr z autoselekcją ($\rho = 0.005$) daje błąd $Z_n \approx 14$, a próba losowa ($\rho = 0.001$) daje $Z_n \approx 6$.
+
+
+# Balans zmiennych pomocniczych (`cobalt` + `WeightIt`)
+
+## Dane: JVS vs. CBOP
+
+Pakiet `nonprobsvy` zawiera dwa zbiory danych, które wykorzystamy do oceny reprezentatywności:
+
+- `jvs` -- próba losowa z Badania Popytu na Pracę (6 523 firmy) -- traktujemy jako **reprezentację populacji**,
+- `admin` -- dane administracyjne z Centralnej Bazy Ofert Pracy, CBOP (9 344 firmy) -- **próba nielosowa**, w której firmy zgłaszają oferty dobrowolnie.
+
+Pytanie: **czy CBOP jest reprezentatywne względem populacji firm?** Innymi słowy, czy rozkład zmiennych pomocniczych (wielkość firmy, sektor, branża, region) w CBOP odpowiada temu w populacji?
+
+```{r}
+data(jvs)
+data(admin)
+```
+
+### Opis kolumn
+
+| Kolumna | Opis | Zbiór |
+|---------|------|-------|
+| `id` | Identyfikator firmy | oba |
+| `private` | 1 = firma prywatna, 0 = publiczna | oba |
+| `size` | Wielkość: S ($\leq 9$), M (10--49), L ($\geq 50$ pracowników) | oba |
+| `nace` | Sekcja PKD (14 kategorii) | oba |
+| `region` | Województwo (16 kodów: 02, 04, ..., 32) | oba |
+| `weight` | Waga kalibrowana z schematu losowania | tylko JVS |
+| `single_shift` | Czy firma oferuje pracę jednozmianową (0/1) | tylko CBOP |
+
+```{r}
+head(jvs)
+```
+
+```{r}
+head(admin)
+```
+
+## Porównanie struktury prób
+
+Porównajmy rozkłady zmiennych pomocniczych -- różnice wskazują na autoselekcję w CBOP:
+
+```{r}
+## rozkład wg wielkości firmy
+tab_jvs <- prop.table(table(jvs$size))
+tab_admin <- prop.table(table(admin$size))
+rbind(JVS = round(tab_jvs, 3), CBOP = round(tab_admin, 3))
+```
+
+```{r}
+## rozkład wg sektora (prywatny vs publiczny)
+tab_jvs_p <- prop.table(table(jvs$private))
+tab_admin_p <- prop.table(table(admin$private))
+rbind(JVS = round(tab_jvs_p, 3), CBOP = round(tab_admin_p, 3))
+```
+
+```{r, fig.width = 8, fig.height = 4}
+par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
+
+## wykres: wielkość firmy
+barplot(rbind(tab_jvs, tab_admin), beside = TRUE,
+        col = c("steelblue", "coral"), legend.text = c("JVS", "CBOP"),
+        main = "Rozkład wg wielkości firmy", ylab = "Odsetek",
+        args.legend = list(x = "topright", bg = adjustcolor("white", 0.8)))
+
+## wykres: sektor
+barplot(rbind(tab_jvs_p, tab_admin_p), beside = TRUE,
+        col = c("steelblue", "coral"),
+        names.arg = c("Publiczna", "Prywatna"),
+        main = "Rozkład wg sektora", ylab = "Odsetek")
+```
+
+Interpretacja: CBOP **nadreprezentuje firmy publiczne i duże** -- to typowe dla rejestrów administracyjnych, gdzie urzędy mają obowiązek zgłaszania ofert, a firmy prywatne (zwłaszcza małe) robią to dobrowolnie. Naiwne szacunki z CBOP będą więc obciążone w kierunku charakterystyk firm publicznych.
+
+## Przygotowanie danych do analizy balansu
+
+Łączymy oba zbiory w jeden, dodając zmienną `source` wskazującą przynależność do JVS (populacja referencyjna) lub CBOP (próba nielosowa):
+
+```{r}
+## wspólne zmienne pomocnicze
+wspol <- intersect(names(jvs), names(admin))
+wspol <- setdiff(wspol, c("id", "weight", "single_shift"))
+
+jvs_sub <- jvs[, wspol]
+jvs_sub$source <- 0   ## JVS = grupa referencyjna
+
+admin_sub <- admin[, wspol]
+admin_sub$source <- 1  ## CBOP = próba nielosowa
+
+combined <- rbind(jvs_sub, admin_sub)
+combined$source <- factor(combined$source, levels = c(0, 1),
+                          labels = c("JVS", "CBOP"))
+
+cat("JVS:", sum(combined$source == "JVS"), "firm\n")
+cat("CBOP:", sum(combined$source == "CBOP"), "firm\n")
+```
+
+## Balans przed ważeniem
+
+Standaryzowana różnica średnich (SMD) mierzy różnicę w rozkładzie zmiennej między dwoma grupami, wyrażoną w jednostkach odchylenia standardowego:
+
+$$
+\text{SMD} = \frac{\bar{x}_{\text{CBOP}} - \bar{x}_{\text{JVS}}}{\sqrt{(s^2_{\text{CBOP}} + s^2_{\text{JVS}})/2}}
+$$
+
+Przyjmuje się, że $|\text{SMD}| < 0.1$ oznacza akceptowalny balans (brak istotnych różnic), a $|\text{SMD}| > 0.25$ to poważny brak balansu.
+
+```{r}
+bal.tab(source ~ size + private + nace + region,
+        data = combined,
+        stats = c("m", "ks"),
+        binary = "std")
+```
+
+Interpretacja: kolumna `Diff.Un` to SMD przed jakąkolwiek korekcją. Wartości dalekie od 0 wskazują zmienne, w których CBOP różni się od JVS -- te zmienne napędzają autoselekcję.
+
+## Ważenie propensity score (`WeightIt`)
+
+Estymujemy propensity score, czyli $P(\text{CBOP} \mid \mathbf{X})$ -- prawdopodobieństwo, że firma znajdzie się w CBOP, a nie w JVS, biorąc pod uwagę jej cechy. Odwrotności tych prawdopodobieństw stają się wagami korygującymi:
+
+```{r}
+W <- weightit(
+  source ~ size + private + nace + region,
+  data = combined,
+  method = "ps",       ## regresja logistyczna
+  estimand = "ATT"     ## cel: zrównoważyć JVS do struktury CBOP
+)
+summary(W)
+```
+
+Interpretacja: `summary(W)` pokazuje rozkład wag. Duży rozrzut wag (wysoki współczynnik zmienności CV) oznacza, że pewne obserwacje z JVS muszą być silnie przeważone, aby odtworzyć strukturę CBOP -- co potwierdza, że próby istotnie się różnią.
+
+## Balans po ważeniu
+
+Teraz porównajmy SMD **przed** i **po** ważeniu:
+
+```{r}
+bal.tab(W, stats = c("m", "ks"), un = TRUE)
+```
+
+Interpretacja:
+
+- `Diff.Un` -- SMD **przed** ważeniem (oryginalne różnice między CBOP a JVS),
+- `Diff.Adj` -- SMD **po** zastosowaniu wag propensity score.
+
+Po ważeniu SMD powinno zbliżyć się do 0. Jeśli tak się stało, oznacza to, że wagi skutecznie wyrównały rozkład zmiennych pomocniczych -- ważona próba JVS ma teraz podobną strukturę do CBOP.
+
+## Wykres Love'a
+
+Wykres Love'a wizualizuje $|\text{SMD}|$ dla każdej zmiennej przed (kółka) i po ważeniu (trójkąty). Pionowa linia przerywana oznacza próg $|\text{SMD}| = 0.1$:
+
+```{r, fig.width = 8, fig.height = 6}
+love.plot(W, stats = "mean.diffs", threshold = 0.1,
+          abs = TRUE, var.order = "unadjusted",
+          title = "Balans zmiennych: CBOP vs JVS",
+          colors = c("coral", "steelblue"))
+```
+
+Interpretacja:
+
+- **Kółka (Unadjusted)** -- wiele zmiennych przekracza próg 0.1, co potwierdza brak reprezentatywności CBOP.
+- **Trójkąty (Adjusted)** -- po ważeniu punkty powinny przesunąć się w lewo, poniżej progu 0.1.
+- Zmienne, które po ważeniu nadal przekraczają próg, wskazują na utrzymujący się brak balansu -- model propensity score może wymagać wzbogacenia (np. o interakcje) lub zastosowania innej metody.
+
+
+# R-indicator (Schouten i in. 2009)
+
+## Definicja
+
+R-indicator to syntetyczna miara reprezentatywności oparta na zmienności propensity scores:
+
+$$
+R = 1 - 2 \cdot S(\hat{\pi}_i),
+$$
+
+gdzie $S(\hat{\pi}_i)$ to odchylenie standardowe oszacowanych prawdopodobieństw włączenia do próby.
+
+- $R = 1$: wszystkie jednostki mają takie samo prawdopodobieństwo pojawienia się w próbie -- **pełna reprezentatywność** (brak autoselekcji).
+- $R \to 0$: prawdopodobieństwa silnie się różnią -- **silna autoselekcja**.
+
+## Obliczenie R-indicator
+
+Wykorzystujemy propensity scores z modelu logistycznego dopasowanego na połączonym zbiorze:
+
+```{r}
+ps_model <- glm(source == "CBOP" ~ size + private + nace + region,
+                data = combined, family = binomial)
+ps_hat <- predict(ps_model, type = "response")
+
+R_indicator <- 1 - 2 * sd(ps_hat)
+cat("R-indicator:", round(R_indicator, 4), "\n")
+cat("SD propensity scores:", round(sd(ps_hat), 4), "\n")
+```
+
+Interpretacja: $R$ znacząco mniejsze od 1 potwierdza, że CBOP **nie jest reprezentatywne** -- prawdopodobieństwo pojawienia się firmy w CBOP silnie zależy od jej cech (sektor, wielkość, branża).
+
+## Rozkład propensity scores
+
+```{r, fig.width = 7, fig.height = 4}
+par(mar = c(4.5, 4.5, 2, 1))
+hist(ps_hat, breaks = 30, col = "steelblue", border = "white",
+     main = "Rozkład propensity scores P(CBOP | X)",
+     xlab = "Prawdopodobieństwo przynależności do CBOP",
+     ylab = "Liczba obserwacji")
+abline(v = mean(ps_hat), lty = 2, col = "red", lwd = 2)
+legend("topright", legend = paste("Średnia:", round(mean(ps_hat), 3)),
+       lty = 2, col = "red", lwd = 2, bg = adjustcolor("white", 0.8))
+```
+
+Interpretacja: gdyby CBOP było reprezentatywne, rozkład propensity scores byłby skupiony wokół jednej wartości (wąski pik). Szeroki, wielomodalny rozkład oznacza, że firmy o różnych cechach mają drastycznie różne szanse pojawienia się w CBOP.
+
+
+# Podsumowanie
+
+| Miara | Co mierzy | Wartość referencyjna | Pakiet R |
+|-------|-----------|---------------------|----------|
+| DDC ($\rho_{R,G}$) | Korelacja między selekcją a cechą badaną | 0 (brak obciążenia) | `ddi` |
+| DDI ($\rho_{R,G}^2$) | Kwadrat DDC (indeks defektu danych) | 0 | `ddi` |
+| R-indicator | Zmienność propensity scores | 1 (pełna reprezentatywność) | ręcznie |
+| SMD | Standaryzowana różnica średnich | $< 0.1$ (dobry balans) | `cobalt` |
+
+Kluczowa różnica:
+
+- **DDC/DDI** -- wymaga znajomości prawdziwej wartości parametru w populacji ($\mu$); mierzy efekt autoselekcji na **konkretną** zmienną badaną.
+- **R-indicator / SMD** -- **nie** wymaga znajomości $\mu$; mierzy ogólną (nie)reprezentatywność próby na podstawie zmiennych pomocniczych $\mathbf{X}$.
+
+
+# Odniesienia
+
+- Meng, X.-L. (2018). Statistical Paradises and Paradoxes in Big Data (I). *Annals of Applied Statistics*, 12(2), 685--726.
+- Bradley, V.C. i in. (2021). Unrepresentative big surveys significantly overestimated US vaccine uptake. *Nature*, 600, 695--700.
+- Schouten, B., Cobben, F. i Bethlehem, J. (2009). Indicators for the representativeness of survey response. *Survey Methodology*, 35(1), 101--113.
+- Shlomo, N. i Kim, M.S. (2025). Quality indicators for representation in administrative data. *Survey Methodology*, 51(2), 509--532.
+- Pakiety: [`ddi`](https://github.com/kuriwaki/ddi), [`cobalt`](https://ngreifer.github.io/cobalt/), [`WeightIt`](https://ngreifer.github.io/WeightIt/)

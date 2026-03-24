@@ -1,0 +1,3448 @@
+\documentclass[10pt,ignorenonframetext, aspectratio=169]{beamer}
+\input{settings/settings.tex}
+
+\usepackage{ragged2e}
+\usepackage{etoolbox}
+\usepackage{float}
+\usepackage{epigraph}
+\usepackage[caption = false]{subfig}
+
+\let\proglang=\textsf
+\newcommand{\pkg}[1]{{\fontseries{b}\selectfont #1}}
+
+\apptocmd{\frame}{}{\justifying}{} % Allow optional arguments after frame.
+
+\newcommand{\indep}{\perp \!\!\! \perp}
+
+\makeatletter
+\def\beamer@writeslidentry{\clearpage\beamer@notesactions}
+\makeatother
+
+\author[Badania Internetowe 2023 (Beręsewicz)]{dr Maciej Beręsewicz, prof. UEP 
+    \\ \small{Katedra Statystyki, Uniwersytet Ekonomiczny w Poznaniu}  
+    \\ \small{Ośrodek Metodologii Badań Ludnościowych, Urząd Statystyczny w Poznaniu}
+    }
+
+\title{Badania Internetowe}
+\date{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% additional settings
+  \newcommand{\bX}{\boldsymbol{X}}
+  \newcommand{\bx}{\boldsymbol{x}}
+  \newcommand{\bY}{\boldsymbol{Y}}
+  \newcommand{\by}{\boldsymbol{y}}
+  \newcommand{\bh}{\boldsymbol{h}}
+  \newcommand{\bH}{\boldsymbol{H}}
+  \newcommand{\ba}{\boldsymbol{a}}
+  \newcommand{\bp}{\boldsymbol{p}}
+  \newcommand{\bA}{\boldsymbol{A}}
+  \newcommand{\bw}{\boldsymbol{w}}
+  \newcommand{\bd}{\boldsymbol{d}}
+  \newcommand{\bZ}{\boldsymbol{Z}}
+  \newcommand{\bz}{\boldsymbol{z}}
+  \newcommand{\bv}{\boldsymbol{v}}
+  \newcommand{\bu}{\boldsymbol{u}}
+  \newcommand{\bU}{\boldsymbol{U}}
+  \newcommand{\bQ}{\boldsymbol{Q}}
+  \newcommand{\bG}{\boldsymbol{G}}
+  \newcommand{\HT}{\text{\rm HT}}
+  \newcommand{\bbeta}{\boldsymbol{\beta}}
+  \newcommand{\balpha}{\boldsymbol{\alpha}}
+  \newcommand{\btau}{\boldsymbol{\tau}}
+  \newcommand{\bgamma}{\boldsymbol{\gamma}}
+  \newcommand{\btheta}{\boldsymbol{\theta}}
+  \newcommand{\blambda}{\boldsymbol{\lambda}}
+  \newcommand{\bPhi}{\boldsymbol{\Phi}}
+  \newcommand{\bEta}{\boldsymbol{\eta}}
+  \newcommand{\bZero}{\boldsymbol{0}}
+  \newcommand{\colvec}{\operatorname{colvec}}
+  \newcommand{\logit}{\operatorname{logit}}
+  \newcommand{\Exp}{\operatorname{Exp}}
+  \newcommand{\Ber}{\operatorname{Bernoulli}}
+  \newcommand{\Uni}{\operatorname{Uniform}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\begin{frame}[plain]{}
+\titlepage
+\end{frame}
+
+\begin{frame}[plain]{Spis treści}
+\tableofcontents
+\end{frame}
+
+%%%%%%%%%%%% O przedmiocie %%%%%%%%%%%%%%%%%%
+
+\section{O wykładzie}
+% \begin{frame}{O wykładzie}
+% \begin{center}
+%     \Large
+%     \textbf{Krótki quiz na początek} \\
+    
+%     \vspace{0.5cm}
+    
+%     Proszę wejść na stronę \url{www.menti.com}, \\ 
+%     wpisać kod: \textbf{78 44 22 4}, \\
+%     %\textbf{3372 6149}, \\
+%     a następnie odpowiedzieć na dwa pytania.
+    
+% \end{center}
+
+% \end{frame}
+
+% \begin{frame}{Oczekiwania}
+% \begin{center}
+%     \Large
+%     \textbf{Oczekiwania} \\
+    
+%     \vspace{0.5cm}
+    
+%     Proszę wejść na stronę \url{www.menti.com}, \\ 
+%     wpisać kod: \textbf{4502 9824}, \\
+%     i podać swoje oczekiwania względem przedmiotu.
+    
+% \end{center}
+
+% \end{frame}
+
+\begin{frame}{O prowadzącym}
+    \begin{itemize}
+        \item \textbf{Kto}: dr Maciej Beręsewicz, prof. UEP.
+        \item \textbf{Skąd}: Katedra Statystyki UEP.
+        \item \textbf{Zainteresowania}: nowe źródła danych na potrzeby statystyki publicznej, próby nielosowe, pakiety statystyczne.
+        \item \textbf{Dyżury}: TBA
+        \item \textbf{Kontakt}: maciej.beresewicz@ue.poznan.pl / MS Teams.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{O wykładzie}
+    \begin{itemize}
+        \item \textbf{Wykład}: Badania internetowe
+        \item \textbf{Forma:} Wykład z praktyką (głównie w języku R; zob. wymagania wstępne w sylabusie)
+        \item \textbf{Oprogramowanie:} 
+        \begin{itemize}
+            \item \texttt{nonprobsvy} -- pakiet w języku R
+            \item \textit{balance} -- moduł w języku Python
+        \end{itemize}
+        \item \textbf{Idea:} Jak na podstawie prób nielosowych wnioskować na populację generalną? 
+        \item \textbf{Materiały:} Moodle oraz Github (\url{https://github.com/DepartmentOfStatisticsPUE/bi-2025})
+        \item \textbf{Sylabus:} \url{https://esylabus.ue.poznan.pl/pl/document/d246a56a-71db-4717-aeb1-0033228d0e5e.html}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}{O wykładzie -- literatura (wybrana)}
+
+    \begin{itemize}
+    \scriptsize
+\item Baker, R, J Michael Brick, Nancy A Bates, Mike Battaglia, Mick P Couper, Jill A Dever, Krista J Gile, and Roger Tourangeau (2013). Summary Report of the AAPOR task force on non-probability sampling. Journal of Survey Statistics and Methodology 1, pp. 90–143.
+\item Bethlehem, J. (2010). Selection Bias in Web Surveys. International Statistical Review, 78(2), 161–188. doi:10.1111/j.1751-5823.2010.00112.x.
+\item Bethlehem, J., and Biggignandi, S. (2012). Handbook of Web Surveys, John Wiley and Sons, Inc. doi:10.1086/318641.
+\item Callegaro M., Baker R., Bethlehem J., Göritz A.S., Krosnick J.A., Lavrakas P. J. (2014) Online Panel Research A Data Quality Perspective, Wiley.
+\item Lee, S. (2006). Propensity score adjustment as a weighting scheme for volunteer panel web surveys. Journal of Official Statistics, 22(2), 329–349.
+\item Kim, J. K., and Tam, S. M. (2020). Data integration by combining big data and survey sample data for finite population inference. International Statistical Review.
+\item S. Yang, J.K. Kim, and R. Song (2020). "Doubly Robust Inference when Combining Probability and Non-probability Samples with High-dimensional Data", Journal of the Royal Statistical Society: Series B, 82, 445-465.
+\item J.K. Kim and Z. Wang (2019). "Sampling techniques for big data analysis in finite population inference", International Statistical Review, 87, S177-S191.
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}{O wykładzie -- zasady zaliczenia}
+
+Zaliczenie składa się z dwóch części:
+
+\begin{enumerate}
+    \item \textbf{Projekt grupowy} realizowany w grupach maksymalnie 2 osobowych -- 50 punktów (maksymalnie ocena 4.0):
+        \begin{itemize}
+            \item do 20 -- 2.0
+            \item $[20, 30)$ -- 3.0
+            \item $[30, 40)$ -- 3.5
+            \item $[40, 50)$ -- 4.0
+        \end{itemize}
+    \item \textbf{3 zadania domowe} -- podniesienie oceny o maksymalnie 1 stopień (gdy ocena za projekt jest co najmniej 3.0) gdy liczba poprawnie wykonanych zadań wynosić będzie:
+    \begin{itemize}
+        \item 1 zadanie - 0.0
+        \item 2 zadania - 0.5
+        \item 3 zadania - 1.0
+    \end{itemize}
+    \item Zadania domowe będą weryfikowane czy zostały zrobione samodzielnie i je zrozumieliście. 
+\end{enumerate}
+\end{frame}
+
+
+\begin{frame}{O wykładzie -- projekt zaliczeniowy}
+
+\begin{itemize}
+
+\justifying
+    \item \textbf{Poświęcony symulacyjnemu badaniu wybranych estymatorów prezentowanych} w~trakcie zajęć aby odpowiedzieć m.in. na pytania:
+        \begin{itemize}
+            \item W jakich przypadkach dany estymator(y) znajduje zastosowanie?
+            \item Jak zachowuje się dany estymator(y) gdy złamane zostaną założenia? 
+        \end{itemize}
+    
+    \item Projekt realizowany w maksymalnie 2/3 osobowych zespołach z jasno określonym wkładem członków zespołu.
+    \item Projekty wyłącznie odtwarzające wykład są ok ale nie na najlepszą ocenę. Preferowana jest własna inwencja twórcza.
+    \item \textbf{Dane do projektu}: podane przez prowadzącego w przeciągu 2 tygodni od rozpoczęcia zajęć.
+   \end{itemize}
+\end{frame}
+
+
+
+\begin{frame}{O wykładzie -- projekt zaliczeniowy}
+
+\textbf{Realizowany w trakcie zajęć poprzez oddawanie kolejnych części projektu}:
+
+    \begin{itemize}
+        \item wstępne wybranie estymatorów i określenie celu badania symulacyjnego (np. wpływ na złamanie założeń dot. rozkładów, duplikaty, błędy pokrycia, słaby model),
+        \item wstępna implementacja danego rozwiązania (w dowolnym języku ale tak żebym mógł to uruchomić -- najlepiej przez Google Colab, które obsługuje R i Pythona),
+        \item krótki, 3-4 stronicowy, raport końcowy z wynikami. Powinien zawierać opis estymatora(ów), opis badania i wyniki (plik PDF, może być R/Jupyter Notebook).
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Moodle (id 7649)}
+    \begin{itemize}
+        \item bi2026
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}{O wykładzie}
+    \begin{center}
+        \Large
+        Pytania?
+    \end{center}
+\end{frame}
+
+\begin{frame}{Zanim rozpoczniemy}
+    \begin{itemize}
+        \item Krótki test wiedzy z zakresu metody reprezentacyjnej
+    \end{itemize}
+\end{frame}
+
+%%%%%%%%%%%% Internet w Polsce %%%%%%%%%%%%%%%%%%
+
+\section{Internet w Polsce}
+
+
+\begin{frame}{Rozgrzewka?}
+    \begin{itemize}
+        \item Ilu jest w Polsce internautów? 
+        \item Ile osób posiada i korzysta ze smartfonów?
+        \item Jak dużo osób codziennie korzysta z internetu?
+        \item Jakie może być źródło tej informacji?
+    \end{itemize}
+\end{frame}
+
+
+% \begin{frame}{Internet w Polsce}
+% \begin{center}
+%     \Large
+%     \textbf{Krótki quiz wiedzy o Internecie w Polsce} \\
+    
+%     \vspace{0.5cm}
+    
+%     Proszę wejść na stronę \url{www.menti.com}, \\ 
+%     wpisać kod: \textbf{ 3788 1305}, \\
+%     a następnie odpowiedzieć na dwa pytania.
+    
+% \end{center}
+% \end{frame}
+
+\begin{frame}{Skąd czerpać wiedzę o populacji internautów?}
+\begin{itemize}
+    \item Społeczeństwo informacyjne (ICT survey) -- GUS i Eurostat
+    \item Mediapanel (wcześniej Gemius/PBI) -- Polskie Badanie Internetu (\url{https://pbi.org.pl/mediapanel/})
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Internet w Polsce -- źródło: badanie ICT GUS}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{fig-1-internet/1-ict.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Internet w Polsce -- źródło: badanie ICT GUS}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{fig-1-internet/mediapanel.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Internet w Polsce -- źródło: badanie ICT GUS}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-1-internet/2-hh-dostep.png}
+    \end{figure}
+\end{frame}
+
+
+
+\begin{frame}{Internet w Polsce -- źródło: badanie ICT GUS}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.6\textwidth]{fig-1-internet/3-hh-eu-dostep.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Internet w Polsce -- źródło: badanie ICT GUS}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-1-internet/4-hh-szeroko.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Internet w Polsce -- źródło: badanie ICT GUS}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-1-internet/6-os-korzyst1.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Internet w Polsce -- źródło: badanie ICT GUS}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-1-internet/6-eurostat-wiek.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Internet w Polsce -- źródło: badanie ICT GUS}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-1-internet/6-eurostat-sasiedzi.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Internet w Polsce -- źródło: badanie ICT GUS}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-1-internet/6-eurostat-inne.png}
+    \end{figure}
+\end{frame}
+
+
+\begin{frame}{Internet w Polsce -- źródło: badanie ICT GUS}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{fig-1-internet/6-os-regul-miejsce.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Internet w Polsce -- źródło: badanie ICT GUS}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-1-internet/6-os-regul-wiek.png}
+    \end{figure}
+\end{frame}
+
+
+\begin{frame}{Internet w Polsce -- źródło: badanie ICT GUS}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.9\textwidth]{fig-1-internet/6-os-regul-wyksz.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Internet w Polsce -- źródło: badanie ICT GUS}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.9\textwidth]{fig-1-internet/6-os-regul-zawody.png}
+    \end{figure}
+\end{frame}
+
+
+\begin{frame}{Internet w Polsce -- źródło: badanie ICT GUS}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{fig-1-internet/9-brak-dlaczego.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Internet w Polsce -- źródło: Diagnoza Społeczna 2015}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-1-internet/9-brak-diagnoza.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Internet w Polsce -- źródło: BBGD 2025}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.9\textwidth]{fig-1-internet/10-dobra2.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Internet w Polsce -- źródło: BBGD 2025}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.9\textwidth]{fig-1-internet/10-dobra3.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Internet w Polsce -- źródło: BBGD 2025}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.9\textwidth]{fig-1-internet/10-dobra4.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Internet w Polsce -- literatura}
+    Literatura użyta na potrzeby zajęć o Internecie w Polsce
+    
+    \begin{itemize}
+    \small
+        \item GUS (2026), Społeczeństwo informacyjne w Polsce w 2025 r., \url{https://stat.gov.pl/obszary-tematyczne/nauka-i-technika-spoleczenstwo-informacyjne/spoleczenstwo-informacyjne/spoleczenstwo-informacyjne-w-polsce-w-2022-roku,1,16.html}.
+        \item GUS (2025), Budżety gospodarstw domowych w 2024 roku, \url{https://stat.gov.pl/obszary-tematyczne/warunki-zycia/dochody-wydatki-i-warunki-zycia-ludnosci/budzety-gospodarstw-domowych-w-2024-r-,9,23.html}
+        \item Czapiewski (2016) Raport z badania Diagnoza Społeczna 2015, \url{www.diagnoza.com}
+    \end{itemize}
+\end{frame}
+
+% %%%%%%%%%%%% discrete dists %%%%%%%%%%%%%%%%%%
+
+\section{Google Trends i inne serwisy} 
+
+\begin{frame}{Google Trends}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-7-trends/gtrends.png}
+        \caption{Strona główna Google Trends}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Google Trends -- podstawowe informacje}
+    \begin{itemize}
+        \item 11 maj 2006 -- start jako "Google Insights for Search".
+        \item 27 września 2012 -- powstanie Google Trends w formie, którą teraz znamy.
+        \item Trendy Google zapewniają dostęp do zasadniczo niefiltrowanej próbki rzeczywistych żądań wyszukiwania wysyłanych do Google.
+        \item Dane te są zanonimizowane (nie można rozpoznać użytkowników), podzielone na kategorie (z określonym tematem wyszukiwanych haseł) i zagregowane (pogrupowane).
+        \item W Trendach Google dostępne są dwa rodzaje próbek danych:
+        \begin{itemize}
+            \item Dane w czasie rzeczywistym to próbka obejmująca ostatnie siedem dni.
+            \item Dane niedynamiczne stanowią osobną próbkę i obejmują okres od 2004 roku do 36 godzin przed wyszukiwaniem.
+        \end{itemize}
+        \item Dane Google Trends podlegają normalizacji.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Google Trends -- normalizacja}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-7-trends/gtrends-norm.png}
+        \caption{Przykład zapytania i normalizacji}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Google Trends -- normalizacja}
+Trendy Google normalizują dane wyszukiwania, by ułatwić porównywanie haseł. Wyniki wyszukiwania są normalizowane względem czasu i lokalizacji wyszukiwania w ten sposób:
+    \begin{itemize}
+    \justifying    
+        \item Każdy punkt danych jest dzielony przez łączną liczbę wyszukiwań w danym regonie i okresie, co pozwala ocenić jego względną popularność. W przeciwnym razie regiony, w których wyszukiwań jest najwięcej, zawsze byłyby najwyżej w rankingu.
+\item Rezultat jest następnie skalowany w zakresie od 0 do 100 na podstawie proporcjonalności tematu względem wszystkich wyszukiwań wszystkich tematów.
+\item Jeśli w różnych regionach zainteresowanie wyszukiwaniem wybranego hasła jest takie samo, nie oznacza to jeszcze, że łączna liczba wyszukiwań jest w nich również taka sama.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Google Trends -- jakość danych}
+    \begin{itemize}
+    \justifying
+        \item Dane w Trendach Google odzwierciedlają codzienne wyszukiwania w Google. 
+        \item Mogą też pokazywać nieprawidłową aktywność związaną z wyszukiwaniem, np. wyszukiwanie zautomatyzowane lub zapytania potencjalnie związane z próbami spamowania wyników wyszukiwania.
+        \item Trendy Google odfiltrowują niektóre typy wyszukiwań, między innymi:
+        \begin{itemize}
+            \item Wyszukiwania przeprowadzone przez niewielu użytkowników: Trendy pokazują tylko dane o hasłach, które są często wyszukiwane. Hasła o małej liczbie wyszukiwań są oznaczone jako „0”.
+            \item Powtarzające się wyszukiwania: Trendy pomijają identyczne zapytania wpisywane przez tego samego użytkownika w krótkich odstępach czasu.
+            \item Znaki specjalne: Trendy odfiltrowują zapytania z apostrofami i innymi znakami specjalnymi.
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+% \begin{frame}{Google Trends}
+%     \begin{center}
+%         \Large Do czego można wykorzystać Google Trends? 
+        
+%         \vspace{1cm}
+        
+%         Proszę wejść na \url{www.menti.com}, 
+%         wpisać kod \textbf{6249 9469} oraz 
+%         podać maksymalnie 3 propozycje.
+        
+%     \end{center}
+% \end{frame}
+
+\begin{frame}{Google Trends -- przykłady}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-7-trends/gtrends-paper.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Google Trends -- przykłady}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-7-trends/gtrends-flu.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Google Trends -- przykłady}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{fig-7-trends/gtrends-flu-2.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Google Trends -- przykłady}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-7-trends/gtrends-paper2.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Google Trends -- przykłady}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-7-trends/gtrends-paper3.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Google Trends -- nauka}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-7-trends/gtrends-scopus.png}
+        \caption{Liczba artykułów naukowych indeksowanych w bazie Scopus zawierająca wyrażenie "Google Trends"}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Google Trends -- nauka}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-7-trends/gtrends-scopus-2.png}
+        \caption{Liczba artykułów naukowych indeksowanych w bazie Scopus zawierająca wyrażenie "Google Trends" według dziedziny}
+    \end{figure}
+\end{frame}
+
+
+\begin{frame}{Google Trends -- COVID19}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{fig-7-trends/gtrends-covid.png}
+        \caption{Zestawienie przygotowane przez zespół PKO PB Research}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Google Trends -- podsumowanie}
+Ogólnie możemy podsumować korzystanie z Google Trends następujaco:
+
+\begin{itemize}
+    \item wykorzystanie indeksu Google Trends jako zmiennej w modelach prognostycznych (prognozowanie krótkookresowe, nowcasting),
+    \item wykorzystanie indeksu Google Trends w modelach przekrojowych / panelowych dodatkowe zmienne wyjaśniające dane zjawisko.
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Google Trends -- jak korzystać?}
+Mamy dwie możliwości korzystania z Google Trends:
+\begin{itemize}
+\item oficjalna strona Google Trends: \url{https://trends.google.com/trends/?geo=PL}
+\item pakiety w językach programowania: \texttt{gtrendsR} (w R), \texttt{pytrends} (w Python).
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Google Trends -- przykład}
+    \begin{center}
+        Przejdźmy do przykładu.
+    \end{center}
+\end{frame}
+
+
+
+
+\section{Web scraping}
+
+\begin{frame}{Czym jest web scraping?}
+\begin{itemize}
+    \item Jest to metoda wykorzystywanych do automatycznego pobierania i ekstrakcji zawartości stron stron internetowych (niezależnie od stosowanej technologii).
+    \item W tym kontekście należy rozróżnić: \textit{web crawling}, który polega na indeksowaniu stron/portali internetowych, a \textit{web scraping}, który polega na ekstrakcji informacji z tych stron.
+    \item Głównym elementem tej metody jest odpowiedni algorytm (tzw. \textit{scraper}), który w małym (np. dopasowany do jednego portalu) lub dużym (np. rozpoznaje zwartość) stopniu działa automatycznie.
+    \item Tożsame pojęcia: \textit{Web scraping}, \textit{web harvesting}, czy \textit{web data extraction}
+    \item Podstawowe technologie: WWW, html, przeglądarka internetowa.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Czym jest web scraping? -- idea}
+\begin{center}
+    \includegraphics[width=0.7\textwidth]{fig-5-web/otodom.png}
+\end{center}
+\end{frame}
+
+\begin{frame}{Web scraping w ekonomii -- przykłady}
+    Wybrane publikacje:
+    \begin{itemize}
+    \small
+        \item Edelman, B. (2012). Using internet data for economic research. Journal of Economic Perspectives, 26(2), 189-206.
+        \item Cavallo, A. (2013). Online and official price indexes: Measuring Argentina's inflation. Journal of Monetary Economics, 60(2), 152-165.
+        \item Cavallo, A., \& Rigobon, R. (2016). The billion prices project: Using online prices for measurement and research. Journal of Economic Perspectives, 30(2), 151-78.
+        \item Hoekstra, R., ten Bosch, O., \& Harteveld, F. (2012). Automated data collection from web sources for official statistics: First experiences. Statistical Journal of the IAOS, 28(3, 4), 99-111.
+        \item Beręsewicz, M., Białkowska, G., Marcinkowski, K., Maślak, M., Opiela, P., Pater, R., \& Zadroga, K. (2021). Enhancing the Demand for Labour survey by including skills from online job advertisements using model-assisted calibration. Survey Reseach Methods (forthcoming)
+        \item Hołda, M. (2019). Newspaper-based economic uncertainty indices for Poland. Narodowy Bank Polski.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Web scraping w ekonomii -- przykłady}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{fig-5-web/bpp-argentina.png}
+    \caption{Źródło: Cavallo, A. (2013)}
+    \label{fig:my_label}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Web scraping w ekonomii -- przykłady}
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{fig-5-web/cedefop.png}
+    \caption{Źródło: Cedefop}
+    \label{fig:my_label}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Web scraping w ekonomii -- przykłady}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{fig-5-web/ons-jobs.png}
+    \caption{Źródło: UK ONS -- Coronavirus and the latest indicators for the UK economy and society: 22 April 2021}
+    \label{fig:my_label}
+\end{figure}
+\end{frame}
+
+
+\begin{frame}{Web scraping w ekonomii -- przykłady}
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{fig-5-web/oferty.png}
+    \caption{Źródło: Opracowanie własne na podstawie pracuj.pl}
+    \label{fig:my_label}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Web scraping w ekonomii -- przykłady}
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{fig-5-web/beresewicz-tab.png}
+    \caption{Źródło: Beręsewicz et al. (2021)}
+    \label{fig:my_label}
+\end{figure}
+\end{frame}
+
+
+\begin{frame}{Web scraping w ekonomii -- podsumowanie}
+    Ogromna liczba zastosowań:
+    \begin{itemize}
+        \item mierniki ekonomii w czasie rzeczywistym (np. oferty pracy, nieruchomości, nastroje społeczne),
+        \item weryfikacja różnych ekonomicznych konceptów (np. lepkość cen),
+        \item now-casting / prognozowanie,
+        \item rozszerzenie istniejących źródeł danych o informacje zawarte na portalach internetowych (np. popyt na pracę, RCiWN),
+        \item zastąpienie wywiadów automatycznym pobieraniem informacji ze stron internetowych (np. pytanie o posiadanie social media, sklepu internetowego),
+        \item aktualizacja operatów losowania (np. weryfikacja czy firma działa),
+        \item wiele innych.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Web scraping -- wybrane technologie}
+Słowo wstępu:
+\begin{itemize}
+    \item strony statyczne (HTML) vs dynamiczne (JavaScript),
+    \item web scraping, a dostęp przez Application Programming Interface (API).
+\end{itemize}
+
+Przydatne biblioteki:
+    \begin{itemize}
+        \item Python -- \texttt{beautifulsoup}, \texttt{scrapy},
+        \item R -- \texttt{rvest},
+        \item Ogólne -- \texttt{PhantomJS}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Web scraping -- przykład}
+    \begin{center}
+        Przejdźmy do przykładu w R.
+    \end{center}
+\end{frame}
+
+\section{Reprezentatywność}
+
+\subsubsection{Reprezentatywność -- definicje, pomiar, problematyka}
+
+
+% % \begin{frame}{Quiz -- 3 minuty}
+
+% % \begin{center}
+% % \large
+
+% %     Której wersji bardziej Państwo zaufacie?
+    
+% %     \vspace{0.5cm}
+    
+% %     \begin{enumerate}
+% %         \item 1\% próbie losowej z 60\% realizacją (odsetkiem odpowiedzi), czy 
+% %         \item rejestrowi administracyjnemu tworzonemu przez dobrowolne deklaracje (\textit{a self-reported administrative dataset.}) pokrywającym 80\% populacji?
+% %     \end{enumerate}
+
+% %     \vspace{0.5cm}
+    
+% %     \fbox{Quiz: \url{www.menti.com}, kod: 1659 4896}
+% % \end{center}
+
+% % \end{frame}
+
+
+\begin{frame}{Zadanie -- 5 minut}
+
+\begin{center}
+\large
+
+    Której wersji bardziej Państwo zaufacie? Dlaczego?
+    
+    \vspace{0.5cm}
+    
+    \begin{enumerate}
+        \item 1\% próbie losowej z 60\% realizacją (odsetkiem odpowiedzi), czy 
+        \item rejestrowi administracyjnemu tworzonemu przez dobrowolne deklaracje (\textit{a self-reported administrative dataset}) pokrywającym 80\% populacji?
+    \end{enumerate}
+\end{center}
+\end{frame}
+
+\begin{frame}{Zadanie -- 5 minut}
+\begin{center}
+\large
+    Co oznacza reprezentatywność? Jak to Państwo rozumiecie? 
+\end{center}
+\end{frame}
+
+
+\begin{frame}{Mocne prawo wielkich liczb}
+
+Dla ciągów (całkowalnych) zmiennych losowych wprowadza się definicję spełniania przez nich tzw. mocnego (i słabego) prawa wielkich liczb.
+
+Ciąg zmiennych niezależnych zmiennych losowych $\left(X_{n}\right)_{n=1}^{\infty}$ spełnia mocne prawo wielkich liczb (MPWL), gdy
+
+\begin{equation}
+\frac{1}{n} \sum_{k=1}^{n}\left(X_{k}-\mathrm{E} (X_{k})\right) \stackrel{p . n .}{\longrightarrow} 0
+\end{equation}
+
+p.n. (Prawie na pewno): określenie zdarzenia zachodzącego z pra\-wdo\-po\-do\-bień\-stwem 1. Sformułowanie to pojawia się w naturalny sposób np. przy badaniu zagadnień granicznych.
+\end{frame}
+
+\begin{frame}{Estymator -- własności}
+
+Niech $\hat{\theta}=T(X_1,X_2,...,X_n)$ będzie estymatorem parametru $\theta$, to
+
+    \begin{itemize}
+        \item estymator jest nieobciążony gdy
+        \begin{equation}
+            E(\hat{\theta}) = \theta,
+        \end{equation}
+        \item obciążenie estymatora oznaczamy przez
+        \begin{equation}
+            B(\hat{\theta}) = E(\hat{\theta}) - \theta,
+        \end{equation}
+        \item wariancję estymatora natomiast
+        \begin{equation}
+            D^2(\hat{\theta}) = E(\hat{\theta} - E(\hat{\theta}))^2,
+        \end{equation}
+        \item estymator jest zgodny, gdy zachodzi
+        \begin{equation}
+        \lim_{n \rightarrow \infty} P \left( |\hat{\theta}_n - \theta| \leq \epsilon \right) = 1.
+        \end{equation}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Mała, a duża próba -- The 1936 Literary Digest Poll}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-2-definicje/digest.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Mała, a duża próba -- The 1936 Literary Digest Poll}
+    \begin{itemize}
+        \item The Literary Digest był bardzo wpływowym, amerykańskim tygodnikiem.
+        \item Od 1916 roku poprawnie przewidywał wyniki wyborów w USA, a w \textbf{1936 roku odbywały się ważne wybory między Rooseveltem, a Landonem}.
+        \item Tygodnik wysłał ponad \textbf{10 mln} karty do głosowania, a ponad \textbf{2.4 mln} kart zostało odesłanych.
+            \begin{itemize}
+                \item \textit{The mailing list was “drawn from every telephone book in the United States, from the rosters of clubs and associations, from city directories, lists of registered voters, classified mail-order and occupational data” (Lohr and Brick (2017))}
+            \end{itemize}
+        \item Według tego badania wybory miał wygrać \textbf{Landon z 55\%} poparciem, a \textbf{Roosevelt} miał otrzymać\textbf{ 41\%}. 
+         \item W tym samym czasie Instytut Gallup'a wykorzystując próbę wielkości 50 tys. prognozował \textbf{56\% dla Roosevelta}.
+        \item Faktyczne wyniki były znacząco inne: \textbf{Roosevelt 61\%, Landon 37\%}.
+        \item W 1938 roku Magazyn został zamknięty.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{The 1936 Literary Digest Poll -- przyczyny}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-2-definicje/digest-why.png}
+        \caption{Źródło: Squire, P. (1988). Why the 1936 Literary Digest poll failed. Public Opinion Quarterly, 52(1), 125-133.}
+        \label{fig:my_label}
+    \end{figure}
+\end{frame}
+
+
+\begin{frame}{Przykłady}
+
+Reprezentatywność w opisie badań, na przykład:
+
+\begin{itemize}
+    \justifying
+    \item \textbf{Badanie EU-SILC} jest dobrowolnym, `reprezentacyjnym` badaniem ankietowym prywatnych gospodarstw domowych, realizowanym techniką bezpośredniego wywiadu z respondentem.
+    \item \textbf{Badanie Aktywności Ekonomicznej Ludności} przeprowadzane jest `metodą reprezentacyjną`, a wyniki badania uogólniane są na populację generalną. Z uwagi na reprezentacyjną metodę badania zalecana jest ostrożność w posługiwaniu się danymi w tych przypadkach, gdy zastosowano bardziej szczegółowe podziały i występują liczby niskiego rzędu (mniejsze niż 15 tys.). 
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}{Reprezentatywność -- definicja}
+Za słownikiem PWN (źródło: \url{http://sjp.pwn.pl/sjp/reprezentatywny;2515040.html})
+
+\begin{itemize}
+    \item \textbf{reprezentatywny} «mający cechy charakterystyczne dla jakiejś zbiorowości» (reprezentatywnie, reprezentatywność)
+\end{itemize}
+
+
+\end{frame}
+
+\begin{frame}{Reprezentatywność -- Próba reprezentatywna}
+
+\textbf{Próba reprezentatywna}
+
+\begin{itemize}
+    \item Próba, której struktura ze względu na badane cechy (zmienne) jest zbliżona do struktury populacji statystycznej, z której pochodzi. 
+    \item Reprezentatywność próby (próba reprezentatywna) można uzyskać stosując zarówno losowe (probabilistyczne) jak i nielosowe (nieprobabilistyczne) techniki wyboru próby. 
+    \item Należy jednak zaznaczyć, iż większą szansę na reprezentatywność próby daje zastosowanie technik losowego jej wyboru.
+\end{itemize}
+
+\vspace{0.5cm}
+
+Źródło: \url{https://stat.gov.pl/metainformacje/slownik-pojec/pojecia-stosowane-w-statystyce-publicznej/2771,pojecie.html}.
+\end{frame}
+
+\begin{frame}{Reprezentatywność -- losowy dobór (za GUS)}
+ 
+\textbf{Losowy wybór próby}
+
+Technika pobierania próby z badanej populacji generalnej, która spełnia dwa następujące warunki: 
+\begin{enumerate}
+    \item każda jednostka populacji ma dodatnie i znane prawdopodobieństwo dostania się do próby; 
+    \item dla każdego zespołu jednostek populacji można ustalić prawdopodobieństwo tego, że w całości znajdzie się on w próbie. 
+\end{enumerate}
+
+\vspace{0.5cm}
+
+\textbf{Próba losowa}
+
+Próba pobrana za pomocą odpowiednich technik probabilistycznych (losowy wybór próby).
+
+\vspace{0.5cm}
+
+Źródło: \url{https://stat.gov.pl/metainformacje/slownik-pojec/pojecia-stosowane-w-statystyce-publicznej/2748,pojecie.html}.
+
+\end{frame}
+
+
+\begin{frame}{Reprezentatywność -- nielosowy dobór (za GUS)}
+
+\textbf{Nielosowy wybór próby}
+
+Technika wyboru próby, która nie spełnia choć jednego z dwóch warunków określonych w definicji losowego wyboru próby. 
+
+Najpopularniejszymi technikami nielosowego wyboru próby są: wybór przypadkowy, wybór dogodny, wybór celowy i wybór kwotowy.
+
+\vspace{0.5cm}
+
+Źródło: \url{https://stat.gov.pl/metainformacje/slownik-pojec/pojecia-stosowane-w-statystyce-publicznej/2761,pojecie.html}.
+\end{frame}
+
+\begin{frame}{Definicja reprezentatywności}
+    Kruskal i Mosteller (1979a, 1979b, 1979c), na podstawie ówczesnej przeglądu literatury, podali następujące definicje reprezentatywności:
+
+\begin{itemize}
+\justifying
+\item ogólne, nieuzasadnione twierdzenie o danych  (ang. \textit{general, unjustified acclaim for the data})
+\item losowy doboru do próby (ang. \textit{absence of selective forces})
+\item miniatura populacji (ang. \textit{mirror or miniature of the population})
+\item typowa jednostka (ang. \textit{typical or ideal case(s)})
+\item pokrycie populacji (ang. \textit{coverage of the population})
+\item termin bez uzasadnienia (ang. \textit{a~vague term to be made precise})
+\item określona metoda doboru próby (ang. \textit{representative sampling as a~specific sampling method})
+\item pozwala na nieobciążoną estymację (ang. \textit{representative sampling as permitting good estimation})
+\item dobór próby odpowiedni do danego problemu (ang. \textit{representative sampling as good enough for a~particular purpose})
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Reprezentatywność -- źródła danych }
+    \begin{enumerate}
+        \item \textbf{Źródła statystyczne} -- źródła informacji statystycznej zaprojektowane przez statystyków i na potrzeby statystyki (np badania częściowe, spisy powszechne, rejestry statystyczne, sprawozdawczość przedsiębiorstw)
+        \item \textbf{Źródła niestatystyczne} -- wszystkie pozostałe źródła danych, których celem nie jest dostarczanie informacji statystycznej o całej populacji (np. rejestry administracyjne, big data)
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}{Reprezentatywność -- źródła danych wg Citro (2014)}
+
+% Constance Ann Forbes Citro (born June 9, 1942 in St. Louis, Missouri)[1] is an American political scientist and statistician. She is the former director of the Committee on National Statistics of the National Research Council, and works as a senior scholar for the Committee on National Statistics.[2]
+
+\begin{columns}
+
+\begin{column}{0.5\textwidth}
+\includegraphics[width=\textwidth]{fig-2-definicje/citro1.png}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\begin{itemize}
+    \small
+    \item \textbf{Constance Citro (ur. 1942)} -- amerykańska statystyczka i politolożka, m.in. była dyrektor \textit{the Committee on National Statistics of the National Research Council}.
+\end{itemize}
+\includegraphics[width=\textwidth]{fig-2-definicje/citro2.png}
+\end{column}
+
+\end{columns}
+
+\end{frame}
+
+
+
+
+\begin{frame}{Przykłady -- Selectivv}
+    
+    \begin{itemize}
+
+    \item Firma posiada obecnie największy w Europie Środkowo-Wschodniej zbiór informacji o właścicielach smartfonów i tabletów, \textbf{który obejmuje łącznie 82 mln osób, z czego 14 mln w Polsce}. \\
+    
+    
+    \item Jesteśmy połączeni z sieciami reklamowymi, co daje nam dostęp do \textbf{200 tys. aplikacji i 15 milionów stron internetowych}. \\
+    
+    \item Średnio o jednym użytkowniku Selectivv \textbf{pozyskuje 362 informacje}, m.in. dane demograficzne, zainteresowania, jego styl życia oraz lokalizacje, w jakich przebywa. Wykorzystanie big data pozwoliło na wyróżnienie ponad 60 profili behawioralnych konsumentów, kategoryzując ich na m.in.: osoby planujące powiększenie rodziny, bywalców galerii handlowych, użytkowników bankowości mobilnej czy aplikacji muzycznych.
+            
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Przykłady -- banki}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{fig-2-definicje/banki.png}
+    \caption{Liczba indywidualnych klientów banków w Polsce w III kw. 2020}
+\end{figure}
+Źródło: \url{https://prnews.pl/raport-prnews-pl-liczba-klientow-w-bankach-iii-kw-2020-455068}    
+\end{frame}
+
+\begin{frame}{Przykład -- CBOP}
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{fig-2-definicje/cbop.png}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Przykład -- OtoDom}
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{fig-2-definicje/otodom.png}
+
+\end{figure}
+\end{frame}
+
+\begin{frame}{Przykład -- Kałużny, Beręsewicz i Filipowska (2018)}
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{fig-2-definicje/cdr.png}
+\end{figure}
+\end{frame}
+
+\begin{frame}{}
+    \begin{center}
+        \large
+        
+        Przejdźmy do precyzyjnych definicji reprezentatywności
+        
+    \end{center}
+\end{frame}
+
+
+\begin{frame}{Podstawowe oznaczenia}
+
+\begin{itemize}
+    \item $I_i = \{0, 1\}$ -- zmienna indykatorowa; określa czy dana jednostka $i$ była obserwowana w określonym zbiorze (np. ma dostęp do Internetu; ang. \textit{inclusion}).
+    \item $R_i = \{0, 1\}$ -- zmienna indykatorowa; określa czy dana jednostka $i$ udzieliła odpowiedzi lub pseudo-odpowiedzi (np. umieściła wpis w Internecie; ang \textit{response}).
+    \item $Y$ -- zmienna celu; cecha, którą badamy (np. poparcie dla danej partii)
+    \item $y_i$ -- wartość, którą obserwujemy dla zmiennej celu (np. wskazanie nazwy partii),
+    \item $\bX$ -- zmienne pomocnicze; cechy, które uważamy, że są związane z $Y$; $\bx_i$ -- wartości cech $\bX$, które obserwujemy w~zbiorze danych.
+    \item $P(I_i=1)$ -- prawdopodobieństwo pokrycia.
+    \item $P(R_i=1 | I_i=1) = \pi_i$ -- warunkowe prawdopodobieństwo pseudo-odpowiedzi (ang. \textit{propensity score}).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Silna i słaba reprezentatywność}
+    Schouten i in. (2009) zaproponował dwie definicje reprezentatywności w odniesieniu do odpowiedzi (ang. \textit{survey response}), które można ująć w kontekście losowego doboru do próby (braku autoselekcji), mianowicie:
+
+\begin{itemize}
+    \item Silna reprezentatywność
+    \begin{equation}
+  	\forall_i \; E(R_i) = \pi_i = P( R_i  = 1  \mid  I_i = 1) = \pi
+	\label{def-strong} 
+	\end{equation}
+	\item Słaba reprezentatywność
+	\begin{equation}
+	    \bar{\pi}_h  = \frac{1}{N_h}\sum_{i=1}^{N_h} \pi_{ih} = \pi, \mbox{for $h=1,2,...,H$}
+    \label{def-weak}
+	\end{equation}
+\end{itemize}
+
+\small{Źródło: Schouten, B., Cobben, F., \& Bethlehem, J. (2009). Indicators for the representativeness of survey response. \textit{Survey Methodology}, 35(1), 101-113}
+
+\end{frame}
+
+\begin{frame}{Miniatura populacji}
+    \begin{itemize}
+        \item Próba jest reprezentatywna w odniesieniu do zmiennych pomocniczych ($\bx$) jeżeli rozkład cechy $\bX$ w próbie jest równy rozkładowi tej cechy w populacji przy założeniu losowego doboru próby
+        
+        \begin{equation}
+            f_s(\bx_i, I_{i} = 1) = f_{\Omega}(\bx),    \label{definition-betlehem}
+        \end{equation}
+        
+    \item Próba jest reprezentatywna w odniesieniu do zmiennych pomocniczych ($\bx$) jeżeli rozkład warunkowy cechy $\bX$ względem $\bw$ jest równy znanym wartościom globalnym (rozkładowi brzegowemu) tych cech w populacji generalnej.
+
+    \begin{equation}
+        f_s(\bx_i | w_i, I_{i} = 1) = f_{\Omega}(\bx),
+    \label{definition-betlehem2}
+    \end{equation}
+    gdzie $w_i$ oznacza pewną wagę przypisaną danej jednostce $i$, którą może być zarówno odwrotność prawdopodobieństwa dostania się do próby $w_i = d_i = 1 / \pi_i$ czy wagi post-stratyfikowane czy kalibrowane.
+
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Reprezentatywny model -- Pfeffermann (2011), Beręsewicz (2017)} 
+    Na podstawie Pfeffermann(2011) można wskazać pojęcie reprezentatywnego modelu, które może być zdefiniowane następująco:
+
+Model jest reprezentatywny, wtedy i tylko wtedy gdy rozkład warunkowy cechy $y$ pod warunkiem $\bx$ jest taki sam w próbie i populacji. To znaczy, $f_{s}(y_i | \bx_i) =  f_{\Omega}(y_i | \bx_i)$ tylko gdy
+
+\begin{equation}
+    Pr(R_i = 1 \mid \bx_i, y_i, I_i = 1)  = Pr(R_i = 1 \mid  \bx_i, I_i = 1).
+\label{pfeffermann-equality}
+\end{equation}
+
+Pojęcie reprezentatywnego modelu możemy zapisać następująco:
+
+\begin{equation}
+    f_{s}(y_i | \bx_i) ={}  
+f(y_i | \bx_i, I_i = 1, R_i=1) =  
+\frac{Pr(R_i=1 \mid \bx_i, y_{i}, I_i=1)f_{\Omega}(y_i | \bx_i)}{Pr(R_i = 1 | \bx_i, I_i = 1)},
+\label{def-pfefferman-modelling}
+\end{equation}
+
+gdzie $f_{s}(y_i | \bx_i)$ jest rozkładem warunkowym w próbie, $f_{\Omega}(y_i | \bx_i)$ jest rozkładem warunkowym w populacji, a pozostałe elementy zdefiniowane są jak poprzednio.
+\end{frame}
+
+\begin{frame}{Betlehem (1988, 2002, 2010)}
+    Betlehem (1988, 2002, 2010) pokazał, że obciążenie estymatora średniej z próby zdefiniowanej jako
+    
+\begin{equation}
+\bar{y}_{S}=\frac{1}{n_{S}} \sum_{i=1}^{N} R_{i} Y_{i},
+\end{equation}
+
+której wartość oczekiwana w przypadku próby internetowej dana jest
+
+\begin{equation}
+E\left(\bar{y}_{S}\right) \approx \bar{Y}_{I}^{*}=\frac{1}{N_{I} \bar{\pi}} \sum_{i=1}^{N} \pi_{k} I_{i} Y_{i},
+\end{equation}
+
+    może zostać zapisane jako
+    
+    \begin{equation}
+        \boxed{B(\bar{y}_S) = \frac{Corr(\pi, Y) \sigma_\pi \sigma_Y}{\bar{\pi}},}
+    \end{equation}
+    
+    gdzie $Corr(\pi, Y)$ to korelacja między $\pi$, a $Y$, $\sigma$ to odchylenie standardowe, a $\bar{\pi}$ to średnia arytmetyczna.
+\end{frame}
+
+
+\begin{frame}{Data Defect Index -- Xiao-Li MENG (2018)}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-2-definicje/meng.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Data Defect Index -- Xiao-Li MENG (2018)}
+ 
+\begin{equation}
+\boxed{\overline{G}_{n}-\overline{G}_{N}=\underbrace{\rho_{R, G}}_{\text {Jakość danych}} \times \underbrace{\sqrt{\frac{1-f}{f}}}_{\text {Ilość danych}} \times \underbrace{\sigma_{G}}_{\text {Złożoność problemu}},}
+\end{equation}
+
+gdzie: 
+\begin{itemize}
+    \item $G_j = G(X_j)$ -- ogólna funkcja po zmiennych $X$, na przykład średnia arytmetyczna,
+    \item $\overline{G}_{n}$ -- średnia z próby o liczebności $n$ ,
+    \item $\overline{G}_{N}$ -- średnia w populacji o liczebności $N$,
+    \item $\rho_{R, G} = Corr(R, G)$ -- korelacja między zmienną indykatorową $R$ a wartościami $G$ (\textbf{data defect correlation}),
+    \item $\sqrt{(1-f)/f}$ -- $f$ oznacza odsetek w próbie tj. $f=n/N$,
+    \item $\sigma_{G}$ -- odchylenie standardowe dla wartości funkcji $G$
+\end{itemize}
+Dowód: w artykule prof. Xiao-Li Menga.
+\end{frame}
+
+\begin{frame}{Prawo wielkich populacji (Meng, 2018)}
+    W przypadku \textit{Big data} i występowaniu autoselekcji mierzonej $\rho_{R,G}$ następuje zmiana paradygmatu w ocenie błędów estymacji, tj.
+    
+    \vspace{0.5cm}
+    
+    przechodzimy z \textit{prawa wielkich liczb} i \textit{centralnego twierdzenia granicznego} według, którego
+    
+    
+    \begin{equation}
+        \boxed{\text{error} \propto \frac{\sigma}{\sqrt{n}},}
+    \end{equation}
+    
+    \vspace{0.5cm}
+    
+    do relatywnego systematycznego błędu (\textit{prawa wielkich populacji}) według, którego
+    
+     \begin{equation}
+        \boxed{\text{error} \propto \rho_{R,G} \cdot \sigma_G \cdot \sqrt{N}.}
+    \end{equation}
+\end{frame}
+
+\begin{frame}{Przykład empiryczny -- Bradley i in. (2021, Nature)}
+    \begin{itemize}
+        \justifying
+        \item Bradley i in. (2021) pokazali, że duże ankiety znacząco przeszacowały zaszczepienie COVID-19 w~USA:
+        \begin{itemize}
+            \item Delphi-Facebook ($\approx$250 tys. odpowiedzi/tydzień) -- przeszacowanie o~\textbf{17 p.p.}
+            \item Census Household Pulse ($\approx$75 tys. co 2 tygodnie) -- przeszacowanie o~\textbf{14 p.p.}
+            \item Axios-Ipsos ($\approx$1 tys./tydzień, dobrana próba panelowa) -- \textbf{trafne szacunki}
+        \end{itemize}
+        \item Jest to empiryczna ilustracja paradoksu Menga: zwiększenie wielkości próby zmniejsza przedział ufności, ale \textbf{powiększa efekt obciążenia} wynikającego z~autoselekcji.
+    \end{itemize}
+
+\small{Źródło: Bradley, V.C. i in. (2021). Unrepresentative big surveys significantly overestimated US vaccine uptake. \textit{Nature}, 600, 695--700.}
+\end{frame}
+
+\begin{frame}{Wybory w USA -- Clinton vs Trump}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-2-definicje/meng-trump.png}
+        \caption{Obliczone na podstawie próby n = 2,315,570 gdzie a N $\approx$ 136,700,730. Meng oszacował, że $\hat{\rho}=-0.005$. Źródło: Meng (2018)}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{DDI -- jak bardzo mylimy się w przypadku dużych prób?}
+
+Celem przykładu będzie oszacowanie odsetka. Niech $G_n()$ będzie odsetkiem 1 dla zmiennej $Y = \{0, 1\}$, stosując standardowy test proporcji (przy założeniu rozkładu normalności) $Z_n$ będzie dany wzorem (za Mengiem)
+
+\begin{equation}
+    Z_n = \frac{\hat{p}-p}{\sqrt{\hat{p}(1-\hat{p})/n}} = 
+    \frac{\sqrt{n}\sqrt{D_O}\rho_{R,G}}{
+    \sqrt{1 - D_O\rho_{R,G}^2 - \sqrt{D_O}\rho_{R,G}
+    \left( \sqrt{\frac{p}{1-p}} - \sqrt{\frac{1-p}{p}}\right)}
+    },
+\end{equation}
+
+gdzie $D_O = (1-f)/f$. Załóżmy dla uproszczenia, że $p=0.5$ wtedy $Z_n$ redukuje się do
+
+\begin{equation}
+    Z_n = \sqrt{n}\sqrt{\frac{D_O\rho^2_{R,G}}{1-D_O\rho^2_{R,G}}}.
+    \label{eq-meng-z}
+\end{equation}
+
+Dzięki \eqref{eq-meng-z} możemy porównać co by było w pytaniu: co wolimy 1\% próbę z 60\% realizacją czy 80\% próbę w postaci rejestru będącego wynikiem samo-rejestracji.
+\end{frame}
+
+
+\begin{frame}{DDI -- jak bardzo mylimy się w przypadku dużych prób?}
+
+Załóżmy, że interesuje nas wnioskowanie o populacji Polski $N$=38 000 000.
+
+\begin{table}
+    \centering
+    \caption{Porównanie $Z_n$ dla próby 80\% i 1\%}
+    \label{tab:my_label}
+    \begin{tabular}{ccc}
+    \hline
+    Parametr    &  80\% rejestr & 1\% próba\\
+    \hline
+    n     & 30,4 mln & 380 tys. \\
+    $\rho_{R,G}$    & 0,005 & 0,001 \\
+    $Z_n$ & 13.78 & 6.13 \\
+    \hline
+    \end{tabular}
+\end{table}
+
+Liczba 13 i 6 oznacza, że mylimy się o odpowiednio 13 i 6 odchyleń standardowych. \textbf{Oznacza to, mając próbę 30 mln mylimy się bardziej niż mając losową próbę.}
+
+\vspace{0.5cm}
+
+\textit{Uwaga}: przyjęliśmy tutaj, zgodnie z różnymi badaniami empirycznymi, że $\rho_{R,G}$ jest zwykle większe dla prób nielosowych (przykładowo Meng (2018) szacował  $\hat{\rho}_{R,G}=-0.005$ dla poparcia dla Trumpa).
+
+\end{frame}
+
+
+\begin{frame}{Zależność między X, Y, a R}
+    \begin{figure}
+        \centering  
+        \includegraphics[width=\textwidth]{figs/zhang-relation.png}
+        \caption{Zależność między cechami $\bX$, $Y$ oraz $R$. }
+    \end{figure}
+    
+Gdzie: $\bX$ -- zmienne pomocnicze, $Y$ zmienna celu oraz $R = \{0,1\}$.
+
+\vspace{0.5cm}
+
+\small{Źródło: Zhang, L. C., Thomsen, I. B., \& Kleven, Ø. (2013). On the Use of Auxiliary and Paradata for Dealing With Non‐sampling Errors in Household Surveys. International Statistical Review, 81(2), 270-288.}
+
+\end{frame}
+
+\begin{frame}{Jaki jest z tego wniosek?}
+    \begin{itemize}
+        \item Redukcja obciążenia występuje tylko wtedy kiedy $\bX$ i $Y$ są ze sobą silnie skorelowane ($|Corr(Y,\bX)| > 0$)
+        \item Redukcja obciążenia występuje tylko wtedy kiedy $\bX$ i $R$ są ze sobą silnie skorelowane  ($|Corr(R,\bX)| > 0$)
+        \item Korelacja miedzy $Y$ i $R$ jest bliska zeru gdy  ($|Corr(Y,R| \bX)| \approx 0$)
+        \item Konieczne jest posiadanie informacji o $X$, a najlepiej gdybyśmy dysponowali zmienną $X_k$, która jest tzw. \textit{proxy variable} -- zbliżona ale nie ta sama definicja  (np. cena ofertowa vs cena transakcyjna).
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Inne miary reprezentatywności}
+
+\begin{itemize}
+    \justifying
+    \item \textbf{R-indicator} (Schouten, Cobben, Bethlehem, 2009) -- mierzy zmienność prawdopodobieństw odpowiedzi $\pi_i$:
+    \begin{equation}
+        R = 1 - 2 S(\hat{\pi}_i),
+    \end{equation}
+    gdzie $S(\hat{\pi}_i)$ to odchylenie standardowe oszacowanych prawdopodobieństw odpowiedzi. $R = 1$ oznacza pełną reprezentatywność (stałe $\pi_i$), a $R$ bliskie 0 oznacza silną niereprezentatywność.
+
+    \item \textbf{Metryki odległości} (Shlomo i Kim, 2025) -- porównanie rozkładów zmiennych pomocniczych w próbie i populacji z wykorzystaniem miar odległości (np. Hellinger, $\chi^2$).
+
+    \item \textbf{Standaryzowane różnice średnich} (SMD) -- miara stosowana w kontekście propensity score weighting, pozwalająca ocenić balans zmiennych pomocniczych.
+\end{itemize}
+
+\vspace{0.3cm}
+\small{Źródła: Schouten i in. (2009). \textit{Survey Methodology}, 35(1); Shlomo, N. i Kim, M.S. (2025). \textit{Survey Methodology}, 51(2).}
+\end{frame}
+
+\begin{frame}[fragile]{Data Defect Index -- przykład w R}
+
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\small
+\begin{verbatim}
+library(ddi)
+data(g2016)
+
+# ddc dla calego USA
+ddc(
+  mu    = 62984824/136639786,
+  muhat = 12284/35829,
+  N     = 136639786,
+  n     = 35829
+)
+# [1] -0.003837163
+
+# ddi = rho^2
+(-0.003837)^2
+# [1] 1.47e-05
+\end{verbatim}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\small
+\begin{itemize}
+    \item $\hat{\rho} \approx -0.004$ -- wyborcy Trumpa niedoreprezentowani w~CCES
+    \item Mimo małej korelacji, przy $N \approx 137$ mln, błąd kumuluje się
+    \item DDI jest \textbf{model-free}: nie wymaga estymacji propensity score, wystarczy znać $\mu$, $\hat{\mu}$, $N$, $n$
+    \item Pakiet R: \texttt{ddi} (Kuriwaki)
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Krótkie podsumowanie dotychczasowej wiedzy}
+    \begin{table}
+        \centering
+        \caption{Próby losowe, a nielosowe}
+        \begin{tabular}{lll}
+        \hline
+        \textbf{Czynnik}     &  \textbf{Próba losowa} & \textbf{Próba nielosowa}\\
+        \hline
+        Dobór     &  Schemat losowania & Auto-selekcja \\
+        Pokrycie     &  Zwykle dobre & Pewne grupy są wykluczone \\
+        Obciążenie & Zwykle mniejsze & duże, lub bardzo duże \\
+        Wariancja & Zwykle większa & Mała, lub bardzo mała \\
+        Koszt & Duży lub bardzo duży & Zwykle nieduży \\
+        \hline
+        \end{tabular}
+
+    \end{table}
+\end{frame}
+
+
+% % \section{Badania symulacyjne}
+
+
+% % \begin{frame}{Badania symulacyjne}
+ 
+% % W statystyce i ekonometrii, celem badań symulacyjnych jest zweryfikowanie
+% %     \begin{itemize}
+% %         \item poprawności implementacji konkretnych podejść (np. czy dany program poprawie oszacowuje konkretne parametry),
+% %         \item porównaniu różnych metod (np. czy faktycznie proponowana metoda działa lepiej niż inne),
+% %         \item analizę wrażliwości (np. jak bardzo odporna jest dana metoda na złamanie założeń).
+% %     \end{itemize}
+    
+% %     Na dzisiejszych zajęciach, które będą przydatne z punktu projektu, będę chciał pokazać Państwu jak można prowadzić takie badania symulacyjne na podstawie wybranych publikacji naukowych.
+% % \end{frame}
+
+% % \begin{frame}{Kim i Wang (2018)}
+% %     \includegraphics[width=0.9\textwidth]{fig-3-sims/sim-2.png}
+% % \end{frame}
+
+% % \begin{frame}{Kim i Wang (2018) -- badanie symulacyjne -- założenia}
+% %     \begin{itemize}
+% %         \item Celem badania było zweryfikowanie skuteczności metod estymacji w przypadku prób nielosowych.
+% %         \item Metody zaproponowane przez Kim'a i Wang'a (2018) zakładają istnienie dwóch prób: losowej (o liczebności 500 lub 1 000) oraz nielosowej.
+% %         \item Próba losowa została wylosowania stosując losowanie proste bez zwracania.
+% %         \item Przynależność do próby losowej wylosowano zgodnie z rozkładem Bernulliego ($\delta_i \sim Bern(p_i)$)
+% %         \item Wielkość populacji ($N$) ustalono na 1 000 000.
+% %         \item Zmienne objaśniające ($X_1$ i $X_2$) oraz błąd losowy ($\epsilon$) były wygenerowane zgodnie z następującym układem
+% %         \begin{equation}
+% %             \begin{aligned}
+% %                 X_1 & \sim N(1,1), \\
+% %                 X_2 & \sim Exp(1), \\ 
+% %                 \epsilon & \sim N(0,1).
+% %             \end{aligned}
+% %         \end{equation}
+% %     \end{itemize}    
+% % \end{frame}
+
+% % \begin{frame}{Kim i Wang (2018) -- badanie symulacyjne -- założenia}
+% % \begin{itemize}
+% %     \item Następnie wygenerowano dwie zmienne celu $Y_1$ i $Y_2$ według następujących modeli
+    
+% %     \begin{equation}
+% %         \begin{aligned}
+% %             Y_1 & = 1 + X_1 + X_2 + \epsilon, \\
+% %             Y_2 & = 0.5(X_1-0.5)^2 + X_2 + \epsilon.
+% %         \end{aligned}
+% %     \end{equation}
+% %     \item Identyfikator $\delta_i$ wylosowano z rozkładu Bernoullego zgodnie z prawdopodobieństwem $p_i$ danym dwoma wzorami:
+% %         \begin{equation}
+% %             \begin{aligned}
+% %                 \text{logit}(p_1) & = X_2 \quad, \text{czyli} \frac{\exp(X_2)}{1 + \exp(X_2)}, \\
+% %                 \text{logit}(p_2) & = -0.5 + 0.5(X_2-2)^2 \quad, \text{czyli} \frac{\exp(-0.5 + 0.5(X_2-2)^2)}{1 + \exp(-0.5 + 0.5(X_2-2)^2)}.
+% %             \end{aligned}
+% %         \end{equation}
+% % \end{itemize}
+% % \end{frame}
+
+% % \begin{frame}{}
+% %     \begin{center}
+% %         \Large
+        
+% %         Przejdźmy do R. 
+        
+% %     \end{center}
+% % \end{frame}
+% % \begin{frame}{Betlehem (2010)}
+% %     \includegraphics[width=0.9\textwidth]{fig-3-sims/sim-1.png}
+% % \end{frame}
+
+
+% % \begin{frame}{Betlehem (2010) -- badanie symulacyjne -- założenia}
+% %     \begin{itemize}
+% %         \item Celem badania było zweryfikowanie skuteczności metod estymacji w zależności od różnych scenariuszy powstawania 
+% %         \item Badanie dotyczyło poparcia dla dwóch fikcyjnych partii politycznych: the National Elderly Party (NEP) oraz the New Internet Party (NIP).
+% %         \item Założono następujące zależności między zmiennymi, które zostały odpowiednio utworzone na potrzeby tego badania.
+% %         \begin{figure}
+% %             \centering
+% %             \includegraphics[width=0.6\textwidth]{fig-3-sims/sim-1-zal.png}
+% %         \end{figure}
+% %         \item W badaniu utworzono pseudo-populację o wielkości 30 tys., z której dokonywano losowania prostego: z całej populacji i tylko z populacji internetowej (obie po 2 000 jednostek)
+% %     \end{itemize}
+% % \end{frame}
+
+% % \begin{frame}{Betlehem (2010) -- badanie symulacyjne -- generowanie (1)}
+
+% % W jaki sposób utworzono zmienne (jest to metoda nieparametryczna)
+
+% % \begin{itemize}
+% %     \item Wiek w grupach (age): młodzi (40\%), średni (35\%), starsi (25\%),
+% %     \item Pochodzenie (ethnic origin): rodzimi mieszkańcy (85\%), obcokrajowcy (15\%),
+% %     \item Posiadanie dostępu do Internetu (Tak/ Nie). założono, że zależy od pochodzenia (ethnic) i wieku (age):
+% %         \begin{table}
+% %             \centering
+% %             \begin{tabular}{llrr}
+% %             \hline
+% %              Przekroje   & Internet &  Tak & Nie\\
+% %             \hline 
+% %               Rodzimi   & Młodzi   &  90\% &  10\% \\
+% %                         &  Średni  &  70\% &  30\% \\
+% %                         &  Starsi  &  50\% & 50\% \\
+% %                 \hline
+% %               Obcokrajowcy   &  Młodzi & 20\% & 80\% \\
+% %                              &  Średni & 10\% & 90\% \\
+% %                              &  Starsi & 0\% & 100\%  \\
+% %             \hline
+% %             \end{tabular}
+% %         \end{table}
+% % \end{itemize}
+% % \end{frame}
+
+
+% % \begin{frame}{Betlehem (2010) -- badanie symulacyjne -- generowanie (2)}
+% % \begin{itemize}
+% %     \item Głosowanie na the National Elderly Party (NEP) zależy od wieku: młodzi (0\%), średni (40\%), starsi (60\%)
+% %     \item the New Internet Party (NIP) zależy od wieku i posiadania Internetu:
+% %     \begin{table}
+% %         \centering
+% %           \begin{tabular}{llrr}
+% %             \hline
+% %              Przekroje   & NIP &  Tak & Nie\\
+% %             \hline 
+% %               Internet   & Młodzi   &  80\% &  20\% \\
+% %                         &  Średni  &  40\% &  60\% \\
+% %                         &  Starsi  &  20\% & 80\% \\
+% %                 \hline
+% %               Brak internetu   &  Młodzi & 10\% & 90\% \\
+% %                              &  Średni & 10\% & 90\% \\
+% %                              &  Starsi & 10\% & 90\%  \\
+% %             \hline
+% %             \end{tabular}
+% %     \end{table}
+% % \end{itemize}    
+% % \end{frame}
+
+% % \section{Błędy w badaniach}
+
+% % \begin{frame}{Główna idea}
+% %     \begin{figure}
+% %         \centering
+% %         \includegraphics[width=0.8\textwidth]{fig-2-definicje/coverage.png}
+% %         \caption{Błąd pokrycia i braki odpowiedzi. Źródło: Särndal, C. E., \& Lundström, S. (2005). Estimation in surveys with nonresponse. John Wiley \& Sons.}
+% %     \end{figure}
+% % \end{frame}
+
+% % \begin{frame}{Główna idea -- źródła błędów w badaniach}
+% %         \begin{figure}
+% %         \centering
+% %         \includegraphics[width=0.9\textwidth]{fig-2-definicje/betlehem-errors.png}
+% %         \caption{Taksonomia błędów w badaniach. Źródło: Bethlehem, J. (2010). Selection Bias in Web Surveys. International Statistical Review, 78(2), 161–188}
+% %     \end{figure}
+% % \end{frame}
+
+
+% % \begin{frame}{Główna idea -- w praktyce trochę trudniejsze}
+% %     \begin{figure}
+% %         \centering
+% %         \includegraphics[width=0.9\textwidth]{fig-2-definicje/zhang1.png}
+% %         \caption{Dwu fazowy cykl życia zintegrowanych mikrodanych statystycznych: Faza 1. Źródło: Zhang, L. (2012). Topics of statistical theory for register-based statistics and data integration. 66(1), 41–63.}
+% %     \end{figure}
+% % \end{frame}
+
+% % \begin{frame}{Główna idea -- w praktyce trochę trudniejsze}
+% %     \begin{figure}
+% %         \centering
+% %         \includegraphics[width=0.9\textwidth]{fig-2-definicje/zhang2.png}
+% %         \caption{Dwu fazowy cykl życia zintegrowanych mikrodanych statystycznych: Faza 2. Źródło: Zhang, L. (2012). Topics of statistical theory for register-based statistics and data integration. 66(1), 41–63.}
+% %     \end{figure}
+% % \end{frame}
+
+
+% % \begin{frame}{Zadanie grupowe -- 15 minut}
+% %  W kontekście źródeł nielosowych oraz powyższej klasyfikacji błędów proszę przedyskutować w grupach następujące sposoby badania:
+ 
+% %  \begin{enumerate}
+% %      \item \textbf{Grupa 1: badanie popyt na pracę (wolne miejsca pracy)} -- cel: oszacowanie ile firm oraz wolnych miejsc pracy jest w gospodarce.
+% %      \item \textbf{Grupa 2: ceny najmu} -- cel: oszacowanie średniej ceny nieruchomości na wynajem,
+% %      \item \textbf{Grupa 3: spędzanie wolnego czasu przez studentów} -- cel: oszacowanie struktury wolnego czasu czyli co robią studenci w wolnym czasie (np. \% na czytanie książek, \% na streaming itp),
+% %      \item \textbf{Grupa 4: nastroje społeczeństwa} -- cel: określenia relacji między pozytywnymi, a negatywnymi nastrojami w społeczeństwie.
+% %  \end{enumerate}
+ 
+% % \end{frame}
+
+% % \begin{frame}{Zadanie grupowe -- 15 minut}
+% %  Dyskutując to zadania proszę wziąć pod uwagę:
+% %  \begin{enumerate}
+% %     \item jaką populację chcemy zbadać? co jest jednostką? co cechą?
+% %      \item z jakich źródeł możemy (hipotetycznie) skorzystać? kto jest ich właścicielem?
+% %      \item jakie jest pokrycie tych źródeł? czy obserwujemy tam tę samą populację, która nas interesuje?
+% %      \item na jakie inne błędy nielosowe możemy się natknąć (np. błąd pomiaru, duplikaty)? 
+% %      \item w jaki sposób moglibyśmy określić czy uzyskane szacunki są zbliżone do (nieznanych) wartości teoretycznych?
+% %  \end{enumerate}
+% %  Proszę przygotować krótką 1-2 slajdową prezentację.
+% % \end{frame}
+
+
+% % \subsubsection{Problematyka braków danych}
+
+% % \begin{frame}{}
+% %         \begin{center}
+% %         \large
+        
+% %         A teraz szerzej, problematyka braków danych.
+        
+% %     \end{center}
+% % \end{frame}
+
+% % \begin{frame}{Big data, a problematyka braków danych}
+% % \begin{itemize}
+% %     \item Problem z big data możemy przedstawić w kontekście problemu braków danych.
+% %     \item Powyższa sytuacja została przedstawiona na poniższym wykresie
+% %     \begin{figure}
+% %         \centering
+% %         \includegraphics[width=0.4\textwidth]{figs/big-data-zrodlo.png}
+% %     \end{figure}
+% % gdzie $X1,X2$ są obserwowane dla całej populacji, a $X3$ i $Y$ są obserwowane wyłącznie w źródle big data. Na czarno zaznaczono część populacji, dla której nie mamy informacji.
+% % \end{itemize}    
+% % \end{frame}
+
+% % \begin{frame}{Mechanizmy powstawania braków danych}
+% % \includegraphics[width=\textwidth]{fig-2-definicje/rubin.png}
+% % \end{frame}
+
+% % \begin{frame}{Mechanizmy powstawania braków danych}
+% % \includegraphics[width=\textwidth]{fig-2-definicje/rubin-little.png}
+% % \end{frame}
+
+% % \begin{frame}{Mechanizmy powstawania braków danych}
+% % \includegraphics[width=\textwidth]{fig-2-definicje/heckman.png}
+% % \end{frame}
+
+% % \begin{frame}{Mechanizmy powstawania braków danych -- Rubin (1976)}
+  
+% %   Rubin (1976), Little i Rubin (2019) zdefiniował następujące mechanizmy braków danych:
+% %   \begin{itemize}
+% %       \item  Braki danych są całkowicie losowe (ang. \textit{Missing Completely at Random}, MCAR) -- \textbf{braki danych można pominąć}.
+% %       \item Braki są losowe (ang. \textit{Missing at Random}, MAR)  -- \textbf{braków danych nie można pominąć, należy wykorzystać zmienne $X$ do korekcji ich wpływu} -- braki zależą od cech $X$,
+% %       \item Braki danych nie są losowe (ang. \textit{Not Missing at Random}, NMAR) -- \textbf{braków danych nie można pominąć, należy zastosować bardzo zaawansowane metody} -- braki zależą od cech $X$ i $Y$.
+% %   \end{itemize}  
+% % \end{frame}
+
+% % \begin{frame}{Mechanizmy powstawania braków danych}
+% %  \begin{figure}
+% %      \centering
+% %      \includegraphics[width=\textwidth]{figs/nmar-r.png}
+% %      \label{fig:my_label}
+% %  \end{figure} 
+% %  \end{frame}
+
+% % \begin{frame}{Mechanizmy powstawania braków danych}
+% % Dane były generowane zgodnie z następującym schematem
+
+% % \begin{itemize}
+% %     \item $X_1 \sim N(-2,1)$, $X_2 \sim N(4,1)$ -- niezależnie
+% %     \item $Y \sim X_1 + X_2 + N(0,1)$
+% % \end{itemize}
+% % Następnie braki danych zostały wygenerowane zgodnie z następującymi schematami:
+% % \begin{itemize}
+% %     \item MCAR: $P(R=1) = \text{Bernoulli}(0.80)$
+% %     \item MAR: $P(R=1) = \text{Bernoulli}( \exp(0.3*X_2)/(1 + \exp(0.3*X_2)))$ 
+% %     \item MAR: $P(R=1) = \text{Bernoulli}( \exp(0.3*Y)/(1 + \exp(0.3*Y)))$ 
+% % \end{itemize}
+% %  \end{frame}
+
+
+% % \begin{frame}{Mechanizmy powstawania braków danych -- rozkład ucięty}
+% %  \begin{figure}
+% %      \centering
+% %      \includegraphics[width=\textwidth]{figs/rozklad-uciety.png}
+% %      \label{fig:my_label}
+% %  \end{figure} 
+% %  \end{frame}
+
+
+% % \begin{frame}{Mechanizmy powstawania braków danych}
+% %  Inne przykłady za  Rubin (1976)
+% %  \begin{figure}
+% %      \centering
+% %      \includegraphics[width=0.6\textwidth]{figs/little-missing-data.png}
+% %      \label{fig:my_label}
+% %  \end{figure} 
+% %  \end{frame}
+
+
+
+% % % \begin{frame}{Przykład empiryczny -- wtórny rynek nieruchomości}
+% % % \begin{itemize}
+% % %     \item Badanie dotyczyło wtórnego rynku nieruchomości w Polsce w roku 2017.
+% % %     \item Celem było określenie błędów pokrycia internetowych źródeł danych o wtórnym rynku nieruchomości (Gratka, OtoDom).
+% % %     \item Porównania dokonano z danymi transakcyjnymi dla wszystkich powiatów w Polsce.
+% % % \end{itemize}
+% % % \end{frame}
+
+
+
+% % % \begin{frame}{Przykład empiryczny -- wtórny rynek nieruchomości}
+% % %  \begin{figure}
+% % %      \centering
+% % %      \includegraphics[width=\textwidth]{figs/cat-vars.jpg}
+% % %      \label{fig:my_label}
+% % %  \end{figure} 
+% % % \end{frame}
+
+% % % \begin{frame}{Przykład empiryczny -- wtórny rynek nieruchomości}
+% % %  \begin{figure}
+% % %      \centering
+% % %      \includegraphics[width=0.8\textwidth]{figs/cat-locality.jpg}
+% % %      \label{fig:my_label}
+% % %  \end{figure} 
+% % % \end{frame}
+
+% % % \begin{frame}{Przykład empiryczny -- wtórny rynek nieruchomości}
+% % %  \begin{figure}
+% % %      \centering
+% % %      \includegraphics[width=0.8\textwidth]{figs/cont-internet-cov.jpg}
+% % %      \label{fig:my_label}
+% % %  \end{figure} 
+% % % \end{frame}
+
+% % % \begin{frame}{Przykład empiryczny -- wtórny rynek nieruchomości}
+% % %  \begin{figure}
+% % %      \centering
+% % %      \includegraphics[width=0.8\textwidth]{figs/model-average.jpg}
+% % %      \label{fig:my_label}
+% % %  \end{figure} 
+% % % \end{frame}
+
+
+% % \begin{frame}{Ogólny wniosek}
+
+% % \begin{center}
+% %     \Large Nie skorygujemy błędów pokrycia czy autoselekcji bez dostępu do co najmniej jednego, niezależnego źródła danych (najlepiej próby losowej lub danych o populacji).
+% % \end{center}
+% % \end{frame}
+
+
+% % % \begin{frame}{Przykład empiryczny}
+
+% % % \begin{center}
+% % % Przejdźmy do przykładu    
+% % % \end{center}
+
+% % % \end{frame}
+
+
+% \section{Metody estymacji dla prób nielosowych}
+
+% \begin{frame}{Metody estymacji -- rozważmy następujące przypadki}
+%     \begin{figure}
+%         \centering
+%         \includegraphics[width=\textwidth]{fig-4-meth/kombinacje-zrodel.png}
+%         \caption{Cztery przykładowe przypadki źródeł danych, gdzie celem jest oszacowanie wybranej charakterystyki cechy $Y$. Cechy $\bX$ są wspólne, cecha $Y^*$ to tzw. zmienna proxy.}
+%     \end{figure}
+% \end{frame}
+
+
+% \begin{frame}{Metody estymacji w przypadku prób nielosowych}
+%     \begin{center}
+%           \includegraphics[width=\textwidth]{fig-4-meth/elliot-statsci.png}
+%     \end{center}
+% \end{frame}
+
+% \begin{frame}{Elliott i Valliant (2017) wyróżniają dwa podejścia:}
+%  \begin{itemize}
+%         \item \textbf{quasi-randomizacyjne} -- w której konstruujemy \textit{pseudo-wagi} z wykorzystaniem próby losowej lub znanych (albo estymowanych) wartości globalnych.
+%         \begin{center}
+%             \includegraphics[width=0.55\textwidth]{fig-4-meth/pseudo-based.png}
+%         \end{center}
+%         \item \textbf{oparte na modelu} -- w którym zakładamy pewien model.
+%         \begin{center}
+%             \includegraphics[width=0.55\textwidth]{fig-4-meth/model-based.png}
+%         \end{center}
+%     \end{itemize}
+% \end{frame}
+
+
+% \subsection{Podstawowe założenia na potrzeby zajęć} 
+
+
+% \begin{frame}{Podstawowe założenia}
+
+% \begin{itemize}
+% \justifying
+%     \item Niech $U=\{1,..., N\}$ oznacza populację docelową składającą się z $N$ oznaczonych jednostek. Każda jednostka $i$ ma powiązany wektor zmiennych pomocniczych $\bx_{i}$ oraz zmienną badaną $y_{i}$. 
+%      \begin{itemize}
+%         \item $\{ (y_i, \bx_i), i \in S_A\}$ - próba nielosowa $S_A$ o liczebności $n_A$
+%         \item $\left\{\left(\bx_i, \pi_{i}^B\right), i \in S_B\right\}$ - próba losowa $S_B$ o liczebności $n_B$
+%     \end{itemize}
+%     \item Dla próby losowej $S_B$ każda jednostka ma przypisaną wagę wynikającą z schematu losowania: $d_i^B = 1/\pi_i^B$, gdzie $\pi_i^B$ to prawdopodobieństwo włączenia.
+%     \item Naszym celem jest oszacowanie średniej w populacji $\mu_y=N^{-1}\sum_{i=1}^{N} y_{i}$ zmiennej $y$.
+% \end{itemize}
+
+% \end{frame}
+
+% % Slajd 2
+% \begin{frame}{Wskaźniki i prawdopodobieństwa włączenia}
+
+% \begin{itemize}
+% \justifying
+%     \item Wprowadźmy wskaźniki włączenia do prób, zdefiniowane dla wszystkich jednostek w populacji docelowej:
+%      \begin{itemize}
+%         \item $R_i^A=I(i \in S_A)$ - włączenie do próby nielosowej $S_A$
+%         \item $R_i^B=I(i \in S_B)$ - włączenie do próby losowej $S_B$
+%     \end{itemize}
+%     \item Niech $\pi_i^A=P(R_i^A=1 \mid \bx_i, y_i)=P(R_i^A=1 \mid \bx_i)$ będzie prawdopodobieństwem włączenia (propensity score), które charakteryzuje mechanizm doboru próby $S_A$.
+%     \item W przeciwieństwie do $\pi_i^B$, wartości $\pi_i^A$ i odpowiadające im wagi $d_i^A=1/\pi_i^A$ są nieznane.
+% \end{itemize}
+    
+% \end{frame}
+
+% \begin{frame}{Struktura danych}
+%     \begin{table}[ht!]
+%         \centering
+%         \resizebox{\linewidth}{!}{
+%         \begin{tabular}{llcccc} 
+%         \hline
+%         Próba & ID & Włączenie ($R$) & Waga ($d$) & Zmienne pom. ($\bx$) & Zm. badana ($y$) \\
+%         \hline
+%         Nielosowa  & 1 & 1 & ? & $\checkmark$ & $\checkmark$ \\ 
+%         $S_A$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ \\
+%         & $n_A$ & 1 & ? & $\checkmark$ & $\checkmark$ \\
+%         Losowa  & 1 & 0 & $\checkmark$ & $\checkmark$ & ? \\
+%         $S_B$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ \\ 
+%         & $n_B$ & 0 & $\checkmark$ & $\checkmark$ & ? \\                                     
+%         \hline     
+%         \end{tabular}
+%         }
+%         \caption{Struktura danych w układzie dwóch prób}
+%     \end{table}
+    
+%     Wartości zmiennej $y_i$ nie są obserwowane w próbie losowej, więc nie można ich bezpośrednio wykorzystać do oszacowania badanej wielkości. Zamiast tego, próbujemy łączyć próbę nielosową i losową.
+% \end{frame}
+
+% \begin{frame}{Główne założenia}
+%     Ze względu na brak uniwersalnie przyjętej metody łączenia prób, założenia różnią się znacznie. Jednak dla większości metod przyjmuje się następujące główne założenia:
+    
+%     \begin{itemize}
+%     \justifying
+%         \item[A1] $R_i^A$ i zmienna badana $y_i$ są niezależne przy ustalonym zbiorze zmiennych pomocniczych $\bx_i$ (mechanizm MAR).
+%         \item[A2] Wszystkie jednostki w populacji docelowej mają niezerowe prawdopodobieństwo włączenia do próby nielosowej, tj. $\pi_i^A>0$, $i=1,2, \ldots, N$ (brak błędu pokrycia).
+%         \item[A3] Wskaźniki włączenia $R_1, R_2, \ldots, R_N$ są niezależne przy ustalonym zbiorze zmiennych pomocniczych $\left(\bx_1, \bx_2, \ldots, \bx_N\right)$ (brak grupowania).
+%     \end{itemize}
+    
+%     Obecnie pomijamy nakładanie się prób $S_A$ i $S_B$ oraz zakładamy brak błędów pomiaru w $y_i$ i znajomość wartości $\bx_i$.
+% \end{frame}
+
+% \subsection{Metody quasi-randomizacyjne}
+
+% \begin{frame}{Propensity score -- Rosenbaum \& Rubin (1983)}
+% \begin{center}
+%     \includegraphics[width=\textwidth]{fig-4-meth/rubin.png}
+% \end{center}
+% \end{frame}
+
+% \begin{frame}{Propensity score  -- Lee (2006)}
+% \begin{center}
+%     \includegraphics[width=\textwidth]{fig-4-meth/lee.png}
+% \end{center}
+% \end{frame}
+
+% \begin{frame}{Propensity score  -- Chen (2020)}
+% \begin{center}
+%     \includegraphics[width=\textwidth]{fig-4-meth/ps-dr.png}
+% \end{center}
+% \end{frame}
+
+% \begin{frame}{Propensity score  -- Wu (2022)}
+% \begin{center}
+%     \includegraphics[width=\textwidth]{fig-4-meth/ps-review.png}
+% \end{center}
+% \end{frame}
+
+% \begin{frame}{Nazewnictwo}
+%     \begin{itemize}
+%     \justifying
+%         \item Propensity score (PS) -- prawdopodobieństwa inkluzji do próby nielosowej $S_A$
+%         \item Propensity score weighting (PSW) / Inverse probability weighting (IPW) -- ważenie przez odwrotność prawdopodobieństwa inkzji 
+%     \end{itemize}
+% \end{frame}
+
+% \begin{frame}{Wprowadzenie do metody IPW}
+%     \begin{itemize}
+%     \justifying
+%         \item Inverse Probability Weighting (IPW) to popularna metoda estymacji wykorzystująca prawdopodobieństwa włączenia do próby
+%         \item Opiera się na estymacji prawdopodobieństwa włączenia (PS) danego wzorem $\pi_i^A=P\left(i \in S_A \right)$
+%         \item Metoda szczególnie przydatna w kontekście próby nielosowej
+%         \item Prawdopodobieństwa włączenia są używane do korygowania obciążeń wynikających z mechanizmu selekcji próby
+%     \end{itemize}
+% \end{frame}
+
+% \begin{frame}{Dwa warianty estymatora IPW}
+%     Metoda IPW oferuje dwa główne warianty estymatora średniej populacyjnej:
+    
+%     \begin{equation}
+%       \hat{\mu}_{y,\text{IPW1}}=\frac{1}{N} \sum_{i \in S_A} \frac{y_i}{\hat{\pi}_i^A} \quad \text { i } \quad 
+%       \hat{\mu}_{y,\text{IPW2}}=\frac{1}{\hat{N}^A} \sum_{i \in S_A} \frac{y_i}{\hat{\pi}_i^A},
+%     \end{equation}
+    
+%     gdzie:
+%     \begin{itemize}
+%         \item $\hat{\mu}_{y,\text{IPW1}}$ - modyfikacja estymatora Horvitza-Thompsona
+%         \item $\hat{\mu}_{y,\text{IPW2}}$ - modyfikacja estymatora Hájeka
+%         \item $\hat{N}^A = \sum_{i \in S_A} (\pi_i^A)^{-1}$ - oszacowana liczebność populacji
+%     \end{itemize}
+    
+%     \vspace{0.5em}
+%     \small{Wu (2022) zauważa, że estymator $\hat{\mu}_{y,\text{IPW2}}$ daje lepsze wyniki niż $\hat{\mu}_{y,\text{IPW1}}$ nawet gdy liczebność populacji jest znana.}
+% \end{frame}
+
+% \begin{frame}{Konstrukcja estymatora IPW}
+%     Budowa estymatora IPW wymaga dwóch kroków:
+    
+%     \begin{enumerate}
+%         \item Estymacja prawdopodobieństw włączenia $\pi_i^A$
+%         \item Wyznaczenie wag $d_i^A = 1/\pi_i^A$
+%     \end{enumerate}
+    
+%     \vspace{1em}
+    
+%     Do estymacji prawdopodobieństw $\pi_i^A=\pi(\bx_i, \bgamma)$ można zastosować metodę największej wiarygodności, zakładając, że informacje o $\bx_i$ są dostępne dla każdej jednostki w populacji (lub próby losowej).
+% \end{frame}
+
+% \begin{frame}{Regresja logistyczna w estymacji PS}
+%     \begin{itemize}
+%     \justifying
+%         \item W praktyce, do modelowania prawdopodobieństwa włączenia $\pi(\bx_i, \bgamma)$ najczęściej stosuje się regresję logistyczną
+%         \item Model logistyczny przyjmuje postać:
+        
+%         \begin{equation}
+%         \pi(\bx_i, \bgamma) = \frac{\exp(\bx_i^T \bgamma)}{1 + \exp(\bx_i^T \bgamma)}
+%         \end{equation}
+        
+%         \item Parametry $\bgamma$ mają interpretację logarytmu ilorazu szans
+%         \item Model jest elastyczny i może uwzględniać zmienne ilościowe, jakościowe oraz interakcje
+%     \end{itemize}
+% \end{frame}
+
+% \begin{frame}{Estymacja modelu logistycznego}
+%     \begin{itemize}
+%     \justifying
+%         \item Do estymacji parametrów $\bgamma$ modelu logistycznego używamy próby nielosowej ($S_A$) i losowej ($S_B$)
+%         \item Jednostki z próby nielosowej traktujemy jako "sukcesy"\; ($R_i^A = 1$)
+%         \item Jednostki z próby losowej traktujemy jako "porażki"\; ($R_i^A = 0$)
+%         \item Zmienne objaśniające $\bx_i$ powinny dobrze przewidywać mechanizm włączenia do próby nielosowej
+%         \item Ważne jest uwzględnienie wag $d_i^B$ z próby losowej w procesie estymacji
+%     \end{itemize}
+    
+%     \vspace{0.5em}
+    
+%     \alert{Uwaga:} Jakość oszacowań $\hat{\pi}_i^A$ bezpośrednio wpływa na jakość finalnego estymatora IPW. Istotny jest dobór odpowiednich zmiennych pomocniczych $\bx_i$ silnie związanych zarówno z mechanizmem włączenia do próby jak i zmienną badaną $y$.
+% \end{frame}
+
+% \begin{frame}{Warunki stosowania modelu logistycznego}
+%     \begin{itemize}
+%     \justifying
+%         \item Wymaga spełnienia założenia MAR (Missing At Random) - prawdopodobieństwo włączenia do próby zależy tylko od obserwowalnych zmiennych $\bx_i$
+%         \item Wymaga odpowiedniego pokrycia przestrzeni zmiennych pomocniczych w próbie losowej i nielosowej
+%         \item Możliwe jest rozszerzenie do bardziej złożonych modeli (np. modele GAM, lasy losowe) jeśli relacja nie jest liniowa w logicie
+%     \end{itemize}
+    
+%     \vspace{1em}
+    
+%     Po estymacji modelu, otrzymane prawdopodobieństwa $\hat{\pi}_i^A$ są używane do konstruowania wag $\hat{d}_i^A = 1/\hat{\pi}_i^A$ stosowanych w estymatorach IPW.
+% \end{frame}
+
+% \begin{frame}{Funkcja wiarygodności}
+%     Teoretyczna funkcja logarytmu wiarygodności ma postać:
+    
+%     \begin{align}
+%     \small
+%     \ell(\bgamma) &= \log\left\{\prod_{i=1}^N \left(\pi_i^A\right)^{R_i}\left(1-\pi_i^A\right)^{1-R_i}\right\} \nonumber \\
+%     &= \sum_{i \in S_{A}} \log \left\{\frac{\pi\left(\bx_i, \bgamma\right)}{1-\pi\left(\bx_i, \bgamma\right)}\right\}+\sum_{i=1}^N \log \left\{1-\pi\left(\bx_i, \bgamma\right)\right\}.
+%     \end{align}
+    
+%     \vspace{0.5em}
+    
+%     W praktyce funkcja tej postaci nie może być stosowana, ponieważ nie wszystkie jednostki z populacji są obserwowane.
+% \end{frame}
+
+% \begin{frame}{Pseudo funkcja wiarygodności}
+%     Bardziej realistyczne podejście polega na wykorzystaniu referencyjnej próby losowej $S_B$. Wtedy otrzymujemy pseudo funkcję logarytmu wiarygodności:
+    
+%     \begin{equation}
+%     \small
+%     \ell^*(\bgamma) = \sum_{i \in S_{A}} \log \left\{\frac{\pi\left(\bx_i, \bgamma\right)}{1-\pi\left(\bx_i, \bgamma\right)}\right\} + \sum_{i \in S_{B}} d_i^B \log \left\{1-\pi\left(\bx_i, \bgamma\right)\right\}.
+%     \end{equation}
+    
+%     \vspace{0.5em}
+    
+%     Estymator $\hat{\bgamma}$ największej pseudo-wiarygodności można uzyskać jako rozwiązanie równania pseudo-score, które przy założeniu funkcji logitowej dla $\pi_i^A$ ma postać:
+    
+%     \begin{equation}
+%     \small
+%     \bU(\bgamma) = \sum_{i \in S_A} \bx_i - \sum_{i \in S_B} d_i^B \pi(\bx_i, \bgamma) \bx_i.
+%     \end{equation}
+% \end{frame}
+
+% \begin{frame}{}
+%     Przejdźmy do przykładu w R
+% \end{frame}
+
+% \begin{frame}{Ograniczenia IPW MLE}
+% Estymacja $\pi(\bx_i, \bgamma)$ z wykorzystaniem metody MLE lub pseudo-MLE ma następujące ograniczenia
+%     \begin{itemize}
+%         \item  działa tylko jeżeli model dla $\pi(\bx_i, \bgamma)$ jest poprawnie wyspecifykowany,
+%         \item może skutkować dużymi wagami gdy $\pi(\bx_i, \bgamma)$ jest małe,
+%         \item wariancja wag zwykle jest większa,
+%         \item wagi $1/\pi(\bx_i, \bgamma)$ nie odtwarzają wartości globalnych z próby lub populacji,
+%         \item możemy zastosować tylko gdy dysponujemy danymi z populacji lub próby.
+%     \end{itemize}
+% \end{frame}
+
+
+% \begin{frame}{Rozszerzenia i metoda kalibracji}
+%     Funkcja $\bU(\bgamma)$ może być zastąpiona przez ogólne równania estymujące (ang. \textit{generalized estimation equations}; GEE). 
+    
+%     \begin{itemize}
+%         \item Niech $\bh(\bx, \bgamma)$ będzie wektorem funkcji o tym samym wymiarze co $\bgamma$
+%         \item Definiujemy funkcję $\bG(\bgamma)$ jako:
+        
+%         \begin{equation}
+%         \bG(\bgamma)=\sum_{i \in S_A} \bh\left(\bx_i, \bgamma\right)-\sum_{i \in S_B} d_i^B \pi\left(\bx_i, \bgamma\right) \bh\left(\bx_i, \bgamma\right)
+%         \end{equation}
+        
+%         \item Rozwiązanie równania $\bG(\bgamma)=\bZero$ daje zgodny estymator $\hat{\bgamma}$
+%         \item Najczęściej wybierane funkcje to 
+%         \begin{itemize}
+%             \item $\bh\left(\bx_i, \bgamma\right) = \bx_i \pi\left(\bx_i, \bgamma\right)^{-1}$,
+%             \item $\bh\left(\bx_i, \bgamma\right) = \bx_i$ (prowadzi do $\bU(\bgamma)$).
+%         \end{itemize} 
+%     \end{itemize}
+    
+%     Dla drugiego wariantu funkcji $\bh$ otrzymujemy \textit{skalibrowane} IPW:
+    
+%     \begin{equation}
+%     \bG(\btheta) = \sum_{i \in S_A} \frac{\bx_i}{\pi\left(\bx_i, \bgamma\right) }-\sum_{i \in S_B} d_i^B \bx_i.
+%     \label{eq-ipw-gee}
+%     \end{equation}
+    
+% \end{frame}
+
+% \begin{frame}{Rozszerzenia i metoda kalibracji}
+% Proszę zauważyć, że dla \eqref{eq-ipw-gee} sumę daną wzorem $\sum_{i \in S_B} d_i^B \bx_i$ możemy zastąpić wartościami globalnym (znanymi z populacji)
+
+%     \begin{equation}
+%     \bG(\btheta) = \sum_{i \in S_A} \frac{\bx_i}{\pi\left(\bx_i, \bgamma\right)} -\btau_{\bx} = 
+%     \begin{bmatrix}
+%     \sum_{i \in S_A} \frac{\bx_{i1}}{\pi\left(\bx_i, \bgamma\right)} \\
+%     \sum_{i \in S_A} \frac{\bx_{i2}}{\pi\left(\bx_i, \bgamma\right)} \\
+%     ... \\
+%     \sum_{i \in S_A} \frac{\bx_{ip}}{\pi\left(\bx_i, \bgamma\right)} 
+%     \end{bmatrix} - 
+%     \begin{bmatrix}
+%      \tau_{x_1} \\
+%      \tau_{x_2} \\
+%      ... \\
+%      \tau_{x_p}
+%     \end{bmatrix}
+%     \end{equation}
+    
+% Kim i Riddles (2012) pokazali, że gdy estymujemy $\bgamma$ z wykorzystaniem GEE to estymator IPW jest podwójnie odporny przy założeniu, że model zmiennej wynikowej (Y) jest liniowy (tj. liniowy w populacji).
+ 
+% \end{frame}
+
+
+% \begin{frame}{Rozszerzenia i metoda kalibracji}
+% Metoda GEE ma następujące własności:
+%     \begin{itemize}
+%     \justifying
+%         \item estymator ten jest podwójnie odporny i.e. kalibrując do znanych wartości globalnych zakładamy, że model $E(Y|X)$ jest liniowy, por. Kim  and Riddles (2012). \textit{Some theory for propensity scoring adjustment estimator}, Survey Methodology 38, 157-165 -- oznacza to, że jeżeli model dla $\pi\left(\bx_i, \bgamma\right)$ będzie źle wyspecifykowany ale model $E(Y|X)$ jest liniowy to estymator dostarczy nam (asymptotycznie) nieobciążonych szacunków.
+%         \item wagi $1/\pi\left(\bx_i, \bgamma\right)$ odtwarzają wartości globalne,
+%         \item estymator GEE możemy stosować gdy nie mamy dostępu do danych jednostkowych a jedynie wartości globalnych,
+%         \item wariancja estymatora GEE jest zwykle mniejsza niż IPW,
+%         \item wariancja wag $1/\pi\left(\bx_i, \bgamma\right)$ w przypadku metody GEE jest zwykle mniejsza i zwykle unikamy wag ekstremalnych.
+%     \end{itemize}
+% \end{frame}
+
+% \begin{frame}{Estymacja wariancji IPW}
+% \begin{itemize}
+% \justifying
+%     \item Chen et al. (2020) przedstawili postać analityczną oraz metodę bootstrap umożliwiającą estymację wariancji estymatora IPW dla średniej.
+%     \item W pakiecie \texttt{nonprobsvy} zaimplementowaliśmy zarówno podejście analityczne, jak i metodę bootstrap.
+%     \item Idea metody bootstrap polega na, $b=1,...,B$ razy powtarzamy
+%     \begin{enumerate}
+%         \item Losujemy ze zwracaniem jednostki z próby $S_A$ (nielosowej)
+%         \item Losujemy ze zwracaniem jednostki z próby $S_B$ (losowej) zgodnie ze schematem losowania.
+%         \item Estymujemy parametry $\bgamma$ funkcji propensity score $\pi\left(\bx_i, \bgamma\right)$ i wyznaczamy $\hat{\mu}_{y,\text{IPW2},b}$
+%     \end{enumerate}
+%     Następnie wyznaczamy wariancję z wektora oszacowań 
+    
+%     $$
+%     \left(\hat{\mu}_{y,\text{IPW2},1}, \hat{\mu}_{y,\text{IPW2},2}, ..., \hat{\mu}_{y,\text{IPW2},b}\right)^T.
+%     $$
+% \end{itemize}
+% \end{frame}
+
+% \begin{frame}{}
+%     Przejdźmy do przykładu w R
+% \end{frame}
+
+
+% % \begin{frame}{Metody quasi-randomizacyjne}
+% % W przypadku metod quasi-randomizacyjnych możemy rozważyć następujące metody:
+% %     \begin{itemize}
+% %         \item \textbf{Post-stratyfikację} (ang. post-stratification) -- wymaga znajomości wartości globalnych  $\bX$ (Holt \& Smith, 1979)
+% %         \item \textbf{Kalibrację}  (ang. calibration) -- wymaga znajomości wartości globalnych / średnich $\bX$ (Deville \& Särndal, 1992)
+% %         \item \textbf{Ważenie przez dopasowanie} (ang. propensity score weighting) -- wymaga dostępu do danych jednostkowych lub wartości globalnych cech $\bX$ (Lee, 2006)
+% %     \end{itemize}
+    
+% %     Literatura:
+% %     \begin{itemize}
+% %     \scriptsize
+% %         \item Holt, D., \& Smith, T. F. (1979). Post stratification. Journal of the Royal Statistical Society: Series A (General), 142(1), 33-46.
+% %         \item Deville, J. C., \& Särndal, C. E. (1992). Calibration estimators in survey sampling. Journal of the American statistical Association, 87(418), 376-382.
+% %         \item Lee, S. (2006). Propensity score adjustment as a weighting scheme for volunteer panel web surveys. Journal of official statistics, 22(2), 329.
+% %     \end{itemize}
+% % \end{frame}
+
+
+% % \subsubsection{Post-stratyfikacja}
+
+
+% % \begin{frame}{Post-stratyfikacja}
+% % Podstawowe oznaczenia
+% % \begin{itemize}
+% %     \item Niech zmienna $X$ ma $H$ poziomów (np. zmienna województwo ma 16 poziomów).
+% %     \item Zmienna $X$ dzieli populację $\Omega$ na $H$ warstw tj. $\Omega_1, \Omega_2, \ldots, \Omega_H$.
+% %     \item Liczba jednostek populacji $\Omega_H$ wynosi $N_H$, czyli $N=N_1 + N_2 + ... + N_H$,
+% %     \item Zakładamy, że zbiór big data ($s$) ma wielkość $n$ i też można go podzielić według zmiennej $X$ na $H$ poziomów. To jest $n=n_1 + n_2 + ... + n_H$.
+% %     \item Następnie dla każdej jednostki $i$ ze zbioru próby nielosowej ($s$) przypisujemy wagę utworzoną w następujący sposób
+% %     \begin{equation}
+% %         w_i = \frac{N_h/N}{n_h/n}
+% %     \end{equation}
+% %     \item Następnie wagę $w_i$ wykorzystujemy do wyznaczenia średniej ważonej w warstwie. 
+% % \end{itemize}
+% % \end{frame}
+
+% % \begin{frame}{Post-stratyfikacja -- estymator}
+
+% %  Post-stratyfikacyjny estymator średniej cechy $Y$ dla próby big data $s$ jest opisany następującym wzorem
+% %     \begin{equation}
+% %         \bar{y}_{s, PS} =  \frac{1}{n} \sum_{i=1}^Ns_i w_i I_i y_i= \frac{1}{N} \sum_{h=1}^{H} N_h\bar{y}_{s}^{(h)} = \sum_{h=1}^{H} W_h \bar{y}_{s}^{(h)},
+% %     \end{equation}
+% %     gdzie $W_h = N_h/N$, a $\bar{y}_{s}^{(h)}$ to średnia arytmetyczna w warstwie.
+% % \end{frame}
+
+% % \begin{frame}{Post-stratyfikacja -- własności}
+
+% % \begin{itemize}
+
+% %     \item Wariancja tego estymatora dana jest wzorem
+
+% % $$
+% % V\left(\bar{y}_{PS}\right)=\left(\frac{1}{n}-\frac{1}{N}\right) \sum_{h=1}^{L} W_{h} S_{h}^{2}+\frac{1}{n^{2}} \sum_{h=1}^{L}\left(1-W_{h}\right) S_{h}^{2},
+% % $$
+
+% % gdzie $S_{h}^{2}$ to wariancja $y$ w warstwie $h$.
+
+% %     \item Obciążenie tego estymatora w przypadku błędu auto-selekcji (ang. self-selection) można opisać następującym wzorem
+
+% %     \begin{equation}
+% % B\left(\bar{y}_{S, P S}\right)=\sum_{h=1}^{L} W_{h} \frac{R_{\rho Y}^{(h)} S_{\rho}^{(h)} S_{Y}^{(h)}}{\bar{\rho}^{(h)}}
+% % \end{equation}
+% %     gdzie oznaczenia są takie same jak opisane w pracy Betlehem (2010).
+% % \end{itemize}
+% % \end{frame}
+
+% \begin{frame}{Przykład -- pomiar oglądalności}
+% \begin{itemize}
+%     \item Oglądalność telewizji mierzona jest w badaniu \textit{Nielsen Audience Measurement} (NAM) -- próba losowa 2,5 tys. gospodarstw domowych (ok. 9,7 tys. osób)
+%     \item Alternatywa: model oglądalności rzeczywistej (MOR) od Netii -- 180 tys. klientów (gospodarstw domowych) Netii
+%     \item Sposób ważenia: liczba gospodarstw i osób w województwie i wielkości miejsca zamieszkania (zgodnie z informacjami z 2018 roku).
+%     \item Na podstawie wyników NAM wycenia się reklamy w mediach oraz dochodzi do rozliczeń domów mediowych z nadawcami.
+% \end{itemize}
+% \end{frame}
+
+% \begin{frame}{Przykład -- pomiar oglądalności}
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=\textwidth]{figs/tvp-netia-mortam.png}
+%     \caption{Porównanie badania NAM i Netii. Źródło: Wirtualne Media}
+% \end{figure}
+% \end{frame}
+
+% \begin{frame}{Przykład -- pomiar oglądalności}
+% Krytyka badania Netii
+% \begin{itemize}
+%     \item Zakłada się, że danym momencie wszystkie osoby oglądają telewizję.
+%     \item Nie wiadomo, kto ogląda i czy w ogóle ogląda telewizję.
+%     \item Nie jest znana liczba gospodarstw domowych w Polsce -- to jest estymowane na podstawie danych z NSP czy badań częściowych.
+%     \item Ważenie dokonuje się wyłącznie na podstawie danych z województw i miejsca zamieszkania zakładając średnią liczbę osób w gospodarstwie domowym (wg. NSP 2021 była to  średnio 2,99 na gospodarstwo domowe w Polsce).
+% \end{itemize}
+% \end{frame}
+
+
+% \begin{frame}{Przykład -- pomiar oglądalności }
+% Źródła: 
+% \begin{itemize}
+%     \item Jak mierzy się oglądalność telewizji w Polsce? \url{https://www.wirtualnemedia.pl/artykul/ogladalnosc-telewizji-w-polsce-jak-to-sie-mierzy-nielsen}
+%     \item Telewizja Polska podaje szczegóły własnego badania oglądalności z danymi od Netii. Jacek Kurski: to projekt przejściowy \url{https://www.wirtualnemedia.pl/artykul/telewizja-polska-nowe-badanie-ogladalnosci-z-danymi-od-netii-jacek-kurski-to-projekt-przejsciowy}
+%     \item Domy mediowe: badanie oglądalności od TVP niemiarodajne, nie zastąpi pomiaru Nielsena \url{https://www.wirtualnemedia.pl/artykul/nowe-badanie-ogladalnosci-od-tvp-i-netii-domy-mediowe-jest-niemiarodajne-nie-zastapi-pomiaru-nielsena}
+% \end{itemize}
+% \end{frame}
+
+
+% % \begin{frame}{Przykład -- CBOP}
+% % \begin{table}[ht]
+% % \centering
+% % \caption{Odsetek wakatów oferowanych na jedną zmianę w CBOP}
+% % \begin{tabular}{lrrrr}
+% %   \hline
+% % Wielkość & $\bar{y}_h$ & $n_h$ & $N_h$ & $W_h$ \\ 
+% %   \hline
+% %   Małe (do 9) & 0.7596 & 6 769 & 128 940 & 0.4381 \\ 
+% %   Średnie (10-49) & 0.7021 & 6 892 & 71 230  & 0.2420 \\ 
+% %   Duże (50 i więcej) & 0.2978 & 14 783 & 94 124  & 0.3198 \\ 
+% %    \hline
+% % \end{tabular}
+% % \end{table}
+
+% % gdzie: $\bar{y}_h$ to odsetek wakatów oferowanych na jedną zmianę, $n_h$ wielkość próby, $N_h$ wielkości populacji, a $W_h=N_h/N$ to waga post-stratyfikacyjna. Naiwny estymator na podstawie tych danych wynosi: 0.5060 (około 51\%).
+
+% % \vspace{0.15cm}
+
+% % Na podstawie tych danych możemy wyznaczyć estymator $\bar{y}_{PS}$:
+
+% % \begin{equation}
+% %     \bar{y}_{PS} = 0.4381 \times 0.7596 + 
+% %                    0.2420 \times 0.7021 +
+% %                    0.3198 \times 0.2978 = 0.5980
+% % \end{equation}
+% % Co by oznaczało, że około 60\% wakatów w Polsce to wakaty oferowane na jedną zmianę.
+% % \end{frame}
+
+
+
+% % \begin{frame}{Post-stratyfikacja -- własności}
+% % Wariancja estymatora post-stratyfikacyjnego nie jest prosta do obliczenia ponieważ mamy dwa źródła zmienności:
+
+% % \begin{itemize}
+% %     \item nieznany mechanizm tworzenia próby nielosowej (auto-selekcja, nieznane pokrycie populacji),
+% %     \item znany mechanizm szacunku wartości globalnych (rejestr vs próba losowa).
+% % \end{itemize}
+
+
+% % \end{frame}
+
+% % \begin{frame}{Post-stratyfikacja -- przykład empiryczny}
+
+% % \begin{center}
+% % Przejdźmy do przykładu w R.
+% % \end{center}
+
+% % \end{frame}
+
+% % \subsubsection{Kalibracja}
+
+% % \begin{frame}{Estymatory kalibracyjne}
+% %     \begin{figure}
+% %         \centering
+% %         \includegraphics[width=0.9\textwidth]{fig-4-meth/calib-jasa.png}
+% %         \caption{Deville, J. C., \& Särndal, C. E. (1992). Calibration estimators in survey sampling. Journal of the American statistical Association, 87(418), 376-382.}
+% %     \end{figure}
+% % \end{frame}
+
+% % \begin{frame}{Estymatory kalibracyjne (w j. polskim)} 
+% %     \begin{figure}
+% %         \centering
+% %         \includegraphics[width=0.8\textwidth]{fig-4-meth/calib-szymkowiak.png}
+% %         \caption{Szymkowiak, M. (2019). Podejście kalibracyjne w badaniach społeczno-ekonomicznych. Wydawnictwo Uniwersytetu Ekonomicznego w Poznaniu.}
+% %     \end{figure}
+% % \end{frame}
+
+
+% % \begin{frame}{Kalibracja dla prób nielosowych -- idea}
+% % \begin{center}
+% %     \includegraphics[width=\textwidth]{fig-4-meth/pseudo-based.png}
+% %     \end{center}
+% %     Chcemy utworzyć wektor $w^*$ tak, aby odtwarzał znane (lub estymowane) wartości globalne cech $\bX$.
+% % \end{frame}
+
+
+% % \begin{frame}{Kalibracja -- idea}
+% % \begin{enumerate}
+% % \item[(C1)] Minimalizujemy funkcję odległości: 
+% % \begin{equation} \label{kal25} 
+% % D\left({\mathbf w},{\mathbf d}\right)=\sum^m_{i{\rm =1}}{}d_i{\rm G}\left(\frac{w_i}{d_i}\right)\to min 
+% % \end{equation} 
+% % \item[(C2)] aby spełnione były tzw. równania kalibracyjne
+% % \begin{equation} \label{kal26} 
+% % \sum^m_{i{\rm =1}}{}w_ix_{ij}={{\mathbf X}}_j{\rm ,\ \ \ \ }j{=1,\dots ,}k, 
+% % \end{equation} 
+% % \item[(C3)] oraz ograniczenia na wagi: 
+% %  $L\le \frac{w_i}{d_i}\le U,$ where ${\rm 0}\le L\le {\rm 1}\le U{\rm ,\ \ }i{\rm =1,\dots ,}m.$ 
+% %  \end{enumerate}
+
+% % W przypadku prób nielosowych zwykle przyjmujemy, że waga $d_i = N/n$, gdzie $N$ to wielkość populacji, a $n$ to liczba rekordów w próbie nielosowej.
+% % \end{frame}
+
+
+% % \begin{frame}{Kalibracja}
+% %     W praktyce najczęściej korzysta się z następujących funkcji odległości
+% % \begin{equation} \label{kal11} 
+% % G_{{\rm 1}}\left(x\right){\rm =}\frac{{\rm 1}}{{\rm 2}}{\left(x{\rm -}{\rm 1}\right)}^{{\rm 2}}, 
+% % \end{equation} 
+% % \begin{equation} \label{kal12} 
+% % G_{{\rm 2}}\left(x\right){\rm =}\frac{{\left(x{\rm -}{\rm 1}\right)}^{{\rm 2}}}{x}, 
+% % \end{equation} 
+% % \begin{equation} \label{kal13} 
+% % {\ G}_{{\rm 3}}\left(x\right){\rm =}x\left({\rm log}x{\rm -}{\rm 1}\right){\rm +1,} 
+% % \end{equation} 
+% % \begin{equation} \label{kal14} 
+% % G_{{\rm 4}}\left(x\right){\rm =2}x{\rm -}{\rm 4}\sqrt{x}{\rm +2,} 
+% % \end{equation} 
+% % \begin{equation} \label{kal15} 
+% % G_{{\rm 5}}\left(x\right){\rm =}\frac{{\rm 1}}{{\rm 2}\alpha }\int^x_{{\rm 1}}{}{\rm sinh}\left[\alpha \left(t{\rm -}\frac{{\rm 1}}{t}\right)\right]dt, 
+% % \end{equation} 
+% % \end{frame}
+
+% % \begin{frame}{Kalibracja}
+% %     W przypadku zastosowania funkcji \eqref{kal11} otrzymujemy wektor wag w postaci analitycznej (tj. mamy konkretny wzór na ich wyznaczenie):
+    
+% %     \begin{equation}
+% % w_{i}^*=d_{i}+d_{i}
+% % \left(\bX-\sum_{i\in \mathcal{S}_n}{d_{i}\mathbf{x}_{i}}\right)^{T}
+% % \left(\sum_{i\in \mathcal{S}_n}d_{i}\mathbf{x}_{i}\mathbf{x}_{i}^{T}\right)^{-1}\mathbf{x}_{i},
+% % \label{lin-cal-eq}
+% % \end{equation}
+
+% % gdzie $\bX$ to wektor znanych (lub estymowanych) wartości globalnych cech pomocniczych (np. cech demograficznych), $\sum_{i\in \mathcal{S}_n}{d_{i}\mathbf{x}_{i}}$ możemy oznaczyć jako $\hat{\bX}$,
+
+% % \vspace{0.5cm}
+
+% % W przypadku innych funkcji należy zastosować metody optymalizacyjne (por. Szymkowiak (2019), rozdział 2.3). W naszym przypadku stosować będziemy pakiet \texttt{survey} oraz funkcję \texttt{calibrate}.
+
+% % \end{frame}
+
+
+% % \begin{frame}{Kalibracja}
+% %     Ostatecznie, estymator kalibracyjnym wartości globalnej (np. liczby ofert pracy) dany jest wzorem
+    
+% %     \begin{equation}
+% %         Y_{\text{cal}} = \sum_{i \in \mathcal{S}_n} y_i w_i^*,
+% %     \end{equation}
+    
+% %     gdzie $\mathcal{S}_n$ oznacza próbę nielosową, a $w^*_i$ to wektor pseudo-wag.
+    
+% %     \vspace{0.5cm}
+    
+% %     Podobnie, jak w przypadku post-stratyfikacji obliczenie wariancji tego estymatora nie jest proste. 
+% % \end{frame} 
+
+% % \begin{frame}{Kalibracja a post-stratyfikacja}
+
+% % \begin{itemize}
+% %     \item Post-stratyfikacja jest szczególnym przypadkiem kalibracji.
+% %     \item W kalibracji możemy stosować zarówno zmienne jakościowe, jak i ilościowe.
+% %     \item W kalibracji możemy odtwarzać zarówno wartości globalne (np. liczebności), jak i średnie (np. średni dochód).
+% %     \item Mamy większą kontrolę nad rozkładem wag $w^*$ (przykładowo chcemy uniknąć wag ekstremalnych).
+% % \end{itemize}
+
+% % \end{frame}
+
+% % \begin{frame}{Kalibracja -- krótki przykład \#1}
+% % 	\scriptsize{
+% % \begin{table}[htp!]
+% % \begin{center}
+% % \begin{tabular}{|l|l|l|l|l|}
+% % \hline
+% % \multicolumn{1}{|c|}{\tiny{L.p.}} & \multicolumn{1}{c|}{\tiny{Płeć}} & \multicolumn{1}{c|}{\tiny{Zamieszkanie}} & \multicolumn{1}{c|}{\tiny{Zatrudnienie}} & \multicolumn{1}{c|}{\tiny{Wykształcenie}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{$\cdot$} & \multicolumn{1}{c|}{\tiny{P}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{2}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{S}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{3}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{$\cdot$} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{4}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{W}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{5}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{$\cdot$} & \multicolumn{1}{c|}{\tiny{W}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{6}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{\tiny{W}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{7}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{\tiny{W}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{8}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{W}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{9}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{S}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{10}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{S}}  \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{11}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{\tiny{S}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{12}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{W}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{13}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{P}}  \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{14}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{$\cdot$}  \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{15}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{\tiny{S}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{16}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{S}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{17}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{\tiny{W}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{18}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{\tiny{P}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{19}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{$\cdot$} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{20}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{S}} \\ 
+% % \hline
+% % \end{tabular}
+% % \end{center}
+% % \end{table}}
+% % \end{frame}
+
+% % \begin{frame}{Kalibracja -- krótki przykład \#2}
+
+% % \begin{itemize}
+% % \item Załóżmy, że celem badania jest stworzenie tabeli ukazującej status zatrudnienia w~zależności od wykształcenia osoby. Ze względu na występujące w~rejestrze braki danych uzyskana tabela nie będzie odpowiednia.
+% % \item Opis zmiennych (płeć: M-mężczyzna, K-kobieta; Zamieszkanie: M-miasto, W-wieś; Zatrudnienie: P-osoba pracująca, B-osoba bezrobotna; Wykształcenie: P-podstawowe, S-średnie, W-wyższe)
+% % \end{itemize}
+% % \begin{table}[htp!]
+% % \begin{center}
+% % \begin{tabular}{llll}
+% % \hline
+% %  & \multicolumn{2}{c}{Status zatrudnienia} &  \\ 
+% % Wykształcenie & Pracująca & Bezrobotna & Razem \\ 
+% % \hline
+% % Wyższe & \multicolumn{1}{c}{3} & \multicolumn{1}{c}{3} & \multicolumn{1}{c}{6} \\ 
+% % Średnie & \multicolumn{1}{c}{5} & \multicolumn{1}{c}{2} & \multicolumn{1}{c}{7} \\ 
+% % Podstawowe & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{2} \\ 
+% % \hline
+% % Razem & \multicolumn{1}{c}{9} & \multicolumn{1}{c}{6} & \multicolumn{1}{c}{{\color{red} 15}} \\ 
+% % \hline
+% % \end{tabular}
+% % \end{center}
+% % \end{table}
+% % \end{frame}
+
+% % \begin{frame}{Algorytm wyznaczania wag kalibracyjnych -- krok 1}
+% %     \begin{itemize}
+% % \item  Wyjściowe wagi przypisujemy sztucznie w~ten sposób, że dla jednostki dla której nie jest znana wartość co najmniej jednej z~interesujących nas cech $d_{i}=0$. Z~kolei gdy znane są wartości wszystkich cech, w~oparciu o~które tworzona będzie tabela przyjmujemy $d_{i}=1$. 
+% % \end{itemize}
+
+% % \scriptsize{
+% % \begin{table}[htp!]
+% % \begin{center}
+% % \begin{tabular}{|l|l|l|l|l|l|}
+% % \hline
+% % \multicolumn{1}{|c|}{\tiny{L.p.}} & \multicolumn{1}{c|}{\tiny{Płeć}} & \multicolumn{1}{c|}{\tiny{Zamieszkanie}} & \multicolumn{1}{c|}{\tiny{Zatrudnienie}} & \multicolumn{1}{c|}{\tiny{Wykształcenie}} & \multicolumn{1}{c|}{$d_{i}$} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{$\cdot$} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{{\color{red} 0}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{2}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{S}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{3}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{$\cdot$} & \multicolumn{1}{c|}{\tiny{{\color{red} 0}}}  \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{4}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1}}}  \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{5}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{$\cdot$} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{{\color{red} 0}}}  \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{6}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1}}}  \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{7}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1}}}  \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{8}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1}}}  \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{9}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{S}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1}}}  \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{10}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{S}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1}}}  \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{$\cdots$}} & \multicolumn{1}{c|}{\tiny{$\cdots$}} & \multicolumn{1}{c|}{\tiny{$\cdots$}} & \multicolumn{1}{c|}{\tiny{$\cdots$}} & \multicolumn{1}{c|}{\tiny{$\cdots$}} & \multicolumn{1}{c|}{\tiny{{\color{red} $\cdots$}}} \\ 
+% % \hline
+% % \end{tabular}
+% % \end{center}
+% % \end{table}}
+% % \end{frame}
+
+% % \begin{frame}{Algorytm wyznaczania wag kalibracyjnych -- krok 2}
+% %     \begin{itemize}
+% % \item\scriptsize W~następnym kroku dokonujemy wyboru zmiennych, dla których znane są wartości dla wszystkich jednostek w~rejestrze. Ponieważ informacja o~płci osoby jak i~jej miejscu zamieszkania znana jest dla wszystkich osób, zmienne te można wykorzystać celem ustalenia nowych wag $w_{i}$. Na potrzeby przykładu przyjęte zostały trzy zmienne pomocnicze: $\mathbf{x}_{i1}$, $\mathbf{x}_{i2}$, $\mathbf{x}_{i3}$. 
+% % {\setlength\arraycolsep{2pt}
+% % \begin{eqnarray}
+% % &\ & \mathbf{x}_{i1}=\left\{ \begin{array}{ll}
+% % 1 & \textrm{jeżeli $i$-ta osoba jest kobietą,}\\
+% % 0 & \textrm{jeżeli $i$-ta osoba jest mężczyzną,}\\
+% % \end{array} \right.  \\
+% % &\ & \mathbf{x}_{i2}=\left\{ \begin{array}{ll}
+% % 1 & \textrm{jeżeli $i$-ta osoba jest mężczyzną,}\\
+% % 0 & \textrm{jeżeli $i$-ta osoba jest kobietą,}\\
+% % \end{array} \right. \\
+% % &\ & \mathbf{x}_{i3}=\left\{ \begin{array}{ll}
+% % 1 & \textrm{jeżeli $i$-ta osoba mieszka w~mieście,}\\
+% % 0 & \textrm{jeżeli $i$-ta osoba mieszka na wsi.}\\
+% % \end{array} \right.
+% % \end{eqnarray}}
+% % \end{itemize}
+% % \scriptsize{
+% % \begin{table}[htp!]
+% % \begin{center}
+% % \begin{tabular}{|l|l|l|l|l|l|l|l|l|}
+% % \hline
+% % \multicolumn{1}{|c|}{\tiny{L.p.}} & \multicolumn{1}{c|}{\tiny{Płeć}} & \multicolumn{1}{c|}{\tiny{Zamieszkanie}} & \multicolumn{1}{c|}{\tiny{Zatrudnienie}} & \multicolumn{1}{c|}{\tiny{Wykształcenie}} & \multicolumn{1}{c|}{$d_{i}$} & \multicolumn{1}{c|}{$\mathbf{x}_{i1}$} & \multicolumn{1}{c|}{$\mathbf{x}_{i2}$} & \multicolumn{1}{c|}{$\mathbf{x}_{i3}$} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{$\cdot$} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{{\color{red} 0}}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1}}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{2}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{S}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1}}} & \multicolumn{1}{c|}{\tiny{{\color{red} 0}}} & \multicolumn{1}{c|}{\tiny{{\color{red} 0}}}  \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{3}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{$\cdot$} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1}}} & \multicolumn{1}{c|}{\tiny{{\color{red} 0}}} & \multicolumn{1}{c|}{\tiny{{\color{red} 0}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{4}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{{\color{red} 0}}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1}}} & \multicolumn{1}{c|}{\tiny{{\color{red} 0}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{$\cdots$}} & \multicolumn{1}{c|}{\tiny{$\cdots$}} & \multicolumn{1}{c|}{\tiny{$\cdots$}} & \multicolumn{1}{c|}{$\cdots$} & \multicolumn{1}{c|}{\tiny{$\cdots$}} & \multicolumn{1}{c|}{\tiny{$\cdots$}} & \multicolumn{1}{c|}{\tiny{{\color{red} $\cdots$}}} & \multicolumn{1}{c|}{\tiny{{\color{red} $\cdots$}}} & \multicolumn{1}{c|}{\tiny{{\color{red} $\cdots$}}}\\ 
+% % \hline
+% % \end{tabular}
+% % \end{center}
+% % \end{table}}
+% % \end{frame}
+
+% % \begin{frame}{Algorytm wyznaczania wag kalibracyjnych -- krok 3}
+% %     \begin{itemize}
+% % \item Tworzymy wektor złożony z~wartości globalnych wszystkich zmiennych pomocniczych $\mathbf{X}$ oraz wektor oszacowanych wartości globalnych $\mathbf{\hat{X}}$.
+% % \item W~naszym przykładzie mamy: $\mathbf{X}=\left(10,10,11\right)^T$, $\mathbf{\hat{X}}=\left(9,6,8\right)^T$.
+% % \item Następnie wyznaczamy wagi kalibracyjne $w_{i}$ korzystając ze wzoru \eqref{lin-cal-eq}.
+% % \end{itemize}
+% % \end{frame}
+
+
+% % \begin{frame}{Wagi kalibracyjne $w_{i}$}
+% %     	\scriptsize{
+% % \begin{table}[htp!]
+% % \begin{center}
+% % \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|}
+% % \hline
+% % \multicolumn{1}{|c|}{\tiny{L.p.}} & \multicolumn{1}{c|}{\tiny{Płeć}} & \multicolumn{1}{c|}{\tiny{Zamieszkanie}} & \multicolumn{1}{c|}{\tiny{Zatrudnienie}} & \multicolumn{1}{c|}{\tiny{Wykształcenie}} & \multicolumn{1}{c|}{$d_{i}$} & \multicolumn{1}{c|}{$\mathbf{x}_{i1}$} & \multicolumn{1}{c|}{$\mathbf{x}_{i2}$} & \multicolumn{1}{c|}{$\mathbf{x}_{i3}$} & \multicolumn{1}{c|}{$w_{i}$} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{$\cdot$} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{{\color{red} 0}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{2}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{S}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1,0447761}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{3}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{$\cdot$} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{{\color{red} 0}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{4}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1,6069652}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{5}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{$\cdot$} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{{\color{red} 0}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{6}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1,7263682}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{7}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1,1641791}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{8}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1,0447761}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{9}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{S}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1,1641791}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{10}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{S}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1,7263682}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{11}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{\tiny{S}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1,0447761}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{12}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1,6069652}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{13}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1,1641791}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{14}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{$\cdot$} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{{\color{red} 0}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{15}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{\tiny{S}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1,7263682}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{16}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{S}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1,0447761}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{17}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1,1641791}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{18}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{W}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1,6069652}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{19}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{B}} & \multicolumn{1}{c|}{$\cdot$} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{{\color{red} 0}}} \\ 
+% % \hline
+% % \multicolumn{1}{|r|}{\tiny{20}} & \multicolumn{1}{c|}{\tiny{K}} & \multicolumn{1}{c|}{\tiny{M}} & \multicolumn{1}{c|}{\tiny{P}} & \multicolumn{1}{c|}{\tiny{S}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{0}} & \multicolumn{1}{c|}{\tiny{1}} & \multicolumn{1}{c|}{\tiny{{\color{red} 1,1641791}}} \\ 
+% % \hline
+% % \end{tabular}
+% % \end{center}
+% % \end{table}}
+
+% % \end{frame}
+
+% % \begin{frame}{}
+% %     \begin{block}{Tworzenie tablic -- bez uwzględnienia wag kalibracyjnych}
+% % \begin{table}[htp!]
+% % \begin{center}
+% % \begin{tabular}{llll}
+% % \hline
+% %  & \multicolumn{2}{c}{Status zatrudnienia} &  \\ 
+% % Wykształcenie & Pracująca & Bezrobotna & Razem \\ 
+% % \hline
+% % Wyższe & \multicolumn{1}{c}{3} & \multicolumn{1}{c}{3} & \multicolumn{1}{c}{6} \\ 
+% % Średnie & \multicolumn{1}{c}{5} & \multicolumn{1}{c}{2} & \multicolumn{1}{c}{7} \\ 
+% % Podstawowe & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{2} \\ 
+% % \hline
+% % Razem & \multicolumn{1}{c}{9} & \multicolumn{1}{c}{6} & \multicolumn{1}{c}{{\color{red} 15}} \\ 
+% % \hline
+% % \end{tabular}
+% % \label{tabela:rejestr1}
+% % \end{center}
+% % \end{table}
+
+% % \end{block}
+% % \begin{block}{Tworzenie tablic -- z~uwzględnieniem wag kalibracyjnych}
+
+% % \begin{table}[htp!]
+% % \begin{center}
+% % \begin{tabular}{llll}
+% % \hline
+% %  & \multicolumn{2}{c}{Status zatrudnienia} &  \\ 
+% % Wykształcenie & Pracująca & Bezrobotna & Razem \\ 
+% % \hline
+% % Wyższe & \multicolumn{1}{c}{4,27} & \multicolumn{1}{c}{4,05} & \multicolumn{1}{c}{8,32} \\ 
+% % Średnie & \multicolumn{1}{c}{6,14} & \multicolumn{1}{c}{2,77} & \multicolumn{1}{c}{8,91} \\ 
+% % Podstawowe & \multicolumn{1}{c}{1,16} & \multicolumn{1}{c}{1,61} & \multicolumn{1}{c}{2,77} \\ 
+% % \hline
+% % Razem & \multicolumn{1}{c}{11,57} & \multicolumn{1}{c}{8,43} & \multicolumn{1}{c}{{\color{red} 20}} \\ 
+% % \hline
+% % \end{tabular}
+% % \end{center}
+% % \end{table}
+% % \end{block}
+
+% % \end{frame}
+
+% % \begin{frame}{Kalibracja -- przykład empiryczny dla prób nielosowych}
+
+% % \begin{center}
+% % Przejdźmy do przykładu    
+% % \end{center}
+
+% % \end{frame}
+
+% % \subsubsection{Propensity score/inverse probability weighting}
+
+% % \begin{frame}{Propensity score -- Rosenbaum \& Rubin (1983)}
+% % \begin{center}
+% %     \includegraphics[width=\textwidth]{fig-4-meth/rubin.png}
+% % \end{center}
+% % \end{frame}
+
+% % \begin{frame}{Propensity score  -- Lee (2006)}
+% % \begin{center}
+% %     \includegraphics[width=\textwidth]{fig-4-meth/lee.png}
+% % \end{center}
+% % \end{frame}
+
+% % \begin{frame}{Propensity score  -- Chen (2020)}
+% % \begin{center}
+% %     \includegraphics[width=\textwidth]{fig-4-meth/ps-dr.png}
+% % \end{center}
+% % \end{frame}
+
+% % \begin{frame}{Propensity score  -- Wu (2022)}
+% % \begin{center}
+% %     \includegraphics[width=\textwidth]{fig-4-meth/ps-review.png}
+% % \end{center}
+% % \end{frame}
+
+% % % \begin{frame}{Propensity score -- dwa podejścia}
+% % % Ogólnie wyróżnia się dwa podejścia:
+
+% % % \begin{enumerate}
+% % %     \item Propensity score matching (PSM) -- pol. łączenie przez dopasowanie,
+% % %     \item Propensity score weighting (PSW) -- pol. ważenie przez dopasowanie.
+% % % \end{enumerate}
+% % % \end{frame}t
+
+% % % \begin{frame}{Propensity score matching -- idea}
+% % % \begin{center}
+% % %     \includegraphics[width=\textwidth]{fig-4-meth/prop.png}
+% % % \end{center}
+% % % \begin{itemize}
+% % %     \item Mamy dwa zbiory danych (próba losowa i nielosowa).
+% % %     \item Mamy dwie wspólne zmienne (X1, X2) oraz jedną obserwowaną tylko w próbie nielosowej (Y).
+% % %     \item W próbie losowej mamy wagi ($d$).
+% % %     \item Szacujemy prawdopodobieństwo $P(R=1)$ uwzględniając wspólne zmienne (X1, X2).
+% % %     \item Łączymy (ang. matching) po oszacowanych $\hat{\rho}=P(R=1 |X1, X2)$.
+% % %     \item Dla jednostek z próby nielosowej przypisujemy wagi $d$ z próby losowej.
+% % % \end{itemize}
+% % % \end{frame}
+
+% % \begin{frame}{Propensity score weighting -- idea}
+% % \begin{center}
+% %     \includegraphics[width=\textwidth]{fig-4-meth/prop-w.png}
+% % \end{center}
+% % \begin{itemize}
+% %     \item Mamy dwa zbiory danych (próba losowa i nielosowa).
+% %     \item Mamy dwie wspólne zmienne (X1, X2) oraz jedną obserwowaną tylko w próbie nielosowej (Y).
+% %     \item W próbie losowej mamy wagi ($d$).
+% %     \item Szacujemy prawdopodobieństwo $P(R=1)$ uwzględniając wspólne zmienne (X1, X2).
+% %     \item Dla jednostek z próby nielosowej przypisujemy wagi $w* = 1/ P(R=1|X1,X2)$.
+% % \end{itemize}
+% % \end{frame}
+
+
+% % \begin{frame}{Propensity score -- założenia (cz. 1)}
+% % \begin{itemize}
+% %     \item Różne nazwy na to samo: propensity score adjustment (PSA), propensity score weighting (PSW), inverse probability weighting (IPW).
+% %     \item W metodzie \textit{propensity score} zakładamy, że 
+% %     \begin{enumerate}
+% %         \item potrafimy rozróżnić jednostki, które są i nie są w próbie nielosowej, 
+% %         \item dysponujemy źródłem, które zawiera jednostki nie występujące w źródle nielosowym. 
+% %     \end{enumerate}
+% %     \item Przykład:
+% %     \begin{itemize}
+% %         \item Źródło big data oraz dane dotyczące całej populacji
+% %         \item Źródło big data oraz próba losowa, w której znajdują się również jednostki obserwowane w big data.
+% %     \end{itemize}
+% % \end{itemize}
+% % \end{frame}
+
+% % \begin{frame}{Propensity score -- oznaczenia}
+
+% % Podstawowe oznaczenia
+% % \begin{itemize}
+% %     \item Niech $R_i = \{0, 1\}$ oznacza zmienną określającą przynależność do próby nielosowej ($R_i=1$).
+% %     \item Niech zmienne $\bx_i$ oznacza wektor zmiennych pomocniczych, obserwowanych w obydwu źródłach danych.
+% %     \item Niech $\pi_i = P(R_i = 1 | \bx_i)$ prawdopodobieństwo przynależności do danego źródła.
+% %     \item $\pi_i$ nie jest znane jest estymowane na podstawie danych.
+% % \end{itemize}
+% % \end{frame}
+
+% % \begin{frame}{Propensity score -- założenia (cz. 2)}
+% % Formalnie, założenia metody \textit{propensity score} są następujące:
+
+% % \begin{itemize}
+% %     \item Zmienna selekcji / inkluzji $R_i$ oraz badana przez nas cecha $y_i$ są warunkowo niezależne gdy pod uwagę weźmiemy cechy $\bx_i$. Innymi słowy $\pi_i = P(R_i = 1 | y, \bx_i) = P(R_i = 1 | \bx_i)$ -- \textbf{Inaczej:} dobór jest nieinformatywny (w literaturze przedmiotu: missing at random, ignorable). 
+% %     \item Wszystkie jednostki w populacji mają niezerowe prawdopodobieństwo inkluzji do próby nielosowej ($\pi_i >0$) -- \textbf{Inaczej:} brak błędów pokrycia.
+% %     \item Zmienne $R_i$ oraz $R_j$ są niezależne gdy uwzględnimy $\bx_i$ dla $i \neq j$ -- \textbf{Inaczej:} obserwacje są niezależne (m.in. brak duplikatów lub jakichś zmiennych $\bz_i$, których nie obserwujemy).
+% % \end{itemize}
+% % \end{frame}
+
+% % \begin{frame}{Propensity score weighting}
+% % $\pi_i$ możemy estymować wiele różnych sposobów. Na przykład, możemy do tego celu wykorzystać 
+
+% % \begin{itemize}
+% %     \item model regresji logistycznej (w tym np. LASSO)
+% %     \begin{equation}
+% %         \log \left(\frac{\pi\left(\bx_{i}\right)}{1-\pi\left(\bx_{i}\right)}\right)=\bx_i^T\bbeta
+% %     \end{equation}
+% %     \item algorytmy uczenia maszynowego
+% %     \begin{equation}
+% %         P(R_i = 1 | \bx_i) = f(\bx_i),
+% %     \end{equation}
+% %     gdzie $f(\cdot)$ jest dowolną funkcją.
+% % \end{itemize}
+% % \end{frame}
+
+% % \begin{frame}{Propensity score weighting -- estymator}
+% %     Po oszacowaniu $\pi$, wykorzystujemy następujący estymator, który oznaczamy jako IPW/PSW/PSA
+    
+% %     \begin{equation}
+% %         \hat{\theta}_{IPW/PSW/PSA} = 
+% %         \frac{ 
+% %         \sum_{i \in \mathcal{S}_n} y_i \hat{\pi}_i^{-1}
+% %         }{
+% %         \sum_{i \in \mathcal{S}_n} \hat{\pi}_i^{-1}
+% %         },
+% %     \end{equation}
+    
+% % gdzie $\mathcal{S}_n$ oznacza próbę nielosową, $\pi_i^{-1}$ to odwrotność skłonności. Uwaga: nie robimy tutaj sumy ponieważ suma $\pi_i^{-1}$ nie daje nam populacji.
+
+% % \vspace{0.5cm}
+
+% % Estymacja wariacji tego estymatora nie jest taka prosta i zostanie pokrótce omówiona na kolejnym slajdzie.
+% % \end{frame}
+
+% % \begin{frame}{Propensity score weighting -- teoria}
+% % Ostatnie, najbardziej aktualne artykuły poświęcone wykorzystaniu metody propensity score weighting dla prób nielosowych:
+
+% % \begin{itemize}
+% %     \item Kim, J. K., \& Wang, Z. (2019). \textbf{Sampling techniques for big data analysis}. \textit{International Statistical Review}, 87, S177-S191
+% %     \begin{itemize}
+% %         \item estymacja tylko na podstawie próby losowej,
+% %         \item propozycja estymatora IPW/PSW/PSA oraz jego wariancji (dla prostych schematów losowania próby losowej).
+% %     \end{itemize}
+% %     \item Chen, Y., Li, P., \& Wu, C. (2020). \textbf{Doubly robust inference with nonprobability survey samples}. \textit{Journal of the American Statistical Association}, 115(532), 2011-2021.
+% %     \begin{itemize}
+% %         \item estymacja IPW/PSW/PSA dla wszystkich obserwacji (oba źródła jednocześnie).
+% %         \item propozycja estymatora IPW/PSW/PSA oraz jego wariancji (ogólna postać dla wszelkiego rodzaju schematów losowania próby losowej).
+% %     \end{itemize}
+
+% % \end{itemize}
+% % \end{frame}
+
+% % \begin{frame}{Propensity score weighting -- wady i zalety}
+% % \textbf{Wśród zalet możemy wymienić}:
+% %     \begin{itemize}
+% %         \item prosta idea i implementacja,
+% %         \item jeden zestaw wag dla całego zbioru danych,
+% %         \item w bardziej (powiedzmy) zaawansowanej wersji wymaga wyłącznie znajomości wartości globalnych / średnich dla cech $\bx_i$.
+% %     \end{itemize}
+    
+% % \textbf{Wśród wad możemy wymienić}:
+
+% % \begin{itemize}
+% %     \item metoda działa \textbf{tylko wtedy gdy poprawnie określimy model} dla $\pi$ (postać, zmienne),
+% %     \item estymator PS nie jest efektywny,
+% %     \item w podstawowej wersji wymaga danych jednostkowych (próba losowa i nielosowa),
+% %     \item musimy zidentyfikować jednostki między źródłami,
+% %     \item wagi ($w_i^*=1/\hat{\pi}_i$) nie odtwarzają wartości globalnych z populacji (np. liczby kobiet, mężczyzn; charakterystyk podmiotów gospodarczych),
+% %     \item jeden zestaw wag dla całego zbioru danych.
+% % \end{itemize}
+
+
+% % \end{frame}
+
+% % \begin{frame}{Propensity score weighting -- przykład empiryczny}
+
+% % \begin{center}
+% % Przejdźmy do przykładu    
+% % \end{center}
+
+% % \end{frame}
+
+
+% % % \begin{frame}{PSW -- Chen, Li \& Wu (2020) -- szczegóły}
+
+% % % \begin{equation}
+% % % \begin{aligned} 
+% % % l(\boldsymbol{\theta}) &=\sum_{i=1}^{N}\left\{R_{i} \log \pi_{i}^{\mathrm{A}}+\left(1-R_{i}\right) \log \left(1-\pi_{i}^{\mathrm{A}}\right)\right\} \\ 
+% % % &=\sum_{i \in \mathcal{S}_{\mathrm{A}}} \log \left\{\frac{\pi\left(\boldsymbol{x}_{i}, \boldsymbol{\theta}\right)}{1-\pi\left(\boldsymbol{x}_{i}, \boldsymbol{\theta}\right)}\right\}+\sum_{i=1}^{N} \log \left\{1-\pi\left(\boldsymbol{x}_{i}, \boldsymbol{\theta}\right)\right\} 
+% % % \end{aligned}
+% % % \end{equation}
+
+% % % \end{frame}
+
+
+% % % \begin{frame}{PSW -- Chen, Li \& Wu (2020) -- szczegóły}
+% % % \begin{equation}
+% % % l^{*}(\boldsymbol{\theta})=\sum_{i \in \mathcal{S}_{\mathrm{A}}} \log \left\{\frac{\pi\left(\boldsymbol{x}_{i}, \boldsymbol{\theta}\right)}{1-\pi\left(\boldsymbol{x}_{i}, \boldsymbol{\theta}\right)}\right\}+\sum_{i \in \mathcal{S}_{\mathrm{B}}} d_{i}^{\mathrm{B}} \log \left\{1-\pi\left(\boldsymbol{x}_{i}, \boldsymbol{\theta}\right)\right\}
+% % % \end{equation}
+% % % \end{frame}
+
+% % % \begin{frame}{PSW -- Chen, Li \& Wu (2020) -- szczegóły}
+% % % \begin{equation}
+% % % l^{*}(\boldsymbol{\theta})=\sum_{i \in \mathcal{S}_{\mathrm{A}}} \boldsymbol{x}_{i}^{\top} \boldsymbol{\theta}-\sum_{i \in \mathcal{S}_{\mathrm{B}}} d_{i}^{\mathrm{B}} \log \left\{1+\exp \left(\boldsymbol{x}_{i}^{\top} \boldsymbol{\theta}\right)\right\}
+% % % \end{equation}
+% % % \end{frame}
+
+
+% % % \begin{frame}{PSW -- Chen, Li \& Wu (2020) -- szczegóły}
+% % % \begin{equation}
+% % % U(\boldsymbol{\theta})=\frac{\partial}{\partial \boldsymbol{\theta}} l^{*}(\boldsymbol{\theta})=\sum_{i \in \mathcal{S}_{\mathrm{A}}} \boldsymbol{x}_{i}-\sum_{i \in \mathcal{S}_{\mathrm{B}}} d_{i}^{\mathrm{B}} \pi\left(\boldsymbol{x}_{i}, \boldsymbol{\theta}\right) \boldsymbol{x}_{i}
+% % % \end{equation}
+% % % \end{frame}
+
+% % % \begin{frame}{PSW -- Chen, Li \& Wu (2020) -- szczegóły}
+% % % \begin{equation}
+% % % \sum_{i \in \mathcal{S}_{\mathrm{A}}} \frac{\boldsymbol{x}_{i}}{\pi_{i}(\boldsymbol{\theta})}=\sum_{i=1}^{N} \boldsymbol{x}_{i}
+% % % \end{equation}
+% % % \end{frame}
+
+% % % \begin{frame}{PSW -- Chen, Li \& Wu (2020) -- szczegóły}
+% % % \begin{equation}
+% % % \hat{\mu}_{\mathrm{IPW} 1}=\frac{1}{N} \sum_{i \in \mathcal{S}_{\mathrm{A}}} \frac{y_{i}}{\hat{\pi}_{i}^{\mathrm{A}}} \quad \text { and } \quad \hat{\mu}_{\mathrm{IPW} 2}=\frac{1}{\hat{N}^{\mathrm{A}}} \sum_{i \in \mathcal{S}_{\mathrm{A}}} \frac{y_{i}}{\hat{\pi}_{i}^{\mathrm{A}}}
+% % % \end{equation}
+% % % \end{frame}
+
+% % % \begin{frame}{PSW -- Chen, Li \& Wu (2020) -- szczegóły}
+% % % \begin{equation}
+% % % \begin{array}{l}V_{\mathrm{IPW} 1}=\frac{1}{N^{2}} \sum_{i=1}^{N}\left(1-\pi_{i}^{\mathrm{A}}\right) \pi_{i}^{\mathrm{A}}\left(\frac{y_{i}}{\pi_{i}^{\mathrm{A}}}-\mathbf{b}_{1}^{\top} \boldsymbol{x}_{i}\right)^{2}+\mathbf{b}_{1}^{\top} \mathbf{D} \mathbf{b}_{1} \\ V_{\mathrm{IPW} 2}=\frac{1}{N^{2}} \sum_{i=1}^{N}\left(1-\pi_{i}^{\mathrm{A}}\right) \pi_{i}^{\mathrm{A}}\left(\frac{y_{i}-\mu_{y}}{\pi_{i}^{\mathrm{A}}}-\mathbf{b}_{2}^{\top} \boldsymbol{x}_{i}\right)^{2}+\mathbf{b}_{2}^{\top} \mathbf{D} \mathbf{b}_{2}\end{array}
+% % % \end{equation}
+% % % \end{frame}
+
+
+% % % \begin{frame}{PSW -- Chen, Li \& Wu (2020) -- szczegóły}
+% % % \begin{equation}
+% % % \frac{1}{N^{2}} \sum_{i \in \mathcal{S}_{\mathrm{A}}}\left(1-\hat{\pi}_{i}^{\mathrm{A}}\right)\left(\frac{y_{i}-\hat{\mu}_{\mathrm{IPW} 2}}{\hat{\pi}_{i}^{\mathrm{A}}}-\hat{\mathbf{b}}_{2}^{\top} \boldsymbol{x}_{i}\right)^{2}
+% % % \end{equation}
+% % % \end{frame}
+
+% % % \begin{frame}{PSW -- Chen, Li \& Wu (2020) -- szczegóły}
+% % % \begin{equation}
+% % % \begin{aligned} \hat{\mathbf{b}}_{2}^{\top}=&\left\{\sum_{i \in \mathcal{S}_{\mathrm{A}}}\left(\frac{1}{\hat{\pi}_{i}^{\mathrm{A}}}-1\right)\left(y_{i}-\hat{\mu}_{\mathrm{IPW} 2}\right) \boldsymbol{x}_{i}^{\top}\right\} \\ & \times\left\{\sum_{i \in \mathcal{S}_{\mathrm{B}}} d_{i}^{\mathrm{B}} \hat{\pi}_{i}^{\mathrm{A}}\left(1-\hat{\pi}_{i}^{\mathrm{A}}\right) \boldsymbol{x}_{i} \boldsymbol{x}_{i}^{\top}\right\}^{-1} \end{aligned}
+% % % \end{equation}
+% % % \end{frame}
+
+% \subsection{Metody oparte na modelu}
+
+% %% trochę wiecej ogolnie o tym zanim do DR
+
+% \subsubsection{Ogólna idea}
+
+% % \begin{frame}{Podejście oparte na modelu}
+% % \begin{itemize}
+% %     \item W podejściu opartym na modelu zakładamy, że interesuje nas $E(Y|X)$,
+% %     \item Zakładamy, że model $E(Y|X, R=1) = E(Y|X) = \mu(y_i | \boldsymbol{x}_i)$,
+% %     \item Budujemy model na próbie nielosowej (np. regresja liniowa, logistyczna) i aplikujemy na całą populację (ewentualnie próbę)
+% %     \item Estymator, w przypadku gdy znamy całą populację na postać:
+    
+% %     \begin{equation}
+% %         \hat{\theta}_{M} = \sum_{i \in \mathcal{S}_A} y_i + \sum_{i \in U \setminus \mathcal{S}_A} \hat{y}_i,
+% %     \end{equation}
+% %     gdzie $\mathcal{S}_{A}$ to próba nielosowa, a $U \setminus \mathcal{S}_A$ to pozostała część populacji.
+% % \end{itemize}
+% % \end{frame}
+
+
+% \begin{frame}{Model semi-parametryczny w podejściu predykcyjnym}
+% \begin{itemize}
+%     \item W podejściu predykcyjnym zakłada się semi-parametryczny model dla populacji skończonej:
+%     \begin{equation*}
+%     E_{\xi}\left(y_i \mid \bx_i\right)=m\left(\bx_i, \bbeta\right), \quad V_{\xi}\left(y_i \mid \bx_i\right)=v\left(\bx_i\right) \sigma^2
+%     \end{equation*}
+%     \item Funkcje $m(\cdot,\cdot)$ i $v(\cdot)$ mają znane formy
+%     \item $y_i$ są warunkowo niezależne, gdy dane są $\bx_i$
+%     \item Model obowiązuje dla wszystkich jednostek w próbie nieprobabilistycznej $S_A$
+%     \item Parametry modelu można oszacować metodą quasi-największej wiarygodności
+% \end{itemize}
+% \end{frame}
+
+% \begin{frame}{Estymatory predykcyjne}
+% \begin{itemize}
+%     \item Dwa powszechnie stosowane estymatory predykcyjne:
+%     \begin{equation*}
+%     \hat{\mu}_{y,PR1}=\frac{1}{N} \sum_{i=1}^N \hat{m}_i \quad \text{i} \quad \hat{\mu}_{y,PR2}=\frac{1}{N}\left\{\sum_{i \in S_A} y_i-\sum_{i \in S_A} \hat{m}_i+\sum_{i=1}^N \hat{m}_i\right\}
+%     \end{equation*}
+%     \item Dla modeli liniowych, gdzie $m(\bx_i, \bbeta)=\bx_i^{\prime}\bbeta$, estymatory upraszczają się do:
+%     \begin{equation*}
+%     \hat{\mu}_{y,PR1}=\mu_{\bx}^{\prime} \hat{\bbeta} \quad \text{i} \quad \hat{\mu}_{y,PR2}=\frac{n_A}{N}\left(\bar{y}_A-\overline{\bx}_A^{\prime} \hat{\bbeta}\right)+\mu_{\bx}^{\prime} \hat{\bbeta}
+%     \end{equation*}
+%     \item Jeśli model liniowy zawiera wyraz wolny i $\hat{\bbeta}$ jest estymatorem najmniejszych kwadratów, to $\hat{\mu}_{y,PR1}=\hat{\mu}_{y,PR2}$
+% \end{itemize}
+% \end{frame}
+
+% \begin{frame}{Korzyści z estymatorów predykcyjnych}
+% \begin{itemize}
+%     \item Formuła $\hat{\mu}_{y,PR2}$ wymaga tylko:
+%     \begin{itemize}
+%         \item próby nieprobabilistycznej $S_A$
+%         \item średnich populacyjnych (lub sum i wielkości populacji $N$)
+%     \end{itemize}
+%     \item Jeśli średnie populacyjne są nieznane, można je zastąpić estymatorami z referencyjnej próby probabilistycznej $S_B$:
+%     \begin{itemize}
+%         \item $\sum_{i=1}^N \hat{m}_i$ zastępuje się przez $\sum_{i \in S_B} d_i^B\hat{m}_i$
+%         \item $\mu_{\bx}$ zastępuje się przez $\hat{\mu}_{\bx}=\hat{N}_B^{-1}\sum_{i \in S_B}d_i^B\bx_i$, gdzie $\hat{N}_B=\sum_{i \in S_B}d_i^B$
+%     \end{itemize}
+% \end{itemize}
+% \end{frame}
+
+
+% \begin{frame}{Podejście oparte na modelu}
+%     \begin{figure}
+%         \centering
+%         \includegraphics[width=0.8\textwidth]{fig-6-model/model-1.png}
+%     \end{figure}
+% \end{frame}
+
+% \begin{frame}{Podejście oparte na modelu}
+%     \begin{figure}
+%         \centering
+%         \includegraphics[width=0.8\textwidth]{fig-6-model/model-2.png}
+%     \end{figure}
+% \end{frame}
+
+% \begin{frame}{Podejście oparte na modelu}
+%     \begin{figure}
+%         \centering
+%         \includegraphics[width=0.8\textwidth]{fig-6-model/model-3.png}
+%     \end{figure}
+% \end{frame}
+
+% \begin{frame}{Podejście oparte na modelu -- klasyfikacja metod}
+% \begin{itemize}
+%     \item Gdy znamy wszystkie jednostki z populacji,
+%     \item Gdy znamy tylko jednostki z próby nielosowej -- masowa imputacja (metoda Riversa, metody opracowane przez Jae-Kwang Kim'a i współpracowników).
+% \end{itemize}
+% \end{frame}
+
+% \begin{frame}{Podejście oparte na modelu -- założenia}
+%     \begin{itemize}
+%         \item Model z próby losowej możemy przenieść na resztę jednostek (ang. missing at random) -- tzw. model dla super-populacji.
+%         \item Dysponujemy zmiennymi $\boldsymbol{X}$, które są obserwowane w próbie/próbach i~populacji.
+%         \item Możemy zidentyfikować jednostki między próbą nielosową i populacją.
+%         \item Zakładamy, że zmienna $Y$ oraz  $\boldsymbol{X}$ są obserwowane bez błędów.
+%         \item Zakładamy brak korelacji między obserwacjami, brak błędu nadreprezentacji itp. 
+%     \end{itemize}
+% \end{frame}
+
+
+% \begin{frame}{Masowa imputacja -- dwa podejścia}
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=0.8\textwidth]{fig-6-model/mass-1.png}
+%     \caption{Podejście I: Przepisanie wartości z próby nielosowej}
+% \end{figure}
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=0.8\textwidth]{fig-6-model/mass-2.png}
+%     \caption{Podejście II: wartości przewidywane z modelu zbudowanego na próbie nielosowej}
+% \end{figure}
+% \end{frame}
+
+
+% \begin{frame}{Masowa imputacja -- podejście I}
+% W pierwszym podejściu, zaproponowanym przez Rivers (2007), dokonujemy masowej imputacji przez tzw. sample matching, który polega na następujących krokach:
+% \begin{enumerate}
+%     \item Dla próby nielosowej $\mathcal{S}_{\mathrm{A}}$ oraz losowej $\mathcal{S}_{\mathrm{B}}$ określamy zestaw wspólnych cech $\mathbf{X}$.
+%     \item Następie, dla każdej jednostki $i \in \mathcal{S}_{\mathrm{B}}$ szukamy najbliższej jednostki ze zbioru $k \in \mathcal{S}_{\mathrm{A}}$, tak żeby
+%     \begin{equation}
+%         d(\mathbf{x}_k, \mathbf{x}_i) =  || \mathbf{x}_k - \mathbf{x}_i|| 
+%     \end{equation}
+%     była jak najmniejsza. Możemy w tym celu wykorzystać np. odległość euklidesową. Jednostce $i$ przypisujemy wartość cechy $y_k$ ze zbioru $\mathcal{S}_{\mathrm{A}}$.
+%     \item Po znalezieniu odpowiednich sąsiadów, wyznaczamy estymator. Przykładowo, estymator wartości średniej dany będzie:
+%     \begin{equation}
+%         \hat{\mu}_{y,MI-NN} = \sum_{i \in S_B} d_iy_i / \sum_{i \in S_B} d_i.
+%     \end{equation}
+% \end{enumerate}
+% \end{frame}
+
+% \begin{frame}{Masowa imputacja -- podejście I -- UWAGA}
+% Na podstawie pracy: Abadie \& Imbens (2006) \textbf{Large sample properties of matching estimators for average} treatment effects (Econometrica, 74(1), 235-267) można wykazać, że obciążenie estymatora $\hat{\theta}_{M1}$ rośnie wraz z liczbą zmiennych użytych do obliczenia $d(\mathbf{x}_k, \mathbf{x}_i)$. Dokładnie, ta zależność wyrażona jest następującym wzorem:
+
+% \begin{equation}
+%     %d(\mathbf{x}_k, \mathbf{x}_i) = O_p(n^{-1/p}),
+%     Bias(\hat{\mu}_{y,MI-NN}) = O_p\left(n^{-1/p}\right)
+% \end{equation}
+
+% gdzie $p$ oznacza liczbę zmiennych (wymiar wektora $\mathbf{x}_k$), a $O_p$ oznacza notację wielkie-O i~określa asymptotyczne tempo wzrostu (od liczebności próby losowej $n_{B}$).
+
+% \vspace{0.5cm}
+
+% Oznacza to, że estymator $\hat{\mu}_{y,MI-NN}$ będzie miał najmniejsze obciążenie wyłącznie gdy $p=1$, $O_p(n^{-1/p}) = O_p(n^{-1/1}) = O_p(n^{-1})$.
+
+% \end{frame}
+
+% \begin{frame}{Asymptotyczne obciążenie przy stałej liczbie sąsiadów}
+%     \begin{figure}
+%         \centering
+%         \includegraphics[width=\textwidth]{figs/assymp-bias.png}
+%         \caption{Wizualizacja asymptotycznego obciążenia estymatora MI NN }
+%     \end{figure}
+% \end{frame}
+
+% \begin{frame}{Masowa imputacja -- podejście I -- Praktyka}
+
+% Mając na uwadze fakt, że przypisania wartości $y_i$ z próby nielosowej dla jednostek $k$ z próby losowej należy wykorzystać na podstawie wyłącznie jednej zmiennej, stosuje się następujące podejście:
+
+% \begin{enumerate}
+%     \item Budujemy model $m(\bx_i; \bbeta)$ na próbie nielosowej $\mathcal{S}_{\mathrm{A}}$ otrzymując $\hat{y}_i = m(\bx_i; \hat{\bbeta})$.
+%     \item Stosujemy model $m(\bx; \hat{\bbeta})$ na próbie losowej $\mathcal{S}_{\mathrm{B}}$ otrzymując $\hat{y}_k = m(\bx_k; \hat{\bbeta})$.
+%     \item Dla każdej jednostki $k \in \mathcal{S}_{\mathrm{B}}$ znajdujemy najbliższą jednostkę na podstawie $d(\hat{y}_k, \hat{y}_{i})$ i przepisujemy wartość $y_i$.  
+%     \item Następnie wyznaczamy estymator 
+        
+%         \begin{equation}
+%         \hat{\mu}_{y,MI-PMM} = \sum_{i \in S_B} d_iy_i / \sum_{i \in S_B} d_i.
+%     \end{equation}
+    
+% \end{enumerate}
+% To podejście w literaturze nazywa się \textit{predictive mean matching}.
+% \end{frame}
+
+% \begin{frame}{Masowa imputacja -- podejście II}
+
+% \begin{itemize}
+%     \item W pracy Kim,  Park, Chen i Wu (2021) \textbf{Combining Non-probability and Probability Survey Samples Through Mass Imputation}, (Journal of the Royal Statistical Society: Series A) zaproponowano trochę inne podejście ale oparte na solidnych, teoretycznych podstawach.
+%     \item Zamiast dokonywać poszukiwania najbliższego sąsiada wykorzystuje się wyłącznie 1 oraz 2 krok z poprzedniego slajdu.
+%     \item Estymator wartości średniej dany jest wtedy 
+%          \begin{equation}
+%         \hat{\mu}_{y,MI} = \sum_{i \in S_B} d_i\hat{y}_i / \sum_{i \in S_B} d_i.
+%     \end{equation}
+%     \item Ten sposób nazywamy na potrzeby zajęć podejściem II do masowej imputacji.
+%     \item W wyżej wymienionej pracy zaproponowano również estymator wariancji w postaci zlinearyzowanej (konkretny wzór), jak i na podstawie metody bootstrap.
+% \end{itemize}
+% \end{frame}
+
+% \begin{frame}{Masowa imputacja -- przykład empiryczny}
+% \begin{center}
+% Przejdźmy do przykładu    
+% \end{center}
+% \end{frame}
+
+% \subsection{Podwójnie odporne estymatory}
+
+% \begin{frame}{Podwójnie odporne estymatory}
+% \begin{itemize}
+%     \item Chen, Y., Li, P., \& Wu, C. (2020). Doubly Robust Inference With Nonprobability Survey Samples. Journal of the American Statistical Association, 115(532), 2011–2021. zaproponowali 2 estymatory podwójnie odporne:
+
+%     \item Wariant 1 ($N$ jest znane)
+%     $$
+%     \hat{\mu}_{y, D R 1}=\frac{1}{N} \sum_{i \in S_A} d_i^A\left\{y_i-m\left(\boldsymbol{x}_i, \hat{\boldsymbol{\beta}}\right)\right\}+\frac{1}{N} \sum_{i \in S_B} d_i^B m\left(\boldsymbol{x}_i, \hat{\boldsymbol{\beta}}\right).
+%     $$
+%     \item Wariant 2 ($N$ jest estymowane)
+%     $$
+%     \hat{\mu}_{y, D R 2}=\frac{1}{\hat{N}^A} \sum_{i \in S_A} d_i^A\left\{y_i-m\left(\boldsymbol{x}_i, \hat{\boldsymbol{\beta}}\right)\right\}+\frac{1}{\hat{N}^B} \sum_{i \in S_B} d_i^B m\left(\boldsymbol{x}_i, \hat{\boldsymbol{\beta}}\right).
+%     $$
+% \end{itemize}
+% \end{frame}
+
+% \begin{frame}{Podwójnie odporne estymatory}
+
+
+% \begin{itemize}
+%     \item \textit{Propensity score weighting} działa \textbf{wyłącznie wtedy, gdy} model  $P(R_i = 1 | \bx_i)$ jest poprawnie \alert{Wyspecyfikowany} -- zakładany model jest poprawny dla całej populacji.
+%     \item Dlatego w literaturze zaproponowano nową klasę estymatorów pod nazwą: podwójnie odporne estymatory (ang. \textit{double robust estimators}).
+%     \item Dlaczego podwójnie odporne? Estymator ten składa się z dwóch części (na przykładzie 2 estymator)
+
+%     $$
+%     \hat{\mu}_{y, D R 2}=
+%     \overbrace{\frac{1}{\hat{N}^A} \sum_{i \in S_A} d_i^A\left\{y_i-m\left(\boldsymbol{x}_i, \hat{\boldsymbol{\beta}}\right)\right\}}^{\text{Średnia ważona reszt z modelu}}
+%     +
+%     \overbrace{\frac{1}{\hat{N}^B} \sum_{i \in S_B} d_i^B m\left(\boldsymbol{x}_i, \hat{\boldsymbol{\beta}}\right).}^{\text{Średnia z predykcji dla całej populacji}}
+%     $$
+
+% \end{itemize}
+
+% \end{frame}
+
+% \begin{frame}{Podwójnie odporne estymatory -- w telegraficznym skrócie}
+
+
+% \begin{center}
+%   \textbf{Do wartości przewidywanych dla jednostek spoza próby nielosowej dodajemy ważone reszty z modelu dla próby nielosowej}.  
+% \end{center}
+
+
+% \end{frame}
+
+% \begin{frame}{Podwójnie odporne estymatory}
+% Własności:
+% \begin{itemize}
+%     \item Estymator ten jest nieobciążony gdy model dla $\pi\left(\bx_i, \bgamma\right)$ jest źle wyspecyfikowany, ale $m\left(\boldsymbol{x}_i, \boldsymbol{\beta}\right)$ jest dobrze wyspecyfikowany,
+%     \item Estymator ten jest nieobciążony gdy $m\left(\boldsymbol{x}_i, \boldsymbol{\beta}\right)$ jest źle wyspecyfikowany ale $\pi\left(\bx_i, \bgamma\right)$ jest dobrze wyspecyfikowany.
+% \end{itemize}
+
+% Literatura:
+
+% \begin{itemize}
+%     \small
+%     \item Chen, Y., Li, P., \& Wu, C. (2020). Doubly Robust Inference With Nonprobability Survey Samples. Journal of the American Statistical Association, 115(532), 2011–2021.
+%     \item Kim, J. K., \& Wang, Z. (2019). Sampling Techniques for Big Data Analysis. International Statistical Review, 87(S1), S177–S191. 
+% \end{itemize}
+% \end{frame}
+
+
+% \begin{frame}{Podwójnie odporne estymatory -- estymacja wariancji}
+% \begin{itemize}
+%     \justifying 
+%     \item Kim  \& Wang (2019) pokazali, że jeżeli próba losowa stanowi niewielki ułamek próby nielosowej ($n_B/N_A = o(1)$) to wariancję estymatora $\hat{\mu}_{y, D R 1}$ lub  $\hat{\mu}_{y, D R 2}$ można wyznaczyć wyłącznie na podstawie próby losowej (zgodnie z jej schematem losowania).
+%     \item Chen, Li \& Wu (2020) wyznaczyli estymatory wariancji bez takiego założenia oraz zaproponowali podejście oparte na metodzie bootstrap, którą można scharakteryzować następującymi niezależnymi krokami:
+%     \begin{enumerate}
+%         \item dla próby nielosowej $S_A$ losujemy ze zwracaniem prostą próbę $S_A^*$o liczebności $n_A$,
+%         \item dla próby losowej $S_B$ losujemy z prawdopodobieństwem $1/d_i^B$ ze zwracaniem próbę $S_B^*$ o liczebności $n_B$
+%     \end{enumerate}
+%     Następnie wyznaczamy $\hat{\mu}_{y, D R 1}^*$ lub $\hat{\mu}_{y, D R 2}^*$ z każdej próby bootstrapowej.
+% \end{itemize}
+% \end{frame}
+
+% \begin{frame}{Podwójnie odporne estymatory -- rozszerzenie}
+
+% \begin{itemize}
+%     \item W powyższych pracach nie rozważano kwestii doboru zmiennych do obydwu modeli,
+%     \item Praca: \textit{Yang, S., Kim, J. K., \& Song, R. (2020). Doubly robust inference when combining probability and non‐probability samples with high dimensional data. Journal of the Royal Statistical Society: Series B (Statistical Methodology), 82(2), 445-465} przedstawia rozwiązanie w tym zakresie oparte na doborze zbliżonym do regresji LASSO (dokładnie Smoothly Clipped Absolute Deviation; SCAD). Jest również pakiet w R ale~o dość ograniczonych możliwościach.
+% \end{itemize}
+
+% \end{frame}
+
+% \begin{frame}{Podwójnie odporne estymatory -- przykład empiryczny}
+
+% \begin{center}
+% Przejdźmy do przykładu    
+% \end{center}
+
+% \end{frame}
+
+% % \subsubsection{Podwójnie odporne estymatory}
+
+% % \begin{frame}{Podwójnie odporne estymatory}
+
+% % \begin{itemize}
+% %     \item \textit{Propensity score weighting} działa \textbf{wyłącznie wtedy, gdy} model  $P(R_i = 1 | \bx_i)$ jest poprawnie \alert{Wyspecyfikowany} -- zakładany model jest poprawny dla całej populacji.
+% %     \item Dlatego w literaturze zaproponowano nową klasę estymatorów pod nazwą: podwójnie odporne estymatory (ang. \textit{double robust estimators}).
+% %     \item Dlaczego podwójnie odporne? Estymator ten składa się z dwóch części
+    
+% % \begin{equation}
+% % \hat{\theta}_{\mathrm{DR}}=
+% % \overbrace{
+% % \frac{1}{N} \sum_{i=1}^{N} 
+% % \frac{
+% % R_{i}
+% % \left\{y_{i}-m\left(\hat{\bbeta};\boldsymbol{x}_{i}\right)\right\}}
+% % {\rho\left(\hat{\blambda};\bx_{i}\right)}}^{\text{Średnia ważona reszt z modelu}} 
+% % +
+% % \overbrace{
+% % \frac{1}{N} 
+% % \sum_{i=1}^{N} 
+% % m\left(\hat{\bbeta}; \bx_{i}\right)}^{\text{Średnia z predykcji dla całej populacji}},
+% % \end{equation}
+
+% % gdzie $R_i$ to zmienna 0-1, gdzie 1 gdy próba nielosowa, $\rho(\hat{\blambda};\bx_{i})$ to prawdopodobieństwo przynależności do próby nielosowej, a $m(\hat{\bbeta};\bx_{i})$ to pewien model parametryczny ($E(y|\bx) = m(\hat{\bbeta};\bx_{i})$).
+% % \end{itemize}
+
+% % \end{frame}
+
+% % \begin{frame}{Podwójnie odporne estymatory -- w telegraficznym skrócie}
+
+
+% % \begin{center}
+% %   \textbf{Do wartości przewidywanych dla jednostek spoza próby nielosowej dodajemy ważone reszty z modelu dla próby nielosowej}.  
+% % \end{center}
+
+
+% % \end{frame}
+
+% % \begin{frame}{Podwójnie odporne estymatory}
+% % Własności:
+% % \begin{itemize}
+% %     \item Estymator ten jest nieobciążony gdy model dla $\rho(\hat{\blambda};\bx_{i})$ jest źle wyspecyfikowany, ale $m(\hat{\bbeta};\bx_{i})$ jest dobrze wyspecyfikowany,
+% %     \item Estymator ten jest nieobciążony gdy $m(\hat{\bbeta};\bx_{i})$ jest źle wyspecyfikowany ale $\rho(\hat{\blambda};\bx_{i})$ jest dobrze wyspecyfikowany.
+% % \end{itemize}
+
+% % Literatura:
+
+% % \begin{itemize}
+% %     \small
+% %     \item Chen, Y., Li, P., \& Wu, C. (2020). Doubly Robust Inference With Nonprobability Survey Samples. Journal of the American Statistical Association, 115(532), 2011–2021.
+% %     \item Kim, J. K., \& Wang, Z. (2019). Sampling Techniques for Big Data Analysis. International Statistical Review, 87(S1), S177–S191. 
+% % \end{itemize}
+% % \end{frame}
+
+% % \begin{frame}{Podwójnie odporne estymatory}
+
+% % Powyższe wzory miały zastosowanie gdy znamy wszystkie jednostki z populacji. Jednak gdy dysponujemy wyłącznie dwiema próbami (losową i~nielosową) estymator ten może mieć postać:
+
+% % \begin{equation}
+% % \hat{\theta}_{\mathrm{DR} 1}=
+% % \overbrace{\frac{1}{N} \sum_{i \in \mathcal{S}_{\mathrm{A}}} w_{i}^{*}\left\{y_{i}-m\left(\bx_{i}, \hat{\bbeta}\right)\right\}}^{\text{Próba nielosowa}} +
+% % \underbrace{\frac{1}{N} \sum_{i \in \mathcal{S}_{\mathrm{B}}} d_{i} m\left(\bx_{i}, \hat{\bbeta}\right)}_{\text{Próba losowa}},
+% % \end{equation}
+% % gdzie $N$ to znana wielkość populacji, $\mathcal{S}_{\mathrm{A}}$ to próba nielosowa, $\mathcal{S}_{\mathrm{B}}$ to próba losowa, $w_{i}^{*} = 1/\rho(\hat{\blambda};\bx_{i})$, $d_i$ to waga wynikająca z losowania.
+% % \end{frame}
+
+% % \begin{frame}{Podwójnie odporne estymatory}
+% % W przypadku gdy wielkość populacji nie jest znana możemy zastosować następujący estymator
+
+% % \begin{equation}
+% % \hat{\theta}_{\mathrm{DR} 2}=
+% % \overbrace{\frac{1}{\hat{N}^A} \sum_{i \in \mathcal{S}_{\mathrm{A}}} w_{i}^{*}\left\{y_{i}-m\left(\bx_{i}, \hat{\bbeta}\right)\right\}}^{\text{Próba nielosowa}} +
+% % \underbrace{\frac{1}{\hat{N}^B} \sum_{i \in \mathcal{S}_{\mathrm{B}}} d_{i} m\left(\bx_{i}, \hat{\bbeta}\right)}_{\text{Próba losowa}},
+% % \end{equation}
+% % gdzie $\hat{N}^A = \sum_{i \in \mathcal{S}_{\mathrm{A}}} w_{i}^{*}$, $\hat{N}^B = \sum_{i \in \mathcal{S}_{\mathrm{B}}} d_{i}$.
+% % \end{frame}
+
+% % \begin{frame}{Podwójnie odporne estymatory -- estymacja wariancji}
+% % \begin{itemize}
+% %     \justifying 
+% %     \item Kim  \& Wang (2019) pokazali, że jeżeli próba losowa stanowi niewielki ułamek próby nielosowej ($n_B/N_A = o(1)$) to wariancję estymatora $\hat{\theta}_{\mathrm{DR} 1}$ lub  $\hat{\theta}_{\mathrm{DR} 2}$ można wyznaczyć wyłącznie na podstawie próby losowej (zgodnie z jej schematem losowania).
+% %     \item Chen, Li \& Wu (2020) wyznaczyli estymatory wariancji bez takiego założenia oraz zaproponowali podejście oparte na metodzie bootstrap, którą można scharakteryzować następującymi niezależnymi krokami:
+% %     \begin{enumerate}
+% %         \item dla próby nielosowej $\mathcal{S}_{\mathrm{A}}$ losujemy ze zwracaniem prostą próbę $\mathcal{S}_{\mathrm{A}}^*$ o liczebności $n_A$,
+% %         \item dla próby losowej $\mathcal{S}_{\mathrm{B}}$ losujemy z prawdopodobieństwem $1/d_i^B$ ze zwracaniem próbę $\mathcal{S}_{\mathrm{B}}$ o liczebności $n_B$
+% %     \end{enumerate}
+% %     Następnie wyznaczamy $\hat{\theta}_{\mathrm{DR} 1}^*$ lub $\hat{\theta}_{\mathrm{DR} 2}^*$ z każdej próby bootstrapowej.
+% % \end{itemize}
+% % \end{frame}
+
+% % \begin{frame}{Podwójnie odporne estymatory -- rozszerzenie}
+
+% % \begin{itemize}
+% %     \item W powyższych pracach nie rozważano kwestii doboru zmiennych do obydwu modeli,
+% %     \item Praca: \textit{Yang, S., Kim, J. K., \& Song, R. (2020). Doubly robust inference when combining probability and non‐probability samples with high dimensional data. Journal of the Royal Statistical Society: Series B (Statistical Methodology), 82(2), 445-465} przedstawia rozwiązanie w tym zakresie oparte na doborze zbliżonym do regresji LASSO (dokładnie Smoothly Clipped Absolute Deviation; SCAD). Jest również pakiet w R ale~o dość ograniczonych możliwościach.
+% % \end{itemize}
+
+% % \end{frame}
+
+% % \begin{frame}{Podwójnie odporne estymatory -- przykład empiryczny}
+
+% % \begin{center}
+% % Przejdźmy do przykładu    
+% % \end{center}
+
+% % \end{frame}
+
+% % % \begin{frame}{Masowa imputacja -- wstęp}
+% % %     \begin{itemize}
+% % %     \justifying
+% % %         \item Wszystkie wcześniejsze założenia zostają zachowane (dwa źródła; znamy $\mathbf{X}$ dla próby nielosowej i losowej, możemy zidentyfikować jednostki między źródłami itp.)
+% % %         \item Estymacja (oszacowanie punktowe oraz wariancja danego estymatora) dokonuje się wyłącznie na podstawie próby losowej.
+% % %         \item Pierwsze podejście zaproponowano w pracy \textbf{Rivers (2007)} \textit{Sampling for web surveys}. Jednak było ono niepełne (brak rozwiązań wspartych teorią).
+% % %         \item Dopiero w pracy \textbf{Kim, Park, Chen i Wu (2021)} \textit{Combining Non-probability and Probability Survey Samples Through Mass Imputation} przedstawiono teoretyczne podstawy masowej imputacji danych dla prób nielosowych (wcześniej propozycję wskazał Rivers 
+% % %     \end{itemize}
+% % % \end{frame}
+
+
+% % % % \begin{frame}{Covariate Balancing Propensity Score (CBPS)}
+
+% % % % \begin{itemize}
+% % % % \justifying
+% % % %     \item Metoda została zaproponowana przez Kosuke Imai (Harvard) i Marca Ratkovica (Prinston) w 2014 roku w publikacji \textit{Covariate balancing propensity score}. Journal of the Royal Statistical Society: Series B (Statistical Methodology), 76(1), 243-263.
+% % % %     \item Polskie tłumaczenie terminu \textit{Covariate Balancing Propensity Score} mogłoby brzmieć \textit{Efekt skłonności balansujący zmienne objaśniające} chociaż rekomendowane jest używanie terminu angielskojęzycznego.
+% % % %     \item Przegląd literatury dotyczący propensity score można znaleźć w książce \textit{Wykorzystanie techniki propensity score matching w badaniach ewaluacyjnych} (link: \url{https://www.parp.gov.pl/files/74/81/305/6873.pdf})
+% % % % \end{itemize}
+% % % % \end{frame}
+
+% % % % \begin{frame}[allowframebreaks]{Założenia i estymacja CBPS}
+% % % %     \begin{itemize}
+% % % %     \justifying
+% % % %         \item Niech $N$ oznacza wielkość populacji $\mathcal{P}$,
+% % % %         \item Niech $s$ oznacza losową próbę prostą,
+% % % %         \item Dla każdej jednostki $i$ obserwujemy zmienną $T_i =\{0,1\}$ określającą przynależność do danej grupy (np. źródła internetowego) oraz $K$-elementowy kolumnowy wektor zmiennych $\bX_i$,
+% % % %         \item Zgodnie z propozycją Rosenbauma i Rubina (1983) zakładamy, że prawdziwe propensity score jest określone przez przedział $(0,1)$
+% % % %         \begin{equation}
+% % % %             0 < Pr(T_i = 1 | \bX_i = x) < 1,
+% % % %         \end{equation}
+% % % %         \item Dalej za Rosenbaumem i Rubinem (1983) zakładamy, że \begin{equation}
+% % % %             \{Y_i(0), Y_i(1) \} \indep   T_i | \bX_i,
+% % % %         \end{equation}
+% % % %         gdzie $Y_i(t)$ oznacza potencjalny wynik zmiennej $Y_i$ dla zmiennej $t=\{0,1\}$, to wtedy prawdopodobieństwo przynależności jest niezależne od wartości cech $Y_i$
+        
+% % % %         \begin{equation}
+% % % %             \{Y_i(0), Y_i(1) \} \indep   T_i | \pi(\bX_i),
+% % % %         \end{equation}
+% % % %         gdzie $\pi(\bX_i)$ to prawdziwe propensity score dla każdej jednostki $i$.
+% % % %         \item W praktyce nigdy nie obserwujemy $\pi(\bX_i)$ i musimy je estymować. Zwykle zakłada się model parametryczny 
+% % % %         \begin{equation}
+% % % %             Pr(T_i=1|\bX_i) = \pi_{\bbeta}(\bX_i),
+% % % %         \end{equation}
+% % % %         gdzie $\bbeta \in \bTheta$ jest $L$-wymiarowym kolumnowym wektorem parametrów. Zwykle używa się w tym celu modelu logistycznego
+% % % %         \begin{equation}
+% % % %             \pi_{\bbeta}(\bX_i) = \frac{\exp(\bX_i^T{\bbeta})}{1 + \exp(\bX_i^T{\bbeta})}.
+% % % %         \end{equation}
+% % % %         \item W literaturze przedmiotu podnoszono wiele problemów z podejściem parametrycznym wskazując, że złe wyspecyfikowanie modelu (ang. \textit{model misspecification}) skutkuje obciążonymi szacunkami badanej cechy $Y_i$. 
+% % % %         \item Dodatkowo, problem pojawia się gdy $X_i$ jest wielowymiarowy (ang. high-dimension).
+% % % %         \item Imai i Ratkovic (2014) zaproponowali alternatywne podejście do estymacji propensity score oparte na jednoczesnym odtwarzaniu wartości średnich cech $\bX$ wykorzystywanych w modelu $\pi_{\bbeta}(\bX_i)$. Ich podejście polega na rozwiązaniu następującego układu równań
+        
+% % % %         \begin{equation}
+% % % %             \mathrm{E}\left\{
+% % % %             \frac{T_i\tilde{\bX}_i}{\pi_{\bbeta}(\bX_i)} - \frac{(1-T_i)\tilde{\bX}_i}{1 - \pi_{\bbeta}(\bX_i)}
+% % % %             \right\} = 0,
+% % % %         \end{equation}
+        
+        
+% % % %         gdzie $\tilde{\bX}_i=f(\bX_i)$ i jest określone przez badacza. Przykładowo, w zwykłym modelu logistycznym $\tilde{\bX}_i = \pi_{\bbeta}^\prime(\bX_i)$
+        
+% % % %         \item  Imai i Ratkovic (2014) zaproponowali użycie $\tilde{\bX}_i=\bX_i$ czyli odtworzenie pierwszego momentu (średniej).
+% % % %         \item Aby otrzymać parametry $\bbeta$ należy rozwiązać $m
+% % % % $-wymiarowy układ równań dany
+
+% % % % \begin{equation}
+% % % %     \bar{\bg}_{\bbeta}(\bT, \bX) = \frac{1}{n} \sum_{i=1}^n {\bg}_{\bbeta}(T_i,\bX_i) = 0,
+% % % % \end{equation}
+% % % % gdzie 
+
+% % % % \begin{equation}
+% % % %     {\bg}_{\bbeta}(T_i,\bX_i) = 
+% % % %     \left( 
+% % % %     \frac{T_i}{\pi_{\bbeta}(\bX_i)} - \frac{1-T_i}{1-\pi_{\bbeta}(\bX_i)}
+% % % %     \right) \bef(\bX_i),
+% % % % \end{equation}
+
+% % % % dla pewnej funkcji balansującej $\bef(\cdot): \mathcal{R}^d \to \mathcal{R}^m$. Przykładowo, za $\bef(\cdot)$ można przyjąć
+
+% % % % \begin{itemize}
+% % % %     \item $\bef(\bX_i) = \pi_{\bbeta}^\prime(\bX_i) = \frac{\partial \pi_{\bbeta}(\bX_i)}{\partial \bbeta}$,
+% % % %     \item $\bef(\bX_i) = \bX_i$.
+% % % % \end{itemize}
+% % % % \item Imai i Ratkovic (2014) oprogramowali swoje podejście w pakiecie R \texttt{CBPS} ale można też oszacować ten model z pakietem \texttt{gmm}.
+% % % % \end{itemize}
+% % % % \end{frame}
+
+% % % % \begin{frame}{Kiedy metody quasi-randomizacyjne będą działać? }
+
+% % % % \begin{itemize}
+% % % %     \item założenie Missing at Random (MAR),
+% % % %     \item silne korelacje między $X,Y, I$,
+% % % %     \item liniowa zależność między $X, Y$,
+% % % %     \item model dla $P(I==1)$ jest poprawny,
+% % % %     \item metoda \textit{propensity score weighting} powoduje zwiększenie wariancji estymatorów (konieczna jest analiza wag).
+% % % % \end{itemize}
+% % % % \end{frame}
+
+
+% % % % \subsection{Metody oparte na modelu}
+
+% % % % \subsusection{Selection bias models}
+
+% % % % \begin{frame}{Co w przypadku selection bias związanego z $Y$?}
+% % % % Do tej pory rozważaliśmy następującą zależność
+
+% % % % \begin{equation}
+% % % %         Pr(R_i =1 | \bx_i, y) = Pr(R_i =1 | \bx_i),
+% % % %     \end{equation}
+    
+    
+% % % %     Jakie metody należy wybrać gdy:
+% % % %     \begin{equation}
+% % % %         Pr(R_i =1 | \bx_i, y) \neq Pr(R_i =1 | \bx_i).
+% % % %     \end{equation}
+    
+% % % %     Jak do tego podejść?
+    
+% % % %     \vspace{0.5cm}
+    
+% % % %     W literaturze pojawiają się następujące pojęcia
+% % % %     \begin{itemize}
+% % % %         \item sample selection (głównie literatura ekonometryczna)
+% % % %         \item non-ingorable non-response
+% % % %         \item missing not at random
+% % % %     \end{itemize}
+% % % % \end{frame}
+
+
+% % % % \subsubsection{Heckman's sample selection model}
+
+% % % % \begin{frame}{Heckman's sample selection -- example problems}
+% % % %     \begin{itemize}
+% % % %         \item We would like to analyse women's wages on labour market -- certain groups of women enters the market,
+% % % %         \item We are interested in factors that correlates with informal employment -- specific firms employees illegally,
+% % % %         \item What are the characteristics of customers of certain products (e.g. BMW cars) -- certain of group of people buys these cars.
+% % % %         \item We would like to measure sentiment based on social media -- certain people use and are active users of these services.
+% % % %     \end{itemize}
+% % % %     In all cases we have situation with non-random selection into the observed sample. For such situations we should consider applying methods that account for this issue. 
+
+% % % %     \vspace{0.5cm}
+    
+% % % %     One of possible ways is to use approach introduced by James Heckman (1976) which is called after his name \textit{Heckman's sample selection model}. There is also method called \textit{generalized Tobit models} (from Tobin (1956)).
+% % % % \end{frame}
+
+% % % % \begin{frame}[allowframebreaks]{Heckman's selection model}
+% % % %   \begin{itemize}
+% % % %       \item Standard Heckman's sample selection model is also called \textit{Tobit-2} model.
+% % % %       \item It consists of the following (unobserved structural process):
+       
+% % % % \begin{equation}
+% % % % \begin{aligned} y_{i}^{S *} &=\boldsymbol{\beta}^{S^{\prime}} \boldsymbol{x}_{i}^{S}+\varepsilon_{i}^{S} \\
+% % % % y_{i}^{O *} &=\boldsymbol{\beta}^{O^{\prime}} \boldsymbol{x}_{i}^{O}+\varepsilon_{i}^{O} \end{aligned}
+% % % % \end{equation}
+
+% % % % where
+% % % % \item $y_{i}^{S *}$ is the realisation of the the latent value of the selection \textit{tendency} for the individual $i$,
+% % % % \item $y_{i}^{O *}$ is the latent outcome,
+% % % % \item $\boldsymbol{x}_{i}^{S}, \boldsymbol{x}_{i}^{O}$ are exploratory variables for the selection and outcome equation, respectively. $\boldsymbol{x}_{i}^{S}, \boldsymbol{x}_{i}^{O}$  may or may not be equal.
+
+% % % % \item We observe
+
+% % % % \begin{equation}
+% % % % y_{i}^{S}=\left\{\begin{array}{ll}{0} & {\text { if } y_{i}^{S *}<0} \\ {1} & {\text { otherwise }}\end{array}\right.
+% % % % \end{equation}
+
+% % % % \begin{equation}
+% % % % y_{i}^{O}=\left\{\begin{array}{ll}{\text{NA}} & {\text { if } y_{i}^{S}=0} \\ {y_{i}^{O *}} & {\text { otherwise }}\end{array}\right.
+% % % % \end{equation}
+
+% % % % i.e. we observe the outcome only if the latent selection variable $y_{i}^{S}$ is positive. 
+
+% % % % \item Th observed dependence between $y^{O}, x^{O}$ can now be written as 
+
+% % % % \begin{equation}
+% % % % \begin{split}
+% % % %     & \mathrm{E}\left[y^{O} | \boldsymbol{x}^{O}=\boldsymbol{x}_{i}^{O}, \boldsymbol{x}^{S}=\boldsymbol{x}_{i}^{S}, y^{S}=1\right] = \\
+% % % %     & = \boldsymbol{\beta}^{O^{\prime}} \boldsymbol{x}_{i}^{O}+\mathrm{E}\left[\varepsilon^{O} | \varepsilon^{S} \geq-\boldsymbol{\beta}^{S^{\prime}} \boldsymbol{x}_{i}^{S}\right]
+% % % % \end{split}
+% % % % \end{equation}
+
+
+% % % % \item \alert{Estimating the model above by OLS gives in general biased result} as $\mathrm{E}\left[\varepsilon^{O} | \varepsilon^{S} \geq-\boldsymbol{\beta}^{S \prime} \boldsymbol{x}_{i}^{S}\right] \neq 0$ unless $\epsilon^O$ and $\epsilon^S$ are mean independent.
+
+% % % % \item Assuming the error terms follow a bivariate normal distribution
+
+% % % % \begin{equation}
+% % % % \left( \begin{array}{c}{\varepsilon^{S}} \\ {\varepsilon^{O}}\end{array}\right) \sim N\left(\left( \begin{array}{l}{0} \\ {0}\end{array}\right), \left( \begin{array}{ll}{1} & {\varrho} \\ {\varrho} & {\sigma^{2}}\end{array}\right)\right)
+% % % % \end{equation}
+
+% % % % \item Based on that, we may write 
+
+% % % % \begin{equation}
+% % % % \begin{split}
+% % % %     y_{i}^{O} =\boldsymbol{\beta}^{O^{\prime}} \boldsymbol{x}_{i}^{O}+\mathrm{E}\left[\varepsilon^{O} | \varepsilon^{S} \geq-\boldsymbol{\beta}^{S^{\prime}} \boldsymbol{x}_{i}^{S}\right]+\eta_{i} \equiv \\ \boldsymbol{\beta}^{O^{\prime}} \boldsymbol{x}_{i}^{O}+\varrho \sigma \lambda\left(\boldsymbol{\beta}^{S^{\prime}} \boldsymbol{x}_{i}^{S}\right)+\eta_{i}
+% % % % \end{split}
+% % % % \end{equation}
+
+% % % % \item where $\lambda(\cdot) = \phi(\cdot) / \Phi(\cdot)$ is commonly referred to as inverse Mill's ratio and $\phi(\cdot), \Phi(\cdot)$ are standard normal density and cumulative distribution functions and $\eta$ is new error term, independent of $x^O$ and $x^S$.
+
+% % % % \end{itemize}
+
+
+
+% % % % \end{frame}
+
+% % % % \begin{frame}{Heckman's sample selection -- estimation}
+% % % %     There are two ways to estimate the model
+    
+% % % %     \begin{itemize}
+% % % %         \item Two-step
+% % % %             \begin{enumerate}
+% % % %                 \item Estimate probit model on the Selection outcome
+% % % %                 \item Estimate Inverse Mills Ratio
+% % % %                 \item Run the following OLS 
+% % % %                 \begin{equation}
+% % % %                      y_{i}^{O} = \boldsymbol{\beta}^{O^{\prime}} \boldsymbol{x}_{i}^{O}+\varrho \sigma \lambda\left(\boldsymbol{\beta}^{S^{\prime}} \boldsymbol{x}_{i}^{S}\right)
+% % % %                 \end{equation}
+% % % %             \end{enumerate}
+% % % %         \item Maximum Likelihood (estymujemy $\btheta=(\bbeta^s, \bbeta^O, \sigma, \rho))$
+% % % %         \begin{equation}
+% % % %         \scriptsize
+% % % % \begin{aligned} 
+% % % % \ell &=\sum_{\left\{i: y_{i}^{S}=0\right\}} 
+% % % % \log \Phi\left(-\boldsymbol{\beta}^{S^{\prime}} \boldsymbol{x}_{i}^{S}\right)+\\ &
+% % % % +\sum_{\left\{i: y_{i}^{S}=1\right\}}\left[\log \Phi\left(\frac{\boldsymbol{\beta}^{S^{\prime}} \boldsymbol{x}_{i}^{S}+\frac{\varrho}{\sigma}\left(y_{i}^{O}-\boldsymbol{\beta}^{O^{\prime}} \boldsymbol{x}_{i}^{O}\right)}{\sqrt{1-\varrho^{2}}}\right)-\frac{1}{2} \log 2 \pi-\log \sigma-\frac{1}{2} \frac{\left(y_{i}^{O}-\boldsymbol{\beta}^{O^{\prime}} \boldsymbol{x}_{i}^{O}\right)^{2}}{\sigma^{2}}\right] 
+% % % % \end{aligned}
+% % % % \end{equation}
+% % % %     \end{itemize}
+% % % % \end{frame}
+
+% % % % \begin{frame}[fragile]{Heckman funkcja $\ell$ w R}
+% % % %     \begin{verbatim}
+% % % % ll_heckman <- function(params, xs, xo, sel, y) {
+% % % %     ncol_xs <- ncol(xs)
+% % % %     ncol_xo <- ncol(xo)
+% % % %     beta_s <- params[1:ncol_xs]
+% % % %     beta_o <- params[(ncol_xs+1):(ncol_xs+ncol_xo)]
+% % % %     rho <- params[(ncol_xs+ncol_xo+1)]
+% % % %     sigma <- params[ncol_xs+ncol_xo+2]
+
+% % % %     ll_s <- log(pnorm(-xs[!sel,] %*% beta_s))
+% % % %     ll_o <- log(pnorm((xs[sel,] %*% beta_s + rho/sigma*
+% % % %         (y - xo %*% beta_o)) / (sqrt(1-rho^2)))) - 
+% % % %         1/2*((y - xo %*% beta_o)/sigma)^2 -
+% % % %         log(sqrt(2*pi)*sigma)
+% % % %     l <- sum(ll_s) + sum(ll_o)
+% % % %     l
+% % % % }
+% % % %     \end{verbatim}
+% % % % \end{frame}
+
+% % % % \begin{frame}{Similar approaches}
+% % % %     \begin{itemize}
+% % % %         \item Truncated regression -- if the variable is in a specific range (e.g. non-negative income)
+% % % %         \item Censored regression -- if the variable is truncated due to some exogenous variables.
+% % % %     \end{itemize}
+% % % % \end{frame}
+
+
+% % % % \begin{frame}{Heckman's sample selection -- software}
+% % % %       \begin{table}[]
+% % % %         \centering
+% % % %         \caption{Overview of functions}
+% % % %         %\label{tab:my_label}
+% % % %         \begin{tabular}{cp{3cm}p{2cm}p{2cm}}
+% % % %         \hline
+% % % %           \textbf{Language}   & \textbf{R} &  \textbf{Python} & \textbf{Julia} \\
+% % % %         \hline
+% % % %          Packages  & 
+% % % %          sampleSelection; SemiParSampleSel &  StatModels & N/A \\
+% % % %         Functions &
+% % % %           selection(); SemiParSampleSel() & heckman() & N/A\\
+% % % %         \hline
+% % % %         \end{tabular}
+% % % %     \end{table}
+% % % % \end{frame}
+
+
+
+
+\end{document}
+
+
