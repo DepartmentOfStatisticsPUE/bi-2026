@@ -34,7 +34,7 @@ Declare population
 # Define parameters
 regions <- c("North", "South", "East")
 cities_per_region <- 4
-individuals_per_city <- c(20, 40, 60, 80)*1000
+individuals_per_city <- c(20, 40, 60, 80)
 city_labels <- paste0(rep(regions, each = cities_per_region), 1:cities_per_region)
 
 # Create cities data frame
@@ -59,7 +59,7 @@ set.seed(123)
 population$Y <- rnorm(nrow(population), mean = mean_income[population$region], sd = 10000)
 
 # Check population size
-head(population)  # Should be 600
+nrow(population)  # Should be 600
 ```
 
 ## Python
@@ -74,7 +74,7 @@ from samplics.estimation import SurveyEstimation
 ```python
 regions = ['North', 'South', 'East']
 cities_per_region = 4
-individuals_per_city = [x * 1000 for x in [20, 40, 60, 80]]
+individuals_per_city = [20, 40, 60, 80]
 city_labels = [f"{region}{i+1}" for region in regions for i in range(cities_per_region)]
 
 # Create population list
@@ -205,6 +205,7 @@ svymean(~Y, design)
 
 ```python
 # Draw cluster sample
+np.random.seed(123)
 selected_cities = np.random.choice(population['city'].unique(), size=4, replace=False)
 cluster_sample = population[population['city'].isin(selected_cities)]
 
@@ -229,7 +230,7 @@ Packages
 
 ```{r}
 set.seed(123)
-city_by_region <- split(unique(population$city), population$region[match(unique(population$city), population$city)])
+city_by_region <- tapply(population$city, population$region, unique)
 selected_cities <- unlist(lapply(city_by_region, function(x) sample(x, size = 2)))
 cluster_strat_sample <- population[population$city %in% selected_cities, ]
 
@@ -288,6 +289,7 @@ svymean(~Y, design)
 
 ```python
 pi_i = 100 / 600
+np.random.seed(123)
 include = np.random.binomial(1, pi_i, size=len(population))
 poisson_sample = population[include == 1]
 

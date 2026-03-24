@@ -1,0 +1,223 @@
+---
+title: "Zadanie domowe 1: Web-scraping ofert pracy w służbie cywilnej"
+author: "Badania Internetowe 2025/26"
+format:
+  html:
+    embed-resources: true
+    number-sections: true
+    df-print: kable
+execute:
+  eval: false
+  message: false
+  warning: false
+lang: pl
+---
+
+## Instrukcje
+
+- Można użyć **R** lub **Python** (wybrać jeden język i stosować konsekwentnie).
+- **Łącznie: 10 punktów. Termin: tydzień od daty zadania.**
+
+::: {.callout-warning}
+## Wymagania dotyczące oddania pracy
+
+1. Oddać **jeden plik HTML** (self-contained) przez **Moodle**.
+2. Nazwa pliku: `ps1-<nr_albumu>.html` (np. `ps1-130149.html`).
+3. Plik **musi zawierać**:
+   - **Nr albumu** na początku.
+   - Cały **kod** (widoczny w dokumencie).
+   - Wszystkie **wyniki** (tabele, ramki danych) wyrenderowane.
+   - Odpowiedzi na pytania interpretacyjne.
+4. **Jak wygenerować plik HTML:**
+   - **R**: Zapisać rozwiązanie w pliku `.qmd`, wyrenderować `quarto render ps1-<nr_albumu>.qmd`.
+   - **Python**: Użyć wersji `.ipynb`, wyeksportować: *File → Download as → HTML*.
+5. **Przed oddaniem** sprawdzić, czy plik HTML otwiera się poprawnie w przeglądarce.
+6. Prace bez widocznego kodu i wyników **nie będą oceniane**.
+
+**Jak korzystać z tego pliku:**
+
+- **R**: Zapisać jako `ps1-<nr_albumu>.qmd`. Usunąć bloki Python, zostawić bloki R. Uzupełnić kod i wyrenderować.
+- **Python**: Użyć wersji `.ipynb`. Usunąć komórki R, zostawić komórki Python. Uzupełnić kod i wyeksportować jako HTML.
+:::
+
+
+## Opis zadania
+
+Celem zadania jest napisanie programu, który pobierze wszystkie aktualne oferty pracy w służbie cywilnej dla **Warszawy** ze strony [nabory.kprm.gov.pl](https://nabory.kprm.gov.pl) i wyciągnie z każdej oferty kluczowe informacje.
+
+**Mój nr albumu:** *XXXXX*
+
+
+## Krok 0: Pakiety
+
+Załadować potrzebne pakiety.
+
+::: panel-tabset
+### R
+
+```{r}
+library(rvest)
+library(stringi)
+```
+
+### Python
+
+```{python}
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+import re
+import time
+```
+:::
+
+
+## Część A: Pobranie listy ogłoszeń (4 punkty)
+
+Po wejściu na stronę [nabory.kprm.gov.pl](https://nabory.kprm.gov.pl) i wybraniu miejscowości **Warszawa**, a następnie kliknięciu **Szukaj**, uzyskujemy listę ogłoszeń:
+
+![Lista ogłoszeń dla Warszawy](figs/ps1-lista.png)
+
+### a) Liczba stron wyników (1 pkt)
+
+Wczytać pierwszą stronę wyników wyszukiwania dla Warszawy. Ustalić ile jest **stron wyników** (paginacja) lub ile jest łącznie ogłoszeń.
+
+::: panel-tabset
+### R
+
+```{r}
+## Tutaj kod (R)
+
+```
+
+### Python
+
+```{python}
+## Tutaj kod (Python)
+
+```
+:::
+
+**Odpowiedź:** Łącznie znaleziono *...* ogłoszeń na *...* stronach.
+
+
+### b) Linki do ogłoszeń (3 pkt)
+
+Napisać pętlę, która przejdzie po **wszystkich stronach wyników** i wyciągnie **linki do poszczególnych ogłoszeń**. Między kolejnymi zapytaniami dodać `Sys.sleep(1)` / `time.sleep(1)`.
+
+::: panel-tabset
+### R
+
+```{r}
+## Tutaj kod (R)
+
+```
+
+### Python
+
+```{python}
+## Tutaj kod (Python)
+
+```
+:::
+
+**Odpowiedź:** Pobrano *...* linków do ogłoszeń.
+
+
+## Część B: Pobranie szczegółów ogłoszeń (4 punkty)
+
+Po kliknięciu w ogłoszenie, na stronie szczegółowej znajdują się interesujące nas informacje:
+
+![Szczegóły ogłoszenia](figs/ps1-oferta.png)
+
+### a) Funkcja do ekstrakcji danych z jednego ogłoszenia (2 pkt)
+
+Napisać funkcję, która przyjmuje URL ogłoszenia i zwraca następujące informacje:
+
+- **numer ogłoszenia** (np. 162141),
+- **liczbę stanowisk** (np. 1),
+- **wymiar etatu** (np. 1),
+- **wynagrodzenie zasadnicze** (np. "nie mniej niż 6538,37 zł brutto").
+
+::: panel-tabset
+### R
+
+```{r}
+## Tutaj kod (R)
+
+```
+
+### Python
+
+```{python}
+## Tutaj kod (Python)
+
+```
+:::
+
+
+### b) Pobranie danych ze wszystkich ogłoszeń (2 pkt)
+
+Zastosować funkcję z punktu (a) do **wszystkich** pobranych linków. Wynik zapisać do **ramki danych** z kolumnami: `numer`, `liczba_stanowisk`, `wymiar_etatu`, `wynagrodzenie`. Między zapytaniami stosować `Sys.sleep(1)` / `time.sleep(1)`.
+
+::: panel-tabset
+### R
+
+```{r}
+## Tutaj kod (R)
+
+```
+
+### Python
+
+```{python}
+## Tutaj kod (Python)
+
+```
+:::
+
+**Odpowiedź:** Pobrano dane z *...* ogłoszeń. Pierwszych 10 wierszy:
+
+```
+## Tutaj wyświetlić head(wynik, 10) / wynik.head(10)
+```
+
+
+## Część C: Podsumowanie (2 punkty)
+
+### a) Statystyki opisowe (1 pkt)
+
+Obliczyć i przedstawić:
+
+- liczbę ogłoszeń, w których podano wynagrodzenie,
+- średnie, minimalne i maksymalne wynagrodzenie (po wyciągnięciu kwoty liczbowej z tekstu),
+- rozkład wymiaru etatu (tabela częstości).
+
+::: panel-tabset
+### R
+
+```{r}
+## Tutaj kod (R)
+
+```
+
+### Python
+
+```{python}
+## Tutaj kod (Python)
+
+```
+:::
+
+**Odpowiedź:**
+
+- Ogłoszenia z wynagrodzeniem: *...*
+- Średnie wynagrodzenie: *...*
+- Min / Max: *... / ...*
+
+
+### b) Wnioski (1 pkt)
+
+Na podstawie zebranych danych odpowiedzieć w 2--3 zdaniach: Jaka jest typowa oferta pracy w służbie cywilnej w Warszawie pod względem wymiaru etatu i wynagrodzenia? Czy występują oferty z więcej niż jednym stanowiskiem?
+
+**Odpowiedź:** *Tutaj wpisać interpretację...*
