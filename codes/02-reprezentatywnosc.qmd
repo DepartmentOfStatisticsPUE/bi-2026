@@ -161,32 +161,42 @@ Interpretacja: ujemne $\hat{\rho}_{R,G}$ oznacza, że wyborcy Trumpa byli niedor
 
 #### Wielkość próby vs. błąd -- paradoks big data
 
+Obliczmy statystykę $Z_n$ dla każdego stanu (jak u Menga, Fig. 7):
+
+$$
+Z_n = \frac{\hat{p} - p}{\sqrt{\hat{p}(1-\hat{p})/n}}
+$$
+
 ```{r, fig.width = 7, fig.height = 5}
+g2016$z_n <- with(g2016, (cces_pct_djt_vv - pct_djt_voters) /
+                    sqrt(cces_pct_djt_vv * (1 - cces_pct_djt_vv) / cces_n_vv))
+
 par(mar = c(4.5, 4.5, 2, 1))
-plot(g2016$cces_n_vv, abs(g2016$blad),
-     xlab = "Wielkość próby CCES (n)",
-     ylab = "|Błąd estymacji|",
+plot(log10(g2016$tot_votes), g2016$z_n,
+     xlab = expression(log[10](N[stan])),
+     ylab = expression(Z[n] ~ "(Trump)"),
      pch = 19, col = adjustcolor("steelblue", 0.7),
-     main = "Większa próba ≠ mniejszy błąd")
-text(g2016$cces_n_vv[abs(g2016$blad) > 0.06],
-     abs(g2016$blad[abs(g2016$blad) > 0.06]),
-     g2016$st[abs(g2016$blad) > 0.06],
-     pos = 4, cex = 0.7)
+     main = "Paradoks big data: błąd rośnie z wielkością populacji")
+rect(par("usr")[1], -2, par("usr")[2], 2, col = adjustcolor("grey", 0.2), border = NA)
+points(log10(g2016$tot_votes), g2016$z_n, pch = 19, col = adjustcolor("steelblue", 0.7))
+text(log10(g2016$tot_votes), g2016$z_n, g2016$st, pos = 4, cex = 0.55)
+abline(h = 0, lty = 1, col = "grey40")
 
 ## regresja liniowa
-abline(lm(abs(blad) ~ cces_n_vv, data = g2016), col = "red", lwd = 2, lty = 2)
+abline(lm(z_n ~ log10(tot_votes), data = g2016), col = "red", lwd = 2, lty = 2)
 
 ## loess
-lo <- loess(abs(blad) ~ cces_n_vv, data = g2016)
-ox <- order(g2016$cces_n_vv)
-lines(g2016$cces_n_vv[ox], predict(lo)[ox], col = "darkgreen", lwd = 2)
+lo <- loess(z_n ~ log10(tot_votes), data = g2016)
+ox <- order(log10(g2016$tot_votes))
+lines(log10(g2016$tot_votes)[ox], predict(lo)[ox], col = "darkgreen", lwd = 2)
 
-legend("topright", legend = c("OLS", "LOESS"),
-       col = c("red", "darkgreen"), lwd = 2, lty = c(2, 1),
+legend("bottomleft", legend = c("OLS", "LOESS", "95% CI (|Z| ≤ 2)"),
+       col = c("red", "darkgreen", adjustcolor("grey", 0.4)),
+       lwd = c(2, 2, 8), lty = c(2, 1, 1),
        bg = adjustcolor("white", 0.8))
 ```
 
-Interpretacja: brak wyraźnej zależności malejącej -- większa próba nie gwarantuje mniejszego błędu. To empiryczna ilustracja paradoksu big data Menga: przy autoselekcji zwiększanie $n$ nie redukuje obciążenia.
+Interpretacja: szary pas to konwencjonalny 95% przedział ufności ($|Z_n| \leq 2$). Większość stanów leży **poza** tym pasem, a $Z_n$ staje się coraz bardziej ujemne wraz ze wzrostem populacji stanu ($N$). To jest sedno paradoksu Menga: błąd estymacji rośnie z $\sqrt{N}$, a nie maleje z $1/\sqrt{n}$. Im większa populacja, tym bardziej autoselekcja w CCES zaburza szacunki poparcia dla Trumpa.
 
 ## Ilustracja paradoksu big data
 
@@ -381,8 +391,8 @@ love.plot(W, stats = "mean.diffs", threshold = 0.1,
 
 Interpretacja:
 
-- **Kółka (Unadjusted)** -- wiele zmiennych przekracza próg 0.1, co potwierdza brak reprezentatywności CBOP.
-- **Trójkąty (Adjusted)** -- po ważeniu punkty powinny przesunąć się w lewo, poniżej progu 0.1.
+- **Pomarańczowe punkty (Unadjusted)** -- SMD przed ważeniem. Zmienne po prawej stronie progu 0.1 wskazują na istotne różnice między CBOP a JVS, czyli brak reprezentatywności.
+- **Niebieskie punkty (Adjusted)** -- SMD po zastosowaniu wag. Powinny przesunąć się w lewo, poniżej progu 0.1, co oznacza, że ważenie skutecznie wyrównało rozkłady.
 - Zmienne, które po ważeniu nadal przekraczają próg, wskazują na utrzymujący się brak balansu -- model propensity score może wymagać wzbogacenia (np. o interakcje) lub zastosowania innej metody.
 
 

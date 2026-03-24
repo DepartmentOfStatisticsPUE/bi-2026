@@ -85,27 +85,31 @@ abline(h = 0, lwd = 1)
 
 
 ## ----fig.width = 7, fig.height = 5--------------------------------------------
+g2016$z_n <- with(g2016, (cces_pct_djt_vv - pct_djt_voters) /
+                    sqrt(cces_pct_djt_vv * (1 - cces_pct_djt_vv) / cces_n_vv))
+
 par(mar = c(4.5, 4.5, 2, 1))
-plot(g2016$cces_n_vv, abs(g2016$blad),
-     xlab = "Wielkość próby CCES (n)",
-     ylab = "|Błąd estymacji|",
+plot(log10(g2016$tot_votes), g2016$z_n,
+     xlab = expression(log[10](N[stan])),
+     ylab = expression(Z[n] ~ "(Trump)"),
      pch = 19, col = adjustcolor("steelblue", 0.7),
-     main = "Większa próba ≠ mniejszy błąd")
-text(g2016$cces_n_vv[abs(g2016$blad) > 0.06],
-     abs(g2016$blad[abs(g2016$blad) > 0.06]),
-     g2016$st[abs(g2016$blad) > 0.06],
-     pos = 4, cex = 0.7)
+     main = "Paradoks big data: błąd rośnie z wielkością populacji")
+rect(par("usr")[1], -2, par("usr")[2], 2, col = adjustcolor("grey", 0.2), border = NA)
+points(log10(g2016$tot_votes), g2016$z_n, pch = 19, col = adjustcolor("steelblue", 0.7))
+text(log10(g2016$tot_votes), g2016$z_n, g2016$st, pos = 4, cex = 0.55)
+abline(h = 0, lty = 1, col = "grey40")
 
 ## regresja liniowa
-abline(lm(abs(blad) ~ cces_n_vv, data = g2016), col = "red", lwd = 2, lty = 2)
+abline(lm(z_n ~ log10(tot_votes), data = g2016), col = "red", lwd = 2, lty = 2)
 
 ## loess
-lo <- loess(abs(blad) ~ cces_n_vv, data = g2016)
-ox <- order(g2016$cces_n_vv)
-lines(g2016$cces_n_vv[ox], predict(lo)[ox], col = "darkgreen", lwd = 2)
+lo <- loess(z_n ~ log10(tot_votes), data = g2016)
+ox <- order(log10(g2016$tot_votes))
+lines(log10(g2016$tot_votes)[ox], predict(lo)[ox], col = "darkgreen", lwd = 2)
 
-legend("topright", legend = c("OLS", "LOESS"),
-       col = c("red", "darkgreen"), lwd = 2, lty = c(2, 1),
+legend("bottomleft", legend = c("OLS", "LOESS", "95% CI (|Z| ≤ 2)"),
+       col = c("red", "darkgreen", adjustcolor("grey", 0.4)),
+       lwd = c(2, 2, 8), lty = c(2, 1, 1),
        bg = adjustcolor("white", 0.8))
 
 
