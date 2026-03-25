@@ -276,20 +276,25 @@ head(admin)
 
 ## Porównanie struktury prób
 
-Porównajmy rozkłady zmiennych pomocniczych -- różnice wskazują na autoselekcję w CBOP:
+Porównajmy rozkłady zmiennych pomocniczych -- różnice wskazują na autoselekcję w CBOP. **Uwaga:** JVS jest próbą losową z wagami, więc proporcje populacyjne szacujemy z uwzględnieniem wag:
 
 ```{r}
+## ważona tablica częstości (JVS z wagami losowania)
+wtab <- function(x, w) {
+  tapply(w, x, sum) / sum(w)
+}
+
 ## rozkład wg wielkości firmy
-tab_jvs <- prop.table(table(jvs$size))
+tab_jvs <- wtab(jvs$size, jvs$weight)
 tab_admin <- prop.table(table(admin$size))
-rbind(JVS = round(tab_jvs, 3), CBOP = round(tab_admin, 3))
+rbind("JVS (ważone)" = round(tab_jvs, 3), CBOP = round(tab_admin, 3))
 ```
 
 ```{r}
 ## rozkład wg sektora (prywatny vs publiczny)
-tab_jvs_p <- prop.table(table(jvs$private))
+tab_jvs_p <- wtab(jvs$private, jvs$weight)
 tab_admin_p <- prop.table(table(admin$private))
-rbind(JVS = round(tab_jvs_p, 3), CBOP = round(tab_admin_p, 3))
+rbind("JVS (ważone)" = round(tab_jvs_p, 3), CBOP = round(tab_admin_p, 3))
 ```
 
 ```{r, fig.width = 8, fig.height = 4}
@@ -297,7 +302,7 @@ par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
 
 ## wykres: wielkość firmy
 barplot(rbind(tab_jvs, tab_admin), beside = TRUE,
-        col = c("steelblue", "coral"), legend.text = c("JVS", "CBOP"),
+        col = c("steelblue", "coral"), legend.text = c("JVS (ważone)", "CBOP"),
         main = "Rozkład wg wielkości firmy", ylab = "Odsetek",
         args.legend = list(x = "topright", bg = adjustcolor("white", 0.8)))
 
@@ -312,17 +317,18 @@ Interpretacja: CBOP **nadreprezentuje firmy publiczne i duże** -- to typowe dla
 
 ## Przygotowanie danych do analizy balansu
 
-Łączymy oba zbiory w jeden, dodając zmienną `source` wskazującą przynależność do JVS (populacja referencyjna) lub CBOP (próba nielosowa):
+Łączymy oba zbiory w jeden, dodając zmienną `source` wskazującą przynależność do JVS (populacja referencyjna) lub CBOP (próba nielosowa). **Zachowujemy wagi** z JVS (dla CBOP waga = 1):
 
 ```{r}
 ## wspólne zmienne pomocnicze
 wspol <- intersect(names(jvs), names(admin))
 wspol <- setdiff(wspol, c("id", "weight", "single_shift"))
 
-jvs_sub <- jvs[, wspol]
+jvs_sub <- jvs[, c(wspol, "weight")]
 jvs_sub$source <- 0   ## JVS = grupa referencyjna
 
 admin_sub <- admin[, wspol]
+admin_sub$weight <- 1  ## CBOP: waga = 1 (rejestr administracyjny)
 admin_sub$source <- 1  ## CBOP = próba nielosowa
 
 combined <- rbind(jvs_sub, admin_sub)
@@ -346,22 +352,24 @@ Przyjmuje się, że $|\text{SMD}| < 0.1$ oznacza akceptowalny balans (brak istot
 ```{r}
 bal.tab(source ~ size + private + nace + region,
         data = combined,
+        s.weights = combined$weight,  ## wagi losowania JVS
         stats = c("m", "ks"),
         binary = "std")
 ```
 
-Interpretacja: kolumna `Diff.Un` to SMD przed jakąkolwiek korekcją. Wartości dalekie od 0 wskazują zmienne, w których CBOP różni się od JVS -- te zmienne napędzają autoselekcję.
+Interpretacja: kolumna `Diff.Un` to SMD przed jakąkolwiek korekcją, z uwzględnieniem wag losowania JVS. Wartości dalekie od 0 wskazują zmienne, w których CBOP różni się od populacji (reprezentowanej przez ważoną próbę JVS) -- te zmienne napędzają autoselekcję.
 
 ## Ważenie propensity score (`WeightIt`)
 
-Estymujemy propensity score, czyli $P(\text{CBOP} \mid \mathbf{X})$ -- prawdopodobieństwo, że firma znajdzie się w CBOP, a nie w JVS, biorąc pod uwagę jej cechy. Odwrotności tych prawdopodobieństw stają się wagami korygującymi:
+Estymujemy propensity score, czyli $P(\text{CBOP} \mid \mathbf{X})$ -- prawdopodobieństwo, że firma znajdzie się w CBOP, a nie w JVS, biorąc pod uwagę jej cechy. Odwrotności tych prawdopodobieństw stają się wagami korygującymi. Argument `s.weights` przekazuje wagi losowania z JVS:
 
 ```{r}
 W <- weightit(
   source ~ size + private + nace + region,
   data = combined,
   method = "ps",       ## regresja logistyczna
-  estimand = "ATT"     ## cel: zrównoważyć JVS do struktury CBOP
+  estimand = "ATT",    ## cel: zrównoważyć JVS do struktury CBOP
+  s.weights = combined$weight  ## wagi losowania JVS
 )
 summary(W)
 ```
@@ -422,7 +430,7 @@ Wykorzystujemy propensity scores z modelu logistycznego dopasowanego na połącz
 
 ```{r}
 ps_model <- glm(source == "CBOP" ~ size + private + nace + region,
-                data = combined, family = binomial)
+                data = combined, family = binomial, weights = weight)
 ps_hat <- predict(ps_model, type = "response")
 
 R_indicator <- 1 - 2 * sd(ps_hat)

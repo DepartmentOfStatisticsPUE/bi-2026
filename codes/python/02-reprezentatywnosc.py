@@ -20,9 +20,13 @@ def ddc(mu, muhat, N, n):
     rho = (muhat - mu) / (sigma_G * np.sqrt((1 - f) / f))
     return rho
 
-def smd(x_treat, x_ctrl):
-    """Standaryzowana różnica średnich."""
-    return (x_treat.mean() - x_ctrl.mean()) / np.sqrt((x_treat.var() + x_ctrl.var()) / 2)
+def smd_weighted(x_treat, x_ctrl, w_ctrl):
+    """SMD z ważoną grupą kontrolną (JVS)."""
+    mean_t = x_treat.mean()
+    var_t = x_treat.var()
+    mean_c = np.average(x_ctrl, weights=w_ctrl)
+    var_c = np.average((x_ctrl - mean_c)**2, weights=w_ctrl)
+    return (mean_t - mean_c) / np.sqrt((var_t + var_c) / 2)
 
 # Data Defect Index (Meng 2018) ----
 
@@ -154,20 +158,25 @@ plt.tight_layout(); plt.show()
 jvs = pd.read_csv("../data/jvs.csv")
 admin = pd.read_csv("../data/admin.csv")
 
-## Porównanie struktury prób ----
-tab_jvs = jvs["size"].value_counts(normalize=True).sort_index()
-tab_admin = admin["size"].value_counts(normalize=True).sort_index()
-print(pd.DataFrame({"JVS": tab_jvs.round(3), "CBOP": tab_admin.round(3)}))
+## Porównanie struktury prób (JVS ważone wagami losowania) ----
+def wprop(x, w):
+    """Ważone proporcje."""
+    df = pd.DataFrame({"x": x, "w": w})
+    return df.groupby("x")["w"].sum() / df["w"].sum()
 
-tab_jvs_p = jvs["private"].value_counts(normalize=True).sort_index()
+tab_jvs = wprop(jvs["size"], jvs["weight"])
+tab_admin = admin["size"].value_counts(normalize=True).sort_index()
+print(pd.DataFrame({"JVS (ważone)": tab_jvs.round(3), "CBOP": tab_admin.round(3)}))
+
+tab_jvs_p = wprop(jvs["private"], jvs["weight"])
 tab_admin_p = admin["private"].value_counts(normalize=True).sort_index()
-print(pd.DataFrame({"JVS": tab_jvs_p.round(3), "CBOP": tab_admin_p.round(3)}).rename(
+print(pd.DataFrame({"JVS (ważone)": tab_jvs_p.round(3), "CBOP": tab_admin_p.round(3)}).rename(
     index={0: "Publiczna", 1: "Prywatna"}))
 
 ## Wykresy porównania
 fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 x = np.arange(len(tab_jvs)); w = 0.35
-axes[0].bar(x - w/2, tab_jvs.values, w, color="steelblue", label="JVS")
+axes[0].bar(x - w/2, tab_jvs.values, w, color="steelblue", label="JVS (ważone)")
 axes[0].bar(x + w/2, tab_admin.values, w, color="coral", label="CBOP")
 axes[0].set_xticks(x); axes[0].set_xticklabels(tab_jvs.index)
 axes[0].set_title("Rozkład wg wielkości firmy"); axes[0].set_ylabel("Odsetek"); axes[0].legend()
@@ -186,30 +195,36 @@ all_cols = sorted(set(jvs_dum.columns) | set(admin_dum.columns))
 jvs_dum = jvs_dum.reindex(columns=all_cols, fill_value=0)
 admin_dum = admin_dum.reindex(columns=all_cols, fill_value=0)
 
-smd_vals = {col: smd(admin_dum[col], jvs_dum[col]) for col in all_cols}
+## wagi JVS
+w_jvs = jvs["weight"].values
+
+## oblicz SMD (ważone dla JVS)
+smd_vals = {col: smd_weighted(admin_dum[col], jvs_dum[col], w_jvs) for col in all_cols}
 smd_df = pd.DataFrame({"SMD": smd_vals}).sort_values("SMD", key=abs, ascending=False)
 print(smd_df.round(4).head(15))
 
-## Propensity score ----
-jvs_sub = jvs[wspol].copy(); jvs_sub["source"] = 0
-admin_sub = admin[wspol].copy(); admin_sub["source"] = 1
+## Propensity score (z wagami JVS) ----
+jvs_sub = jvs[wspol].copy(); jvs_sub["source"] = 0; jvs_sub["weight"] = jvs["weight"].values
+admin_sub = admin[wspol].copy(); admin_sub["source"] = 1; admin_sub["weight"] = 1.0
 combined = pd.concat([jvs_sub, admin_sub], ignore_index=True)
 combined_dum = pd.get_dummies(combined[wspol], columns=["size", "nace", "region"], dtype=float)
 
 X = sm.add_constant(combined_dum)
 y = combined["source"]
-ps_model = sm.Logit(y, X).fit(disp=0)
+ps_model = sm.Logit(y, X, freq_weights=combined["weight"]).fit(disp=0)
 ps_hat = ps_model.predict(X)
 
 ## Wagi IPW
 ps_jvs = ps_hat[y == 0].values
-weights = ps_jvs / (1 - ps_jvs)
+ipw_weights = ps_jvs / (1 - ps_jvs)
+## wagi końcowe = wagi losowania * wagi IPW
+final_weights = w_jvs * ipw_weights
 
 ## SMD po ważeniu ----
 smd_adj = {}
 for col in all_cols:
-    weighted_mean = np.average(jvs_dum[col], weights=weights)
-    weighted_var = np.average((jvs_dum[col] - weighted_mean)**2, weights=weights)
+    weighted_mean = np.average(jvs_dum[col], weights=final_weights)
+    weighted_var = np.average((jvs_dum[col] - weighted_mean)**2, weights=final_weights)
     admin_mean = admin_dum[col].mean()
     admin_var = admin_dum[col].var()
     pooled_sd = np.sqrt((admin_var + weighted_var) / 2)

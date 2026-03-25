@@ -155,17 +155,22 @@ head(admin)
 
 
 ## -----------------------------------------------------------------------------
+## ważona tablica częstości (JVS z wagami losowania)
+wtab <- function(x, w) {
+  tapply(w, x, sum) / sum(w)
+}
+
 ## rozkład wg wielkości firmy
-tab_jvs <- prop.table(table(jvs$size))
+tab_jvs <- wtab(jvs$size, jvs$weight)
 tab_admin <- prop.table(table(admin$size))
-rbind(JVS = round(tab_jvs, 3), CBOP = round(tab_admin, 3))
+rbind("JVS (ważone)" = round(tab_jvs, 3), CBOP = round(tab_admin, 3))
 
 
 ## -----------------------------------------------------------------------------
 ## rozkład wg sektora (prywatny vs publiczny)
-tab_jvs_p <- prop.table(table(jvs$private))
+tab_jvs_p <- wtab(jvs$private, jvs$weight)
 tab_admin_p <- prop.table(table(admin$private))
-rbind(JVS = round(tab_jvs_p, 3), CBOP = round(tab_admin_p, 3))
+rbind("JVS (ważone)" = round(tab_jvs_p, 3), CBOP = round(tab_admin_p, 3))
 
 
 ## ----fig.width = 8, fig.height = 4--------------------------------------------
@@ -173,7 +178,7 @@ par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
 
 ## wykres: wielkość firmy
 barplot(rbind(tab_jvs, tab_admin), beside = TRUE,
-        col = c("steelblue", "coral"), legend.text = c("JVS", "CBOP"),
+        col = c("steelblue", "coral"), legend.text = c("JVS (ważone)", "CBOP"),
         main = "Rozkład wg wielkości firmy", ylab = "Odsetek",
         args.legend = list(x = "topright", bg = adjustcolor("white", 0.8)))
 
@@ -189,10 +194,11 @@ barplot(rbind(tab_jvs_p, tab_admin_p), beside = TRUE,
 wspol <- intersect(names(jvs), names(admin))
 wspol <- setdiff(wspol, c("id", "weight", "single_shift"))
 
-jvs_sub <- jvs[, wspol]
+jvs_sub <- jvs[, c(wspol, "weight")]
 jvs_sub$source <- 0   ## JVS = grupa referencyjna
 
 admin_sub <- admin[, wspol]
+admin_sub$weight <- 1  ## CBOP: waga = 1
 admin_sub$source <- 1  ## CBOP = próba nielosowa
 
 combined <- rbind(jvs_sub, admin_sub)
@@ -206,6 +212,7 @@ cat("CBOP:", sum(combined$source == "CBOP"), "firm\n")
 ## -----------------------------------------------------------------------------
 bal.tab(source ~ size + private + nace + region,
         data = combined,
+        s.weights = combined$weight,
         stats = c("m", "ks"),
         binary = "std")
 
@@ -215,7 +222,8 @@ W <- weightit(
   source ~ size + private + nace + region,
   data = combined,
   method = "ps",       ## regresja logistyczna
-  estimand = "ATT"     ## cel: zrównoważyć JVS do struktury CBOP
+  estimand = "ATT",    ## cel: zrównoważyć JVS do struktury CBOP
+  s.weights = combined$weight  ## wagi losowania JVS
 )
 summary(W)
 
@@ -233,7 +241,7 @@ love.plot(W, stats = "mean.diffs", threshold = 0.1,
 
 ## -----------------------------------------------------------------------------
 ps_model <- glm(source == "CBOP" ~ size + private + nace + region,
-                data = combined, family = binomial)
+                data = combined, family = binomial, weights = weight)
 ps_hat <- predict(ps_model, type = "response")
 
 R_indicator <- 1 - 2 * sd(ps_hat)
