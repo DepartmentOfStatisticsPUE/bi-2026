@@ -211,7 +211,8 @@ combined_dum = pd.get_dummies(combined[wspol], columns=["size", "nace", "region"
 
 X = sm.add_constant(combined_dum)
 y = combined["source"]
-ps_model = sm.Logit(y, X, freq_weights=combined["weight"]).fit(disp=0)
+ps_model = sm.GLM(y, X, family=sm.families.Binomial(),
+                  freq_weights=combined["weight"]).fit()
 ps_hat = ps_model.predict(X)
 
 ## Wagi IPW
