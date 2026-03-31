@@ -1343,6 +1343,7 @@ Wzór na statystykę testową (przy $p = 0.5$):
 \textbf{Wskazówka:} $\sqrt{n} \cdot \sqrt{D_0} = \sqrt{n \cdot \frac{N-n}{n}} = \sqrt{N-n}$, więc $Z_n$ zależy od wielkości \textbf{populacji}, nie próby.
 
 \begin{enumerate}
+\small
     \item Oblicz $f$, $N - n$ i $Z_n$ dla obu źródeł.
     \item Które źródło daje większy błąd (w odchyleniach standardowych)?
     \item O ile musielibyśmy zmniejszyć $\rho_{R,G}$ w rejestrze, żeby $Z_n < 2$?
@@ -1696,360 +1697,360 @@ Wzór na statystykę testową (przy $p = 0.5$):
 % % % \end{frame}
 
 
-% \section{Metody estymacji dla prób nielosowych}
+\section{Metody estymacji dla prób nielosowych}
 
-% \begin{frame}{Metody estymacji -- rozważmy następujące przypadki}
-%     \begin{figure}
-%         \centering
-%         \includegraphics[width=\textwidth]{fig-4-meth/kombinacje-zrodel.png}
-%         \caption{Cztery przykładowe przypadki źródeł danych, gdzie celem jest oszacowanie wybranej charakterystyki cechy $Y$. Cechy $\bX$ są wspólne, cecha $Y^*$ to tzw. zmienna proxy.}
-%     \end{figure}
-% \end{frame}
-
-
-% \begin{frame}{Metody estymacji w przypadku prób nielosowych}
-%     \begin{center}
-%           \includegraphics[width=\textwidth]{fig-4-meth/elliot-statsci.png}
-%     \end{center}
-% \end{frame}
-
-% \begin{frame}{Elliott i Valliant (2017) wyróżniają dwa podejścia:}
-%  \begin{itemize}
-%         \item \textbf{quasi-randomizacyjne} -- w której konstruujemy \textit{pseudo-wagi} z wykorzystaniem próby losowej lub znanych (albo estymowanych) wartości globalnych.
-%         \begin{center}
-%             \includegraphics[width=0.55\textwidth]{fig-4-meth/pseudo-based.png}
-%         \end{center}
-%         \item \textbf{oparte na modelu} -- w którym zakładamy pewien model.
-%         \begin{center}
-%             \includegraphics[width=0.55\textwidth]{fig-4-meth/model-based.png}
-%         \end{center}
-%     \end{itemize}
-% \end{frame}
+\begin{frame}{Metody estymacji -- rozważmy następujące przypadki}
+    \begin{figure}
+        \centering
+        \includegraphics[width=\textwidth]{fig-4-meth/kombinacje-zrodel.png}
+        \caption{Cztery przykładowe przypadki źródeł danych, gdzie celem jest oszacowanie wybranej charakterystyki cechy $Y$. Cechy $\bX$ są wspólne, cecha $Y^*$ to tzw. zmienna proxy.}
+    \end{figure}
+\end{frame}
 
 
-% \subsection{Podstawowe założenia na potrzeby zajęć} 
+\begin{frame}{Metody estymacji w przypadku prób nielosowych}
+    \begin{center}
+          \includegraphics[width=\textwidth]{fig-4-meth/elliot-statsci.png}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Elliott i Valliant (2017) wyróżniają dwa podejścia:}
+ \begin{itemize}
+        \item \textbf{quasi-randomizacyjne} -- w której konstruujemy \textit{pseudo-wagi} z wykorzystaniem próby losowej lub znanych (albo estymowanych) wartości globalnych.
+        \begin{center}
+            \includegraphics[width=0.55\textwidth]{fig-4-meth/pseudo-based.png}
+        \end{center}
+        \item \textbf{oparte na modelu} -- w którym zakładamy pewien model.
+        \begin{center}
+            \includegraphics[width=0.55\textwidth]{fig-4-meth/model-based.png}
+        \end{center}
+    \end{itemize}
+\end{frame}
 
 
-% \begin{frame}{Podstawowe założenia}
+\subsection{Podstawowe założenia na potrzeby zajęć} 
 
-% \begin{itemize}
-% \justifying
-%     \item Niech $U=\{1,..., N\}$ oznacza populację docelową składającą się z $N$ oznaczonych jednostek. Każda jednostka $i$ ma powiązany wektor zmiennych pomocniczych $\bx_{i}$ oraz zmienną badaną $y_{i}$. 
-%      \begin{itemize}
-%         \item $\{ (y_i, \bx_i), i \in S_A\}$ - próba nielosowa $S_A$ o liczebności $n_A$
-%         \item $\left\{\left(\bx_i, \pi_{i}^B\right), i \in S_B\right\}$ - próba losowa $S_B$ o liczebności $n_B$
-%     \end{itemize}
-%     \item Dla próby losowej $S_B$ każda jednostka ma przypisaną wagę wynikającą z schematu losowania: $d_i^B = 1/\pi_i^B$, gdzie $\pi_i^B$ to prawdopodobieństwo włączenia.
-%     \item Naszym celem jest oszacowanie średniej w populacji $\mu_y=N^{-1}\sum_{i=1}^{N} y_{i}$ zmiennej $y$.
-% \end{itemize}
 
-% \end{frame}
+\begin{frame}{Podstawowe założenia}
 
-% % Slajd 2
-% \begin{frame}{Wskaźniki i prawdopodobieństwa włączenia}
+\begin{itemize}
+\justifying
+    \item Niech $U=\{1,..., N\}$ oznacza populację docelową składającą się z $N$ oznaczonych jednostek. Każda jednostka $i$ ma powiązany wektor zmiennych pomocniczych $\bx_{i}$ oraz zmienną badaną $y_{i}$. 
+     \begin{itemize}
+        \item $\{ (y_i, \bx_i), i \in S_A\}$ - próba nielosowa $S_A$ o liczebności $n_A$
+        \item $\left\{\left(\bx_i, \pi_{i}^B\right), i \in S_B\right\}$ - próba losowa $S_B$ o liczebności $n_B$
+    \end{itemize}
+    \item Dla próby losowej $S_B$ każda jednostka ma przypisaną wagę wynikającą z schematu losowania: $d_i^B = 1/\pi_i^B$, gdzie $\pi_i^B$ to prawdopodobieństwo włączenia.
+    \item Naszym celem jest oszacowanie średniej w populacji $\mu_y=N^{-1}\sum_{i=1}^{N} y_{i}$ zmiennej $y$.
+\end{itemize}
 
-% \begin{itemize}
-% \justifying
-%     \item Wprowadźmy wskaźniki włączenia do prób, zdefiniowane dla wszystkich jednostek w populacji docelowej:
-%      \begin{itemize}
-%         \item $R_i^A=I(i \in S_A)$ - włączenie do próby nielosowej $S_A$
-%         \item $R_i^B=I(i \in S_B)$ - włączenie do próby losowej $S_B$
-%     \end{itemize}
-%     \item Niech $\pi_i^A=P(R_i^A=1 \mid \bx_i, y_i)=P(R_i^A=1 \mid \bx_i)$ będzie prawdopodobieństwem włączenia (propensity score), które charakteryzuje mechanizm doboru próby $S_A$.
-%     \item W przeciwieństwie do $\pi_i^B$, wartości $\pi_i^A$ i odpowiadające im wagi $d_i^A=1/\pi_i^A$ są nieznane.
-% \end{itemize}
+\end{frame}
+
+% Slajd 2
+\begin{frame}{Wskaźniki i prawdopodobieństwa włączenia}
+
+\begin{itemize}
+\justifying
+    \item Wprowadźmy wskaźniki włączenia do prób, zdefiniowane dla wszystkich jednostek w populacji docelowej:
+     \begin{itemize}
+        \item $R_i^A=I(i \in S_A)$ - włączenie do próby nielosowej $S_A$
+        \item $R_i^B=I(i \in S_B)$ - włączenie do próby losowej $S_B$
+    \end{itemize}
+    \item Niech $\pi_i^A=P(R_i^A=1 \mid \bx_i, y_i)=P(R_i^A=1 \mid \bx_i)$ będzie prawdopodobieństwem włączenia (propensity score), które charakteryzuje mechanizm doboru próby $S_A$.
+    \item W przeciwieństwie do $\pi_i^B$, wartości $\pi_i^A$ i odpowiadające im wagi $d_i^A=1/\pi_i^A$ są nieznane.
+\end{itemize}
     
-% \end{frame}
+\end{frame}
 
-% \begin{frame}{Struktura danych}
-%     \begin{table}[ht!]
-%         \centering
-%         \resizebox{\linewidth}{!}{
-%         \begin{tabular}{llcccc} 
-%         \hline
-%         Próba & ID & Włączenie ($R$) & Waga ($d$) & Zmienne pom. ($\bx$) & Zm. badana ($y$) \\
-%         \hline
-%         Nielosowa  & 1 & 1 & ? & $\checkmark$ & $\checkmark$ \\ 
-%         $S_A$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ \\
-%         & $n_A$ & 1 & ? & $\checkmark$ & $\checkmark$ \\
-%         Losowa  & 1 & 0 & $\checkmark$ & $\checkmark$ & ? \\
-%         $S_B$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ \\ 
-%         & $n_B$ & 0 & $\checkmark$ & $\checkmark$ & ? \\                                     
-%         \hline     
-%         \end{tabular}
-%         }
-%         \caption{Struktura danych w układzie dwóch prób}
-%     \end{table}
+\begin{frame}{Struktura danych}
+    \begin{table}[ht!]
+        \centering
+        \resizebox{\linewidth}{!}{
+        \begin{tabular}{llcccc} 
+        \hline
+        Próba & ID & Włączenie ($R$) & Waga ($d$) & Zmienne pom. ($\bx$) & Zm. badana ($y$) \\
+        \hline
+        Nielosowa  & 1 & 1 & ? & $\checkmark$ & $\checkmark$ \\ 
+        $S_A$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ \\
+        & $n_A$ & 1 & ? & $\checkmark$ & $\checkmark$ \\
+        Losowa  & 1 & 0 & $\checkmark$ & $\checkmark$ & ? \\
+        $S_B$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ \\ 
+        & $n_B$ & 0 & $\checkmark$ & $\checkmark$ & ? \\                                     
+        \hline     
+        \end{tabular}
+        }
+        \caption{Struktura danych w układzie dwóch prób}
+    \end{table}
     
-%     Wartości zmiennej $y_i$ nie są obserwowane w próbie losowej, więc nie można ich bezpośrednio wykorzystać do oszacowania badanej wielkości. Zamiast tego, próbujemy łączyć próbę nielosową i losową.
-% \end{frame}
+    Wartości zmiennej $y_i$ nie są obserwowane w próbie losowej, więc nie można ich bezpośrednio wykorzystać do oszacowania badanej wielkości. Zamiast tego, próbujemy łączyć próbę nielosową i losową.
+\end{frame}
 
-% \begin{frame}{Główne założenia}
-%     Ze względu na brak uniwersalnie przyjętej metody łączenia prób, założenia różnią się znacznie. Jednak dla większości metod przyjmuje się następujące główne założenia:
+\begin{frame}{Główne założenia}
+    Ze względu na brak uniwersalnie przyjętej metody łączenia prób, założenia różnią się znacznie. Jednak dla większości metod przyjmuje się następujące główne założenia:
     
-%     \begin{itemize}
-%     \justifying
-%         \item[A1] $R_i^A$ i zmienna badana $y_i$ są niezależne przy ustalonym zbiorze zmiennych pomocniczych $\bx_i$ (mechanizm MAR).
-%         \item[A2] Wszystkie jednostki w populacji docelowej mają niezerowe prawdopodobieństwo włączenia do próby nielosowej, tj. $\pi_i^A>0$, $i=1,2, \ldots, N$ (brak błędu pokrycia).
-%         \item[A3] Wskaźniki włączenia $R_1, R_2, \ldots, R_N$ są niezależne przy ustalonym zbiorze zmiennych pomocniczych $\left(\bx_1, \bx_2, \ldots, \bx_N\right)$ (brak grupowania).
-%     \end{itemize}
+    \begin{itemize}
+    \justifying
+        \item[A1] $R_i^A$ i zmienna badana $y_i$ są niezależne przy ustalonym zbiorze zmiennych pomocniczych $\bx_i$ (mechanizm MAR).
+        \item[A2] Wszystkie jednostki w populacji docelowej mają niezerowe prawdopodobieństwo włączenia do próby nielosowej, tj. $\pi_i^A>0$, $i=1,2, \ldots, N$ (brak błędu pokrycia).
+        \item[A3] Wskaźniki włączenia $R_1, R_2, \ldots, R_N$ są niezależne przy ustalonym zbiorze zmiennych pomocniczych $\left(\bx_1, \bx_2, \ldots, \bx_N\right)$ (brak grupowania).
+    \end{itemize}
     
-%     Obecnie pomijamy nakładanie się prób $S_A$ i $S_B$ oraz zakładamy brak błędów pomiaru w $y_i$ i znajomość wartości $\bx_i$.
-% \end{frame}
+    Obecnie pomijamy nakładanie się prób $S_A$ i $S_B$ oraz zakładamy brak błędów pomiaru w $y_i$ i znajomość wartości $\bx_i$.
+\end{frame}
 
-% \subsection{Metody quasi-randomizacyjne}
+\subsection{Metody quasi-randomizacyjne}
 
-% \begin{frame}{Propensity score -- Rosenbaum \& Rubin (1983)}
-% \begin{center}
-%     \includegraphics[width=\textwidth]{fig-4-meth/rubin.png}
-% \end{center}
-% \end{frame}
+\begin{frame}{Propensity score -- Rosenbaum \& Rubin (1983)}
+\begin{center}
+    \includegraphics[width=\textwidth]{fig-4-meth/rubin.png}
+\end{center}
+\end{frame}
 
-% \begin{frame}{Propensity score  -- Lee (2006)}
-% \begin{center}
-%     \includegraphics[width=\textwidth]{fig-4-meth/lee.png}
-% \end{center}
-% \end{frame}
+\begin{frame}{Propensity score  -- Lee (2006)}
+\begin{center}
+    \includegraphics[width=\textwidth]{fig-4-meth/lee.png}
+\end{center}
+\end{frame}
 
-% \begin{frame}{Propensity score  -- Chen (2020)}
-% \begin{center}
-%     \includegraphics[width=\textwidth]{fig-4-meth/ps-dr.png}
-% \end{center}
-% \end{frame}
+\begin{frame}{Propensity score  -- Chen (2020)}
+\begin{center}
+    \includegraphics[width=\textwidth]{fig-4-meth/ps-dr.png}
+\end{center}
+\end{frame}
 
-% \begin{frame}{Propensity score  -- Wu (2022)}
-% \begin{center}
-%     \includegraphics[width=\textwidth]{fig-4-meth/ps-review.png}
-% \end{center}
-% \end{frame}
+\begin{frame}{Propensity score  -- Wu (2022)}
+\begin{center}
+    \includegraphics[width=\textwidth]{fig-4-meth/ps-review.png}
+\end{center}
+\end{frame}
 
-% \begin{frame}{Nazewnictwo}
-%     \begin{itemize}
-%     \justifying
-%         \item Propensity score (PS) -- prawdopodobieństwa inkluzji do próby nielosowej $S_A$
-%         \item Propensity score weighting (PSW) / Inverse probability weighting (IPW) -- ważenie przez odwrotność prawdopodobieństwa inkzji 
-%     \end{itemize}
-% \end{frame}
+\begin{frame}{Nazewnictwo}
+    \begin{itemize}
+    \justifying
+        \item Propensity score (PS) -- prawdopodobieństwa inkluzji do próby nielosowej $S_A$
+        \item Propensity score weighting (PSW) / Inverse probability weighting (IPW) -- ważenie przez odwrotność prawdopodobieństwa inkluzji 
+    \end{itemize}
+\end{frame}
 
-% \begin{frame}{Wprowadzenie do metody IPW}
-%     \begin{itemize}
-%     \justifying
-%         \item Inverse Probability Weighting (IPW) to popularna metoda estymacji wykorzystująca prawdopodobieństwa włączenia do próby
-%         \item Opiera się na estymacji prawdopodobieństwa włączenia (PS) danego wzorem $\pi_i^A=P\left(i \in S_A \right)$
-%         \item Metoda szczególnie przydatna w kontekście próby nielosowej
-%         \item Prawdopodobieństwa włączenia są używane do korygowania obciążeń wynikających z mechanizmu selekcji próby
-%     \end{itemize}
-% \end{frame}
+\begin{frame}{Wprowadzenie do metody IPW}
+    \begin{itemize}
+    \justifying
+        \item Inverse Probability Weighting (IPW) to popularna metoda estymacji wykorzystująca prawdopodobieństwa włączenia do próby
+        \item Opiera się na estymacji prawdopodobieństwa włączenia (PS) danego wzorem $\pi_i^A=P\left(i \in S_A \right)$
+        \item Metoda szczególnie przydatna w kontekście próby nielosowej
+        \item Prawdopodobieństwa włączenia są używane do korygowania obciążeń wynikających z mechanizmu selekcji próby
+    \end{itemize}
+\end{frame}
 
-% \begin{frame}{Dwa warianty estymatora IPW}
-%     Metoda IPW oferuje dwa główne warianty estymatora średniej populacyjnej:
+\begin{frame}{Dwa warianty estymatora IPW}
+    Metoda IPW oferuje dwa główne warianty estymatora średniej populacyjnej:
     
-%     \begin{equation}
-%       \hat{\mu}_{y,\text{IPW1}}=\frac{1}{N} \sum_{i \in S_A} \frac{y_i}{\hat{\pi}_i^A} \quad \text { i } \quad 
-%       \hat{\mu}_{y,\text{IPW2}}=\frac{1}{\hat{N}^A} \sum_{i \in S_A} \frac{y_i}{\hat{\pi}_i^A},
-%     \end{equation}
+    \begin{equation}
+      \hat{\mu}_{y,\text{IPW1}}=\frac{1}{N} \sum_{i \in S_A} \frac{y_i}{\hat{\pi}_i^A} \quad \text { i } \quad 
+      \hat{\mu}_{y,\text{IPW2}}=\frac{1}{\hat{N}^A} \sum_{i \in S_A} \frac{y_i}{\hat{\pi}_i^A},
+    \end{equation}
     
-%     gdzie:
-%     \begin{itemize}
-%         \item $\hat{\mu}_{y,\text{IPW1}}$ - modyfikacja estymatora Horvitza-Thompsona
-%         \item $\hat{\mu}_{y,\text{IPW2}}$ - modyfikacja estymatora Hájeka
-%         \item $\hat{N}^A = \sum_{i \in S_A} (\pi_i^A)^{-1}$ - oszacowana liczebność populacji
-%     \end{itemize}
+    gdzie:
+    \begin{itemize}
+        \item $\hat{\mu}_{y,\text{IPW1}}$ - modyfikacja estymatora Horvitza-Thompsona
+        \item $\hat{\mu}_{y,\text{IPW2}}$ - modyfikacja estymatora Hájeka
+        \item $\hat{N}^A = \sum_{i \in S_A} (\pi_i^A)^{-1}$ - oszacowana liczebność populacji
+    \end{itemize}
     
-%     \vspace{0.5em}
-%     \small{Wu (2022) zauważa, że estymator $\hat{\mu}_{y,\text{IPW2}}$ daje lepsze wyniki niż $\hat{\mu}_{y,\text{IPW1}}$ nawet gdy liczebność populacji jest znana.}
-% \end{frame}
+    \vspace{0.5em}
+    \small{Wu (2022) zauważa, że estymator $\hat{\mu}_{y,\text{IPW2}}$ daje lepsze wyniki niż $\hat{\mu}_{y,\text{IPW1}}$ nawet gdy liczebność populacji jest znana.}
+\end{frame}
 
-% \begin{frame}{Konstrukcja estymatora IPW}
-%     Budowa estymatora IPW wymaga dwóch kroków:
+\begin{frame}{Konstrukcja estymatora IPW}
+    Budowa estymatora IPW wymaga dwóch kroków:
     
-%     \begin{enumerate}
-%         \item Estymacja prawdopodobieństw włączenia $\pi_i^A$
-%         \item Wyznaczenie wag $d_i^A = 1/\pi_i^A$
-%     \end{enumerate}
+    \begin{enumerate}
+        \item Estymacja prawdopodobieństw włączenia $\pi_i^A$
+        \item Wyznaczenie wag $d_i^A = 1/\pi_i^A$
+    \end{enumerate}
     
-%     \vspace{1em}
+    \vspace{1em}
     
-%     Do estymacji prawdopodobieństw $\pi_i^A=\pi(\bx_i, \bgamma)$ można zastosować metodę największej wiarygodności, zakładając, że informacje o $\bx_i$ są dostępne dla każdej jednostki w populacji (lub próby losowej).
-% \end{frame}
+    Do estymacji prawdopodobieństw $\pi_i^A=\pi(\bx_i, \bgamma)$ można zastosować metodę największej wiarygodności, zakładając, że informacje o $\bx_i$ są dostępne dla każdej jednostki w populacji (lub próby losowej).
+\end{frame}
 
-% \begin{frame}{Regresja logistyczna w estymacji PS}
-%     \begin{itemize}
-%     \justifying
-%         \item W praktyce, do modelowania prawdopodobieństwa włączenia $\pi(\bx_i, \bgamma)$ najczęściej stosuje się regresję logistyczną
-%         \item Model logistyczny przyjmuje postać:
+\begin{frame}{Regresja logistyczna w estymacji PS}
+    \begin{itemize}
+    \justifying
+        \item W praktyce, do modelowania prawdopodobieństwa włączenia $\pi(\bx_i, \bgamma)$ najczęściej stosuje się regresję logistyczną
+        \item Model logistyczny przyjmuje postać:
         
-%         \begin{equation}
-%         \pi(\bx_i, \bgamma) = \frac{\exp(\bx_i^T \bgamma)}{1 + \exp(\bx_i^T \bgamma)}
-%         \end{equation}
+        \begin{equation}
+        \pi(\bx_i, \bgamma) = \frac{\exp(\bx_i^T \bgamma)}{1 + \exp(\bx_i^T \bgamma)}
+        \end{equation}
         
-%         \item Parametry $\bgamma$ mają interpretację logarytmu ilorazu szans
-%         \item Model jest elastyczny i może uwzględniać zmienne ilościowe, jakościowe oraz interakcje
-%     \end{itemize}
-% \end{frame}
+        \item Parametry $\bgamma$ mają interpretację logarytmu ilorazu szans
+        \item Model jest elastyczny i może uwzględniać zmienne ilościowe, jakościowe oraz interakcje
+    \end{itemize}
+\end{frame}
 
-% \begin{frame}{Estymacja modelu logistycznego}
-%     \begin{itemize}
-%     \justifying
-%         \item Do estymacji parametrów $\bgamma$ modelu logistycznego używamy próby nielosowej ($S_A$) i losowej ($S_B$)
-%         \item Jednostki z próby nielosowej traktujemy jako "sukcesy"\; ($R_i^A = 1$)
-%         \item Jednostki z próby losowej traktujemy jako "porażki"\; ($R_i^A = 0$)
-%         \item Zmienne objaśniające $\bx_i$ powinny dobrze przewidywać mechanizm włączenia do próby nielosowej
-%         \item Ważne jest uwzględnienie wag $d_i^B$ z próby losowej w procesie estymacji
-%     \end{itemize}
+\begin{frame}{Estymacja modelu logistycznego}
+    \begin{itemize}
+    \justifying
+        \item Do estymacji parametrów $\bgamma$ modelu logistycznego używamy próby nielosowej ($S_A$) i losowej ($S_B$)
+        \item Jednostki z próby nielosowej traktujemy jako "sukcesy"\; ($R_i^A = 1$)
+        \item Jednostki z próby losowej traktujemy jako "porażki"\; ($R_i^A = 0$)
+        \item Zmienne objaśniające $\bx_i$ powinny dobrze przewidywać mechanizm włączenia do próby nielosowej
+        \item Ważne jest uwzględnienie wag $d_i^B$ z próby losowej w procesie estymacji
+    \end{itemize}
     
-%     \vspace{0.5em}
+    \vspace{0.5em}
     
-%     \alert{Uwaga:} Jakość oszacowań $\hat{\pi}_i^A$ bezpośrednio wpływa na jakość finalnego estymatora IPW. Istotny jest dobór odpowiednich zmiennych pomocniczych $\bx_i$ silnie związanych zarówno z mechanizmem włączenia do próby jak i zmienną badaną $y$.
-% \end{frame}
+    \alert{Uwaga:} Jakość oszacowań $\hat{\pi}_i^A$ bezpośrednio wpływa na jakość finalnego estymatora IPW. Istotny jest dobór odpowiednich zmiennych pomocniczych $\bx_i$ silnie związanych zarówno z mechanizmem włączenia do próby jak i zmienną badaną $y$.
+\end{frame}
 
-% \begin{frame}{Warunki stosowania modelu logistycznego}
-%     \begin{itemize}
-%     \justifying
-%         \item Wymaga spełnienia założenia MAR (Missing At Random) - prawdopodobieństwo włączenia do próby zależy tylko od obserwowalnych zmiennych $\bx_i$
-%         \item Wymaga odpowiedniego pokrycia przestrzeni zmiennych pomocniczych w próbie losowej i nielosowej
-%         \item Możliwe jest rozszerzenie do bardziej złożonych modeli (np. modele GAM, lasy losowe) jeśli relacja nie jest liniowa w logicie
-%     \end{itemize}
+\begin{frame}{Warunki stosowania modelu logistycznego}
+    \begin{itemize}
+    \justifying
+        \item Wymaga spełnienia założenia MAR (Missing At Random) - prawdopodobieństwo włączenia do próby zależy tylko od obserwowalnych zmiennych $\bx_i$
+        \item Wymaga odpowiedniego pokrycia przestrzeni zmiennych pomocniczych w próbie losowej i nielosowej
+        \item Możliwe jest rozszerzenie do bardziej złożonych modeli (np. modele GAM, lasy losowe) jeśli relacja nie jest liniowa w logicie
+    \end{itemize}
     
-%     \vspace{1em}
+    \vspace{1em}
     
-%     Po estymacji modelu, otrzymane prawdopodobieństwa $\hat{\pi}_i^A$ są używane do konstruowania wag $\hat{d}_i^A = 1/\hat{\pi}_i^A$ stosowanych w estymatorach IPW.
-% \end{frame}
+    Po estymacji modelu, otrzymane prawdopodobieństwa $\hat{\pi}_i^A$ są używane do konstruowania wag $\hat{d}_i^A = 1/\hat{\pi}_i^A$ stosowanych w estymatorach IPW.
+\end{frame}
 
-% \begin{frame}{Funkcja wiarygodności}
-%     Teoretyczna funkcja logarytmu wiarygodności ma postać:
+\begin{frame}{Funkcja wiarygodności}
+    Teoretyczna funkcja logarytmu wiarygodności ma postać:
     
-%     \begin{align}
-%     \small
-%     \ell(\bgamma) &= \log\left\{\prod_{i=1}^N \left(\pi_i^A\right)^{R_i}\left(1-\pi_i^A\right)^{1-R_i}\right\} \nonumber \\
-%     &= \sum_{i \in S_{A}} \log \left\{\frac{\pi\left(\bx_i, \bgamma\right)}{1-\pi\left(\bx_i, \bgamma\right)}\right\}+\sum_{i=1}^N \log \left\{1-\pi\left(\bx_i, \bgamma\right)\right\}.
-%     \end{align}
+    \begin{align}
+    \small
+    \ell(\bgamma) &= \log\left\{\prod_{i=1}^N \left(\pi_i^A\right)^{R_i}\left(1-\pi_i^A\right)^{1-R_i}\right\} \nonumber \\
+    &= \sum_{i \in S_{A}} \log \left\{\frac{\pi\left(\bx_i, \bgamma\right)}{1-\pi\left(\bx_i, \bgamma\right)}\right\}+\sum_{i=1}^N \log \left\{1-\pi\left(\bx_i, \bgamma\right)\right\}.
+    \end{align}
     
-%     \vspace{0.5em}
+    \vspace{0.5em}
     
-%     W praktyce funkcja tej postaci nie może być stosowana, ponieważ nie wszystkie jednostki z populacji są obserwowane.
-% \end{frame}
+    W praktyce funkcja tej postaci nie może być stosowana, ponieważ nie wszystkie jednostki z populacji są obserwowane.
+\end{frame}
 
-% \begin{frame}{Pseudo funkcja wiarygodności}
-%     Bardziej realistyczne podejście polega na wykorzystaniu referencyjnej próby losowej $S_B$. Wtedy otrzymujemy pseudo funkcję logarytmu wiarygodności:
+\begin{frame}{Pseudo funkcja wiarygodności}
+    Bardziej realistyczne podejście polega na wykorzystaniu referencyjnej próby losowej $S_B$. Wtedy otrzymujemy pseudo funkcję logarytmu wiarygodności:
     
-%     \begin{equation}
-%     \small
-%     \ell^*(\bgamma) = \sum_{i \in S_{A}} \log \left\{\frac{\pi\left(\bx_i, \bgamma\right)}{1-\pi\left(\bx_i, \bgamma\right)}\right\} + \sum_{i \in S_{B}} d_i^B \log \left\{1-\pi\left(\bx_i, \bgamma\right)\right\}.
-%     \end{equation}
+    \begin{equation}
+    \small
+    \ell^*(\bgamma) = \sum_{i \in S_{A}} \log \left\{\frac{\pi\left(\bx_i, \bgamma\right)}{1-\pi\left(\bx_i, \bgamma\right)}\right\} + \sum_{i \in S_{B}} d_i^B \log \left\{1-\pi\left(\bx_i, \bgamma\right)\right\}.
+    \end{equation}
     
-%     \vspace{0.5em}
+    \vspace{0.5em}
     
-%     Estymator $\hat{\bgamma}$ największej pseudo-wiarygodności można uzyskać jako rozwiązanie równania pseudo-score, które przy założeniu funkcji logitowej dla $\pi_i^A$ ma postać:
+    Estymator $\hat{\bgamma}$ największej pseudo-wiarygodności można uzyskać jako rozwiązanie równania pseudo-score, które przy założeniu funkcji logitowej dla $\pi_i^A$ ma postać:
     
-%     \begin{equation}
-%     \small
-%     \bU(\bgamma) = \sum_{i \in S_A} \bx_i - \sum_{i \in S_B} d_i^B \pi(\bx_i, \bgamma) \bx_i.
-%     \end{equation}
-% \end{frame}
+    \begin{equation}
+    \small
+    \bU(\bgamma) = \sum_{i \in S_A} \bx_i - \sum_{i \in S_B} d_i^B \pi(\bx_i, \bgamma) \bx_i.
+    \end{equation}
+\end{frame}
 
-% \begin{frame}{}
-%     Przejdźmy do przykładu w R
-% \end{frame}
+\begin{frame}{}
+    Przejdźmy do przykładu w R
+\end{frame}
 
-% \begin{frame}{Ograniczenia IPW MLE}
-% Estymacja $\pi(\bx_i, \bgamma)$ z wykorzystaniem metody MLE lub pseudo-MLE ma następujące ograniczenia
-%     \begin{itemize}
-%         \item  działa tylko jeżeli model dla $\pi(\bx_i, \bgamma)$ jest poprawnie wyspecifykowany,
-%         \item może skutkować dużymi wagami gdy $\pi(\bx_i, \bgamma)$ jest małe,
-%         \item wariancja wag zwykle jest większa,
-%         \item wagi $1/\pi(\bx_i, \bgamma)$ nie odtwarzają wartości globalnych z próby lub populacji,
-%         \item możemy zastosować tylko gdy dysponujemy danymi z populacji lub próby.
-%     \end{itemize}
-% \end{frame}
+\begin{frame}{Ograniczenia IPW MLE}
+Estymacja $\pi(\bx_i, \bgamma)$ z wykorzystaniem metody MLE lub pseudo-MLE ma następujące ograniczenia
+    \begin{itemize}
+        \item  działa tylko jeżeli model dla $\pi(\bx_i, \bgamma)$ jest poprawnie wyspecifykowany,
+        \item może skutkować dużymi wagami gdy $\pi(\bx_i, \bgamma)$ jest małe,
+        \item wariancja wag zwykle jest większa,
+        \item wagi $1/\pi(\bx_i, \bgamma)$ nie odtwarzają wartości globalnych z próby lub populacji,
+        \item możemy zastosować tylko gdy dysponujemy danymi z populacji lub próby.
+    \end{itemize}
+\end{frame}
 
 
-% \begin{frame}{Rozszerzenia i metoda kalibracji}
-%     Funkcja $\bU(\bgamma)$ może być zastąpiona przez ogólne równania estymujące (ang. \textit{generalized estimation equations}; GEE). 
+\begin{frame}{Rozszerzenia i metoda kalibracji}
+    Funkcja $\bU(\bgamma)$ może być zastąpiona przez ogólne równania estymujące (ang. \textit{generalized estimation equations}; GEE). 
     
-%     \begin{itemize}
-%         \item Niech $\bh(\bx, \bgamma)$ będzie wektorem funkcji o tym samym wymiarze co $\bgamma$
-%         \item Definiujemy funkcję $\bG(\bgamma)$ jako:
+    \begin{itemize}
+        \item Niech $\bh(\bx, \bgamma)$ będzie wektorem funkcji o tym samym wymiarze co $\bgamma$
+        \item Definiujemy funkcję $\bG(\bgamma)$ jako:
         
-%         \begin{equation}
-%         \bG(\bgamma)=\sum_{i \in S_A} \bh\left(\bx_i, \bgamma\right)-\sum_{i \in S_B} d_i^B \pi\left(\bx_i, \bgamma\right) \bh\left(\bx_i, \bgamma\right)
-%         \end{equation}
+        \begin{equation}
+        \bG(\bgamma)=\sum_{i \in S_A} \bh\left(\bx_i, \bgamma\right)-\sum_{i \in S_B} d_i^B \pi\left(\bx_i, \bgamma\right) \bh\left(\bx_i, \bgamma\right)
+        \end{equation}
         
-%         \item Rozwiązanie równania $\bG(\bgamma)=\bZero$ daje zgodny estymator $\hat{\bgamma}$
-%         \item Najczęściej wybierane funkcje to 
-%         \begin{itemize}
-%             \item $\bh\left(\bx_i, \bgamma\right) = \bx_i \pi\left(\bx_i, \bgamma\right)^{-1}$,
-%             \item $\bh\left(\bx_i, \bgamma\right) = \bx_i$ (prowadzi do $\bU(\bgamma)$).
-%         \end{itemize} 
-%     \end{itemize}
+        \item Rozwiązanie równania $\bG(\bgamma)=\bZero$ daje zgodny estymator $\hat{\bgamma}$
+        \item Najczęściej wybierane funkcje to 
+        \begin{itemize}
+            \item $\bh\left(\bx_i, \bgamma\right) = \bx_i \pi\left(\bx_i, \bgamma\right)^{-1}$,
+            \item $\bh\left(\bx_i, \bgamma\right) = \bx_i$ (prowadzi do $\bU(\bgamma)$).
+        \end{itemize} 
+    \end{itemize}
     
-%     Dla drugiego wariantu funkcji $\bh$ otrzymujemy \textit{skalibrowane} IPW:
+    Dla drugiego wariantu funkcji $\bh$ otrzymujemy \textit{skalibrowane} IPW:
     
-%     \begin{equation}
-%     \bG(\btheta) = \sum_{i \in S_A} \frac{\bx_i}{\pi\left(\bx_i, \bgamma\right) }-\sum_{i \in S_B} d_i^B \bx_i.
-%     \label{eq-ipw-gee}
-%     \end{equation}
+    \begin{equation}
+    \bG(\btheta) = \sum_{i \in S_A} \frac{\bx_i}{\pi\left(\bx_i, \bgamma\right) }-\sum_{i \in S_B} d_i^B \bx_i.
+    \label{eq-ipw-gee}
+    \end{equation}
     
-% \end{frame}
+\end{frame}
 
-% \begin{frame}{Rozszerzenia i metoda kalibracji}
-% Proszę zauważyć, że dla \eqref{eq-ipw-gee} sumę daną wzorem $\sum_{i \in S_B} d_i^B \bx_i$ możemy zastąpić wartościami globalnym (znanymi z populacji)
+\begin{frame}{Rozszerzenia i metoda kalibracji}
+Proszę zauważyć, że dla \eqref{eq-ipw-gee} sumę daną wzorem $\sum_{i \in S_B} d_i^B \bx_i$ możemy zastąpić wartościami globalnym (znanymi z populacji)
 
-%     \begin{equation}
-%     \bG(\btheta) = \sum_{i \in S_A} \frac{\bx_i}{\pi\left(\bx_i, \bgamma\right)} -\btau_{\bx} = 
-%     \begin{bmatrix}
-%     \sum_{i \in S_A} \frac{\bx_{i1}}{\pi\left(\bx_i, \bgamma\right)} \\
-%     \sum_{i \in S_A} \frac{\bx_{i2}}{\pi\left(\bx_i, \bgamma\right)} \\
-%     ... \\
-%     \sum_{i \in S_A} \frac{\bx_{ip}}{\pi\left(\bx_i, \bgamma\right)} 
-%     \end{bmatrix} - 
-%     \begin{bmatrix}
-%      \tau_{x_1} \\
-%      \tau_{x_2} \\
-%      ... \\
-%      \tau_{x_p}
-%     \end{bmatrix}
-%     \end{equation}
+    \begin{equation}
+    \bG(\btheta) = \sum_{i \in S_A} \frac{\bx_i}{\pi\left(\bx_i, \bgamma\right)} -\btau_{\bx} = 
+    \begin{bmatrix}
+    \sum_{i \in S_A} \frac{\bx_{i1}}{\pi\left(\bx_i, \bgamma\right)} \\
+    \sum_{i \in S_A} \frac{\bx_{i2}}{\pi\left(\bx_i, \bgamma\right)} \\
+    ... \\
+    \sum_{i \in S_A} \frac{\bx_{ip}}{\pi\left(\bx_i, \bgamma\right)} 
+    \end{bmatrix} - 
+    \begin{bmatrix}
+     \tau_{x_1} \\
+     \tau_{x_2} \\
+     ... \\
+     \tau_{x_p}
+    \end{bmatrix}
+    \end{equation}
     
-% Kim i Riddles (2012) pokazali, że gdy estymujemy $\bgamma$ z wykorzystaniem GEE to estymator IPW jest podwójnie odporny przy założeniu, że model zmiennej wynikowej (Y) jest liniowy (tj. liniowy w populacji).
+Kim i Riddles (2012) pokazali, że gdy estymujemy $\bgamma$ z wykorzystaniem GEE to estymator IPW jest podwójnie odporny przy założeniu, że model zmiennej wynikowej (Y) jest liniowy (tj. liniowy w populacji).
  
-% \end{frame}
+\end{frame}
 
 
-% \begin{frame}{Rozszerzenia i metoda kalibracji}
-% Metoda GEE ma następujące własności:
-%     \begin{itemize}
-%     \justifying
-%         \item estymator ten jest podwójnie odporny i.e. kalibrując do znanych wartości globalnych zakładamy, że model $E(Y|X)$ jest liniowy, por. Kim  and Riddles (2012). \textit{Some theory for propensity scoring adjustment estimator}, Survey Methodology 38, 157-165 -- oznacza to, że jeżeli model dla $\pi\left(\bx_i, \bgamma\right)$ będzie źle wyspecifykowany ale model $E(Y|X)$ jest liniowy to estymator dostarczy nam (asymptotycznie) nieobciążonych szacunków.
-%         \item wagi $1/\pi\left(\bx_i, \bgamma\right)$ odtwarzają wartości globalne,
-%         \item estymator GEE możemy stosować gdy nie mamy dostępu do danych jednostkowych a jedynie wartości globalnych,
-%         \item wariancja estymatora GEE jest zwykle mniejsza niż IPW,
-%         \item wariancja wag $1/\pi\left(\bx_i, \bgamma\right)$ w przypadku metody GEE jest zwykle mniejsza i zwykle unikamy wag ekstremalnych.
-%     \end{itemize}
-% \end{frame}
+\begin{frame}{Rozszerzenia i metoda kalibracji}
+Metoda GEE ma następujące własności:
+    \begin{itemize}
+    \justifying
+        \item estymator ten jest podwójnie odporny i.e. kalibrując do znanych wartości globalnych zakładamy, że model $E(Y|X)$ jest liniowy, por. Kim  and Riddles (2012). \textit{Some theory for propensity scoring adjustment estimator}, Survey Methodology 38, 157-165 -- oznacza to, że jeżeli model dla $\pi\left(\bx_i, \bgamma\right)$ będzie źle wyspecifykowany ale model $E(Y|X)$ jest liniowy to estymator dostarczy nam (asymptotycznie) nieobciążonych szacunków.
+        \item wagi $1/\pi\left(\bx_i, \bgamma\right)$ odtwarzają wartości globalne,
+        \item estymator GEE możemy stosować gdy nie mamy dostępu do danych jednostkowych a jedynie wartości globalnych,
+        \item wariancja estymatora GEE jest zwykle mniejsza niż IPW,
+        \item wariancja wag $1/\pi\left(\bx_i, \bgamma\right)$ w przypadku metody GEE jest zwykle mniejsza i zwykle unikamy wag ekstremalnych.
+    \end{itemize}
+\end{frame}
 
-% \begin{frame}{Estymacja wariancji IPW}
-% \begin{itemize}
-% \justifying
-%     \item Chen et al. (2020) przedstawili postać analityczną oraz metodę bootstrap umożliwiającą estymację wariancji estymatora IPW dla średniej.
-%     \item W pakiecie \texttt{nonprobsvy} zaimplementowaliśmy zarówno podejście analityczne, jak i metodę bootstrap.
-%     \item Idea metody bootstrap polega na, $b=1,...,B$ razy powtarzamy
-%     \begin{enumerate}
-%         \item Losujemy ze zwracaniem jednostki z próby $S_A$ (nielosowej)
-%         \item Losujemy ze zwracaniem jednostki z próby $S_B$ (losowej) zgodnie ze schematem losowania.
-%         \item Estymujemy parametry $\bgamma$ funkcji propensity score $\pi\left(\bx_i, \bgamma\right)$ i wyznaczamy $\hat{\mu}_{y,\text{IPW2},b}$
-%     \end{enumerate}
-%     Następnie wyznaczamy wariancję z wektora oszacowań 
+\begin{frame}{Estymacja wariancji IPW}
+\begin{itemize}
+\justifying
+    \item Chen et al. (2020) przedstawili postać analityczną oraz metodę bootstrap umożliwiającą estymację wariancji estymatora IPW dla średniej.
+    \item W pakiecie \texttt{nonprobsvy} zaimplementowaliśmy zarówno podejście analityczne, jak i metodę bootstrap.
+    \item Idea metody bootstrap polega na, $b=1,...,B$ razy powtarzamy
+    \begin{enumerate}
+        \item Losujemy ze zwracaniem jednostki z próby $S_A$ (nielosowej)
+        \item Losujemy ze zwracaniem jednostki z próby $S_B$ (losowej) zgodnie ze schematem losowania.
+        \item Estymujemy parametry $\bgamma$ funkcji propensity score $\pi\left(\bx_i, \bgamma\right)$ i wyznaczamy $\hat{\mu}_{y,\text{IPW2},b}$
+    \end{enumerate}
+    Następnie wyznaczamy wariancję z wektora oszacowań 
     
-%     $$
-%     \left(\hat{\mu}_{y,\text{IPW2},1}, \hat{\mu}_{y,\text{IPW2},2}, ..., \hat{\mu}_{y,\text{IPW2},b}\right)^T.
-%     $$
-% \end{itemize}
-% \end{frame}
+    $$
+    \left(\hat{\mu}_{y,\text{IPW2},1}, \hat{\mu}_{y,\text{IPW2},2}, ..., \hat{\mu}_{y,\text{IPW2},b}\right)^T.
+    $$
+\end{itemize}
+\end{frame}
 
-% \begin{frame}{}
-%     Przejdźmy do przykładu w R
-% \end{frame}
+\begin{frame}{}
+    Przejdźmy do przykładu w R
+\end{frame}
 
 
 % % \begin{frame}{Metody quasi-randomizacyjne}

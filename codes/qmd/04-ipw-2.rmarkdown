@@ -1,0 +1,205 @@
+---
+title: "Kalibrowany estymator IPW"
+format: 
+  html:
+    embed-resources: true
+    table-of-contents: true
+    number-sections: true
+editor: source
+execute: 
+  eval: true
+  warning: false
+  message: false
+---
+
+```{r}
+library(nonprobsvy) ## wersja 0.2.3
+library(cobalt)
+library(WeightIt)
+```
+
+```{r}
+data(admin) ## próba nielosowa (S_A)
+head(admin)
+```
+
+```{r}
+data(jvs) ## próba losowa (S_B)
+head(jvs)
+```
+
+```{r}
+jvs_svy <- svydesign(ids = ~ 1,  
+                     weights = ~ weight,
+                     strata = ~ size + nace + region, 
+                     data = jvs)
+```
+
++ 1 źródło: próba nielosowa S_A (dane z CBOP)
++ 2 źródło: próba losowa S_B (dane z badania popyt na pracę)
+
+Ostatnim razem wykorzystywaliśmy pseudo-funkcję największej wiarygodności (daną poniżej) do estymcji parametrów $\boldsymbol{\gamma}$.
+
+$$
+\ell^*(\boldsymbol{\gamma}) = \sum_{i \in S_{A}} \log \left\{\frac{\pi\left(\boldsymbol{x}_i, \boldsymbol{\gamma}\right)}{1-\pi\left(\boldsymbol{x}_i, \boldsymbol{\gamma}\right)}\right\} + \sum_{i \in S_{B}} d_i^B \log \left\{1-\pi\left(\boldsymbol{x}_i, \boldsymbol{\gamma}\right)\right\}.
+$$
+  
+Ta metoda jest przydatna gdy 1) mamy dostęp do danych z populacji lub 2) mamy dostęp do danych jednostkowych z badania reprezentacyjnego. 
+
+Ogarniczenia są jednak następujące:
+
+- nie zawsze mamy dostęp do danych jednostkowych -- dysponujemy wyłącznie wartościami globalnymi tj. wiemy ile jest kobiet czy mężczyzn
+- wagi uzyskane z metody MLE nie gwarantują odtworzenia znanych lub estymowanych wartości globalnych tj. nie sumują się do liczby kobiet i mężczyzn.
+
+W takim przypadku możemy zastosować podejście oparte o rozwiązywanie uogólnionych równań estymujących (ang. *generalized estimating equations*). 
+
+- Niech $\boldsymbol{h}(\boldsymbol{x}, \boldsymbol{\gamma})$ będzie wektorem funkcji o tym samym wymiarze co $\boldsymbol{\gamma}$
+- Definiujemy funkcję $\boldsymbol{G}(\boldsymbol{\gamma})$ jako:
+$$
+\boldsymbol{G}(\boldsymbol{\gamma})=\sum_{i \in S_A} \boldsymbol{h}\left(\boldsymbol{x}_i, \boldsymbol{\gamma}\right)-\sum_{i \in S_B} d_i^B \pi\left(\boldsymbol{x}_i, \boldsymbol{\gamma}\right) \boldsymbol{h}\left(\boldsymbol{x}_i, \boldsymbol{\gamma}\right)
+$$
+- Rozwiązanie równania $\boldsymbol{G}(\boldsymbol{\gamma})=\boldsymbol{0}$ daje zgodny estymator $\hat{\boldsymbol{\gamma}}$
+- Najczęściej wybierane funkcje to $\boldsymbol{h}\left(\boldsymbol{x}_i, \boldsymbol{\gamma}\right) = \boldsymbol{x}_i$ i $\boldsymbol{h}\left(\boldsymbol{x}_i, \boldsymbol{\gamma}\right) = \boldsymbol{x}_i \pi\left(\boldsymbol{x}_i, \boldsymbol{\gamma}\right)^{-1}$
+- Dla drugiego wariantu funkcji $\boldsymbol{h}$ otrzymujemy \textit{skalibrowane} IPW:
+$$
+\boldsymbol{G}(\boldsymbol{\theta}) = \sum_{i \in S_A} \frac{\boldsymbol{x}_i}{\pi\left(\boldsymbol{x}_i, \boldsymbol{\gamma}\right) }-\sum_{i \in S_B} d_i^B \boldsymbol{x}_i
+$$
+
+To podejście wymaga tylko znajomości sum populacyjnych dla zmiennych pomocniczych $\boldsymbol{x}$ i prowadzi do estymatora podwójnie odpornego przy założeniu, że model zmiennej wynikowej jest liniowy.
+
+
+Przykład 1:
+
+- estymator IPW: wykorzystujemy jedną zmienną tj.
+
+$$
+P(R_A = 1 | size)
+$$
+Zaczniemy od standardowego IPW
+
+```{r}
+ipw_mle <- nonprob(selection = ~ size,         ## P(R_1 = 1 | ...)
+                    target = ~ single_shift,    ## y - zmienna celu
+                    svydesign = jvs_svy,        ## proba losowa S_B
+                    data = admin,               ## proba nielosowa S_A
+                    method_selection = "logit") ## regresja logistyczna / probit / cloglog
+
+ipw_mle
+```
+
+Porównamy teraz z GEE
+
+```{r}
+ipw_gee <- nonprob(selection = ~ size,         ## P(R_1 = 1 | ...)
+                    target = ~ single_shift,    ## y - zmienna celu
+                    svydesign = jvs_svy,        ## proba losowa S_B
+                    data = admin,               ## proba nielosowa S_A
+                    method_selection = "logit", ## regresja logistyczna / probit / cloglog
+                    control_selection = control_sel(est_method = "gee")) 
+
+ipw_gee
+```
+
+
+```{r}
+check_balance(~size-1, ipw_mle)
+check_balance(~size-1, ipw_gee)
+```
+
+```{r}
+coef(ipw_mle)
+```
+
+```{r}
+coef(ipw_gee)
+```
+
+Przykład 2:
+
+- estymator IPW: wykorzystujemy wszystie zmienne tj.
+
+$$
+P(R_A = 1 | size, nace, region, private)
+$$
+
+Zaczynamy od stadardowego estymatora IPW
+
+```{r}
+ipw_mle2 <- nonprob(selection = ~ size + nace + region + private,         ## P(R_1 = 1 | ...)
+                    target = ~ single_shift,    ## y - zmienna celu
+                    svydesign = jvs_svy,        ## proba losowa S_B
+                    data = admin,               ## proba nielosowa S_A
+                    method_selection = "logit") ## regresja logistyczna / probit / cloglog
+
+
+```
+
+a teraz GEE
+
+```{r}
+ipw_gee2 <- nonprob(selection = ~ size + nace + region + private,         ## P(R_1 = 1 | ...)
+                    target = ~ single_shift,    ## y - zmienna celu
+                    svydesign = jvs_svy,        ## proba losowa S_B
+                    data = admin,               ## proba nielosowa S_A
+                    method_selection = "logit", ## regresja logistyczna / probit / cloglog
+                    control_selection = control_sel(est_method = "gee"))
+
+
+```
+
+Porównajmy oszacowania
+
+```{r}
+rbind(
+  extract(ipw_mle2),
+  extract(ipw_gee2)
+)
+```
+
+Porównamy wagi
+
+```{r}
+plot(x = weights(ipw_mle2),
+     y = weights(ipw_gee2),
+     xlab = "Wagi IPW", ylab = "Wagi GEE")
+```
+
+```{r}
+summary(weights(ipw_mle2))
+summary(weights(ipw_gee2))
+```
+
+Metoda GEE zapewnia zgodność rozkładów
+
+```{r}
+check_balance(~size-1,ipw_mle2)
+check_balance(~size-1,ipw_gee2)
+```
+
+Przykład 3: znamy tylko wartości globalne
+
+- załóżmy, że znamy wartości globalne dla zmiennej size
+
+```{r}
+pop_totals <- c("(Intercept)"=51870, sizeM = 13758, sizeS = 29551)
+```
+
+```{r}
+ipw_gee3 <- nonprob(selection = ~ size,         ## P(R_1 = 1 | ...)
+                    target = ~ single_shift,    ## y - zmienna celu
+                    pop_totals = pop_totals,
+                    data = admin,               ## proba nielosowa S_A
+                    method_selection = "logit", ## regresja logistyczna / probit / cloglog
+                    control_selection = control_sel(est_method = "gee"))
+
+ipw_gee3
+```
+
+```{r}
+rbind(
+  extract(ipw_gee),
+  extract(ipw_gee3)
+)
+```
+
+

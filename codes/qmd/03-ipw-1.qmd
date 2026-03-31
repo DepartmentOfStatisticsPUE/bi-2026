@@ -1,0 +1,151 @@
+---
+title: "Wstęp do IPW"
+format: 
+  html:
+    embed-resources: true
+    table-of-contents: true
+    number-sections: true
+editor: source
+execute: 
+  eval: true
+  warning: false
+  message: false
+---
+
+```{r}
+library(nonprobsvy) ## wersja 0.2.3
+library(cobalt)
+library(WeightIt)
+```
+
+```{r}
+data(admin) ## próba nielosowa (S_A)
+head(admin)
+```
+
+```{r}
+data(jvs) ## próba losowa (S_B)
+head(jvs)
+```
+
+```{r}
+jvs_svy <- svydesign(ids = ~ 1,  
+                     weights = ~ weight,
+                     strata = ~ size + nace + region, 
+                     data = jvs)
+```
+
++ 1 źródło: próba nielosowa S_A (dane z CBOP)
++ 2 źródło: próba losowa S_B (dane z badania popyt na pracę)
+
+
+$$
+\ell^*(\boldsymbol{\gamma}) = \sum_{i \in S_{A}} \log \left\{\frac{\pi\left(\boldsymbol{x}_i, \boldsymbol{\gamma}\right)}{1-\pi\left(\boldsymbol{x}_i, \boldsymbol{\gamma}\right)}\right\} + \sum_{i \in S_{B}} d_i^B \log \left\{1-\pi\left(\boldsymbol{x}_i, \boldsymbol{\gamma}\right)\right\}.
+$$
+  
+$$
+\boldsymbol{U}(\boldsymbol{\gamma}) = \sum_{i \in S_A} \boldsymbol{x}_i - \sum_{i \in S_B} d_i^B \pi(\boldsymbol{x}_i, \boldsymbol{\gamma}) \boldsymbol{x}_i.
+$$
+    
+Przykład 1:
+
+- estymator IPW: wykorzystujemy jedną zmienną tj.
+
+$$
+P(R_A = 1 | size)
+$$
+
+```{r}
+ipw_est1 <- nonprob(selection = ~ size,         ## P(R_1 = 1 | ...)
+                    target = ~ single_shift,    ## y - zmienna celu
+                    svydesign = jvs_svy,        ## proba losowa S_B
+                    data = admin,               ## proba nielosowa S_A
+                    method_selection = "logit") ## regresja logistyczna / probit / cloglog
+
+ipw_est1
+```
+
+```{r}
+plot(ipw_est1)
+```
+
+```{r}
+summary(ipw_est1)
+```
+
+```{r}
+extract(ipw_est1)
+```
+
+```{r}
+weights(ipw_est1) |> table()
+1/3.36782061369001
+1/4.47997394983112
+1/7.92039459072027
+```
+
+```{r}
+check_balance(~size-1, ipw_est1)
+check_balance(~private, ipw_est1)
+```
+
+```{r}
+coef(ipw_est1)
+```
+
+Przykład 2:
+
+- estymator IPW: wykorzystujemy wszystie zmienne tj.
+
+$$
+P(R_A = 1 | size, nace, region, private)
+$$
+
+```{r}
+ipw_est2 <- nonprob(selection = ~ size + nace + region + private,         ## P(R_1 = 1 | ...)
+                    target = ~ single_shift,    ## y - zmienna celu
+                    svydesign = jvs_svy,        ## proba losowa S_B
+                    data = admin,               ## proba nielosowa S_A
+                    method_selection = "logit") ## regresja logistyczna / probit / cloglog
+
+
+rbind(ipw_est1$output, ipw_est2$output)
+plot(ipw_est1)
+```
+
+```{r}
+coef(ipw_est2)
+```
+```{r}
+summary(ipw_est2)
+```
+
+```{r}
+weights(ipw_est2) |> hist(breaks = "fd")
+```
+
+```{r}
+check_balance(~size-1,ipw_est1)
+check_balance(~size-1,ipw_est2)
+```
+
+Porównanie rozkładow: model 1
+
+```{r}
+ipw_est1_comp <- as.weightit(x = 1/ipw_est1$ps_scores,
+                             treat = ipw_est1$R,
+                             covs = rbind(admin[, c("nace", "region", "size", "private")],
+                                          jvs[, c("nace", "region", "size", "private")]))
+bal.tab(ipw_est1_comp, un = T) |> plot()
+```
+
+
+Porównanie rozkładow: model 2
+
+```{r}
+ipw_est2_comp <- as.weightit(x = 1/ipw_est2$ps_scores,
+                             treat = ipw_est2$R,
+                             covs = rbind(admin[, c("nace", "region", "size", "private")],
+                                          jvs[, c("nace", "region", "size", "private")]))
+bal.tab(ipw_est2_comp, un = T) |> plot()
+```
