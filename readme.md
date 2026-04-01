@@ -20,5 +20,6 @@ Rozwiązania oddawać jako **pojedynczy plik HTML** przez **Moodle**.
 
 ## Projekt
 
+-   [Opis projektu i zasady zaliczenia](project/opis-projektu.md)
 -   Szablon projektu: [qmd](project/szablon.qmd) | [ipynb](project/szablon.ipynb)
 -   [Przykład raportu](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/project/projekt-przyklad.html)
