@@ -1,0 +1,513 @@
+---
+title: "Ćwiczenie: IPW krok po kroku (MLE i kalibrowany)"
+format:
+  html:
+    embed-resources: true
+    table-of-contents: true
+    number-sections: true
+    df-print: kable
+execute:
+  eval: true
+  warning: false
+  message: false
+lang: pl
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(reticulate)
+use_python("/opt/anaconda3/bin/python3", required = TRUE)
+```
+
+::: {.callout-note}
+## Informacje organizacyjne
+
+- **Czas**: ~90 minut
+- **Język**: R lub Python (wybierz jeden i pracuj w odpowiedniej zakładce)
+- **Dane**: `admin` (próba nielosowa z CBOP) i `jvs` (próba losowa — badanie popytu na pracę)
+- **Cel**: od estymatora naiwnego do kalibrowanego IPW w 4 krokach
+- W każdej części znajdziesz **przykładowy kod** — Twoim zadaniem jest go **zmodyfikować i rozszerzyć**
+:::
+
+# Część A: Dane i estymator naiwny
+
+## Pakiety
+
+::: panel-tabset
+### R
+
+```{r}
+#| label: a-pakiety-r
+library(nonprobsvy) ## wersja >= 0.2.3
+library(survey)
+```
+
+### Python
+
+```{python}
+#| label: a-pakiety-py
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+from scipy.optimize import fsolve
+from scipy.special import expit
+```
+:::
+
+## Wczytanie danych
+
+::: panel-tabset
+### R
+
+```{r}
+#| label: a-dane-r
+data(admin) ## próba nielosowa S_A (CBOP)
+data(jvs)   ## próba losowa S_B (badanie popytu na pracę)
+
+head(admin)
+head(jvs)
+```
+
+### Python
+
+```{python}
+#| label: a-dane-py
+admin = pd.read_csv("../data/admin.csv")
+jvs = pd.read_csv("../data/jvs.csv")
+
+## region w R jest zmienną tekstową (factor) -- konwertujemy
+admin["region"] = admin["region"].astype(str).str.zfill(2)
+jvs["region"] = jvs["region"].astype(str).str.zfill(2)
+
+## wielkość populacji estymowana z JVS
+N_pop = jvs["weight"].sum()
+
+print(admin.head())
+print(jvs.head())
+```
+:::
+
+Dane `admin` zawierają 9344 firm z rejestru CBOP (próba nielosowa). Dane `jvs` zawierają 6523 firm z badania popytu na pracę (próba losowa ze znanymi wagami). Zmienne wspólne: `private`, `size`, `nace`, `region`. Zmienna celu (tylko w admin): `single_shift`.
+
+## Obiekt schematu losowania
+
+::: panel-tabset
+### R
+
+```{r}
+#| label: a-svydesign
+jvs_svy <- svydesign(ids = ~1, weights = ~weight,
+                     strata = ~size + nace + region, data = jvs)
+```
+
+### Python
+
+```{python}
+#| label: a-schemat-py
+## w Pythonie nie tworzymy obiektu schematu -- korzystamy z kolumny weight bezpośrednio
+```
+:::
+
+
+::: {.callout-important}
+## Zadanie A1
+
+Porównaj rozkład zmiennej `size` w obu źródłach danych. Użyj `prop.table(table(...))` (R) lub `value_counts(normalize=True)` (Python). Dla JVS pamiętaj o wagach!
+:::
+
+::: panel-tabset
+### R
+
+```{r}
+#| label: zad-a1-r
+#| eval: false
+## Tutaj kod -- porównanie rozkładu size w admin vs JVS
+```
+
+### Python
+
+```{python}
+#| label: zad-a1-py
+#| eval: false
+## Tutaj kod -- porównanie rozkładu size w admin vs JVS
+```
+:::
+
+**Odpowiedź:** *...*
+
+
+::: {.callout-important}
+## Zadanie A2
+
+Oblicz naiwną średnią zmiennej `single_shift` z próby admin (bez żadnych korekt). Zapisz wynik — będziesz go porównywać z estymatorami IPW w kolejnych częściach.
+
+**Podpowiedź R**: `mean(admin$single_shift)`
+
+**Podpowiedź Python**: `admin["single_shift"].mean()`
+:::
+
+::: panel-tabset
+### R
+
+```{r}
+#| label: zad-a2-r
+#| eval: false
+## Tutaj kod
+```
+
+### Python
+
+```{python}
+#| label: zad-a2-py
+#| eval: false
+## Tutaj kod
+```
+:::
+
+**Odpowiedź:** *...*
+
+
+# Część B: Estymator IPW-MLE
+
+Model selekcji do próby nielosowej:
+
+$$
+P(R_A = 1 \mid \boldsymbol{x}) = \pi(\boldsymbol{x}, \boldsymbol{\gamma}) = \frac{\exp(\boldsymbol{x}'\boldsymbol{\gamma})}{1 + \exp(\boldsymbol{x}'\boldsymbol{\gamma})}
+$$
+
+Wagi IPW: $w_i = 1/\hat{\pi}(\boldsymbol{x}_i)$. Estymator IPW 1 (Horvitza-Thompsona):
+
+$$
+\hat{\mu}_{IPW1} = \frac{\sum_{i \in S_A} w_i \, y_i}{\hat{N}}
+$$
+
+gdzie $\hat{N} = \sum_{i \in S_B} d_i^B$ to estymowana wielkość populacji z próby losowej.
+
+::: {.callout-warning}
+## Uwaga: estymator IPW 1 vs IPW 2
+
+W tym ćwiczeniu stosujemy **estymator IPW 1** (Horvitza-Thompsona), w którym mianownikiem jest $\hat{N} = \sum_{i \in S_B} d_i^B$. Tak działa domyślnie funkcja `nonprob()` w R. Alternatywą jest **estymator IPW 2** (Hajeka), w którym mianownikiem jest $\sum_{i \in S_A} w_i$ — tę wersję omówimy na kolejnych zajęciach.
+:::
+
+## Przykład: model z jedną zmienną (`~size`)
+
+Poniżej gotowy kod dla prostego modelu $P(R_A = 1 \mid \text{size})$. Uruchom go i przeanalizuj wyniki.
+
+::: panel-tabset
+### R
+
+```{r}
+#| label: b-przyklad-mle-r
+## model z jedną zmienną
+ipw_mle_simple <- nonprob(
+  selection = ~ size,
+  target = ~ single_shift,
+  svydesign = jvs_svy,
+  data = admin,
+  method_selection = "logit"
+)
+
+## oszacowanie
+extract(ipw_mle_simple)
+
+## rozkład wag
+summary(weights(ipw_mle_simple))
+
+## balans
+check_balance(~ size - 1, ipw_mle_simple)
+```
+
+### Python
+
+```{python}
+#| label: b-przyklad-mle-py
+## przygotowanie macierzy design (dummy encoding)
+cat_vars = ["size"]
+admin_dum = pd.get_dummies(admin[cat_vars], columns=cat_vars, dtype=float, drop_first=True)
+jvs_dum = pd.get_dummies(jvs[cat_vars], columns=cat_vars, dtype=float, drop_first=True)
+all_cols = sorted(set(admin_dum.columns) | set(jvs_dum.columns))
+admin_dum = admin_dum.reindex(columns=all_cols, fill_value=0)
+jvs_dum = jvs_dum.reindex(columns=all_cols, fill_value=0)
+
+X_admin = sm.add_constant(admin_dum).values.astype(float)
+X_jvs = sm.add_constant(jvs_dum).values.astype(float)
+w_jvs = jvs["weight"].values
+
+## pseudo-MLE: rozwiązanie równania score
+## U(gamma) = sum_{S_A} x_i - sum_{S_B} d_i^B * pi(x_i, gamma) * x_i = 0
+def score_eq(gamma):
+    pi_jvs = expit(X_jvs @ gamma)
+    return X_admin.sum(axis=0) - (X_jvs * (w_jvs * pi_jvs)[:, None]).sum(axis=0)
+
+gamma_hat = fsolve(score_eq, np.zeros(X_admin.shape[1]))
+ps_simple = expit(X_admin @ gamma_hat)
+w_simple = 1.0 / ps_simple
+
+## estymator HT
+y_admin = admin["single_shift"].values
+mu_simple = np.sum(w_simple * y_admin) / N_pop
+print(f"Oszacowanie IPW-MLE (~size): {mu_simple:.4f}")
+print(f"\nRozkład wag:")
+print(pd.Series(w_simple).describe().round(2))
+```
+:::
+
+
+::: {.callout-important}
+## Zadanie B1
+
+Zmodyfikuj powyższy kod tak, aby model selekcji wykorzystywał **wszystkie zmienne**: `size + nace + region + private`. Porównaj oszacowanie z modelem prostym.
+
+**Podpowiedź R**: zmień `selection = ~ size` na `selection = ~ size + nace + region + private`
+
+**Podpowiedź Python**: zmień `cat_vars = ["size"]` na `cat_vars = ["size", "nace", "region"]` i dodaj `"private"` do listy zmiennych w `admin[...]` / `jvs[...]` (jako zmienna numeryczna, nie kategoryczna)
+:::
+
+::: panel-tabset
+### R
+
+```{r}
+#| label: zad-b1-r
+#| eval: false
+## Tutaj kod -- IPW-MLE z wszystkimi zmiennymi
+## Podpowiedź: skopiuj kod z przykładu i zmień formułę selekcji
+```
+
+### Python
+
+```{python}
+#| label: zad-b1-py
+#| eval: false
+## Tutaj kod -- IPW-MLE z wszystkimi zmiennymi
+## Podpowiedź: skopiuj kod z przykładu i zmień listę zmiennych
+```
+:::
+
+
+::: {.callout-important}
+## Zadanie B2
+
+Dla Twojego modelu pełnego (`~ size + nace + region + private`):
+
+a) Wypisz rozkład wag (`summary(weights(...))` w R lub `pd.Series(w).describe()` w Python). Jaka jest min/max waga?
+
+b) Sprawdź balans zmiennej `size` (`check_balance(~ size - 1, ...)` w R). Czy ważenie poprawiło zgodność z JVS?
+:::
+
+::: panel-tabset
+### R
+
+```{r}
+#| label: zad-b2-r
+#| eval: false
+## Tutaj kod -- rozkład wag i balans
+```
+
+### Python
+
+```{python}
+#| label: b-check-balance-py
+## funkcja do sprawdzania balansu (użyj dla swoich wag)
+def check_balance(admin, jvs, var, ipw_weights):
+    cats = sorted(admin[var].unique())
+    rows = []
+    for c in cats:
+        rows.append({
+            "Kategoria": c,
+            "CBOP (raw)": round((admin[var] == c).mean(), 4),
+            "CBOP (IPW)": round(np.average(admin[var] == c, weights=ipw_weights), 4),
+            "JVS (ważone)": round(np.average(jvs[var] == c, weights=jvs["weight"]), 4)
+        })
+    return pd.DataFrame(rows)
+
+## Użyj check_balance() z wagami z Twojego modelu, np.:
+## print(check_balance(admin, jvs, "size", twoje_wagi))
+```
+:::
+
+**Odpowiedź:** *...*
+
+
+# Część C: Kalibrowany estymator IPW (GEE)
+
+Metoda MLE nie gwarantuje, że wagi odtworzą znane wartości globalne populacji. Podejście GEE rozwiązuje równanie kalibracyjne:
+
+$$
+\boldsymbol{G}(\boldsymbol{\gamma}) = \sum_{i \in S_A} \frac{\boldsymbol{x}_i}{\pi(\boldsymbol{x}_i, \boldsymbol{\gamma})} - \sum_{i \in S_B} d_i^B \boldsymbol{x}_i = \boldsymbol{0}
+$$
+
+Dzięki temu ważone sumy zmiennych w próbie $S_A$ **dokładnie** odtwarzają estymowane sumy z próby $S_B$.
+
+
+::: {.callout-important}
+## Zadanie C1
+
+Korzystając z kodu z Zadania B1 (model pełny), napisz analogiczny model ale z estymacją **GEE** zamiast MLE.
+
+**Podpowiedź R**: dodaj argument `control_selection = control_sel(est_method = "gee")` do funkcji `nonprob()`
+
+**Podpowiedź Python**: zamiast `sm.GLM` musisz rozwiązać układ równań kalibracyjnych. Poniżej szablon:
+:::
+
+::: panel-tabset
+### R
+
+```{r}
+#| label: zad-c1-r
+#| eval: false
+## Tutaj kod -- IPW-GEE z wszystkimi zmiennymi
+## Podpowiedź: skopiuj kod MLE z B1 i dodaj control_selection = control_sel(est_method = "gee")
+```
+
+### Python
+
+```{python}
+#| label: zad-c1-py
+#| eval: false
+## Poniżej szablon GEE — uzupełnij formula_vars (wstaw listę zmiennych)
+## i uruchom cały blok
+
+## formula_vars = ["private", "size", "nace", "region"]  ## <-- odkomentuj i uzupełnij
+
+## admin_dum = pd.get_dummies(admin[formula_vars],
+##                             columns=["size", "nace", "region"],
+##                             dtype=float, drop_first=True)
+## jvs_dum = pd.get_dummies(jvs[formula_vars],
+##                           columns=["size", "nace", "region"],
+##                           dtype=float, drop_first=True)
+## all_cols = sorted(set(admin_dum.columns) | set(jvs_dum.columns))
+## admin_dum = admin_dum.reindex(columns=all_cols, fill_value=0)
+## jvs_dum = jvs_dum.reindex(columns=all_cols, fill_value=0)
+##
+## X_admin = sm.add_constant(admin_dum).values
+## X_jvs = sm.add_constant(jvs_dum).values
+## w_jvs = jvs["weight"].values
+##
+## tau_x = (X_jvs * w_jvs[:, None]).sum(axis=0)
+##
+## def gee_equations(gamma):
+##     pi_admin = np.clip(expit(X_admin @ gamma), 1e-10, 1 - 1e-10)
+##     return (X_admin / pi_admin[:, None]).sum(axis=0) - tau_x
+##
+## gamma0 = np.zeros(X_admin.shape[1])
+## gamma_gee = fsolve(gee_equations, gamma0)
+## ps_gee = expit(X_admin @ gamma_gee)
+## w_gee = 1.0 / ps_gee
+##
+## mu_gee = np.sum(w_gee * admin["single_shift"].values) / N_pop
+## print(f"Oszacowanie IPW-GEE: {mu_gee:.4f}")
+```
+:::
+
+
+::: {.callout-important}
+## Zadanie C2
+
+Porównaj wyniki MLE i GEE:
+
+a) Wypisz oszacowania obu metod. Czy się różnią?
+
+b) Sprawdź balans zmiennej `size` dla obu metod. Która metoda daje lepszy balans?
+
+c) Narysuj wykres porównujący wagi MLE vs GEE (`plot(w_mle, w_gee)` w R lub `plt.scatter(w_mle, w_gee)` w Python).
+:::
+
+::: panel-tabset
+### R
+
+```{r}
+#| label: zad-c2-r
+#| eval: false
+## Tutaj kod -- porównanie MLE vs GEE
+```
+
+### Python
+
+```{python}
+#| label: zad-c2-py
+#| eval: false
+## Tutaj kod -- porównanie MLE vs GEE
+```
+:::
+
+**Odpowiedź:** *...*
+
+
+::: {.callout-important}
+## Zadanie C3
+
+Załóżmy, że nie mamy danych jednostkowych z JVS, ale znamy wartości globalne populacji: łącznie 51870 firm, w tym 13758 średnich (M) i 29551 małych (S). Dopasuj model GEE korzystając z `pop_totals`.
+
+**Podpowiedź R**: zamiast `svydesign` użyj `pop_totals = c("(Intercept)" = 51870, sizeM = 13758, sizeS = 29551)` i zmień formułę na `~ size`.
+
+**Podpowiedź Python**: poniżej szablon:
+:::
+
+::: panel-tabset
+### R
+
+```{r}
+#| label: zad-c3-r
+#| eval: false
+## Tutaj kod -- GEE z wartościami globalnymi
+```
+
+### Python
+
+```{python}
+#| label: c3-gee-totals-py
+## szablon GEE z pop_totals
+pop_totals = {"const": 51870, "size_M": 13758, "size_S": 29551}
+
+admin_dum_s = pd.get_dummies(admin[["size"]], columns=["size"],
+                              dtype=float, drop_first=True)
+X_admin_s = sm.add_constant(admin_dum_s).values
+col_names_s = ["const"] + sorted(admin_dum_s.columns.tolist())
+tau_x_s = np.array([pop_totals.get(c, 0) for c in col_names_s])
+
+def gee_eq_totals(gamma):
+    pi_a = np.clip(expit(X_admin_s @ gamma), 1e-10, 1 - 1e-10)
+    return (X_admin_s / pi_a[:, None]).sum(axis=0) - tau_x_s
+
+result_tot = fsolve(gee_eq_totals, np.zeros(X_admin_s.shape[1]))
+ps_tot = expit(X_admin_s @ result_tot)
+w_tot = 1.0 / ps_tot
+mu_gee_tot = np.sum(w_tot * admin["single_shift"].values) / N_pop
+print(f"IPW-GEE (wartości globalne): {mu_gee_tot:.4f}")
+```
+:::
+
+**Odpowiedź:** *...*
+
+
+# Część D: Podsumowanie
+
+::: {.callout-important}
+## Zadanie D1
+
+Uzupełnij tabelę swoimi wynikami:
+
+| Estymator | Oszacowanie $\hat{\mu}$ |
+|-----------|------------------------|
+| Naiwny (admin bez wag) | *...* |
+| IPW-MLE (~size) | *...* |
+| IPW-MLE (pełny) | *...* |
+| IPW-GEE (pełny) | *...* |
+| IPW-GEE (pop_totals) | *...* |
+:::
+
+::: {.callout-important}
+## Zadanie D2
+
+Odpowiedz na pytania:
+
+a) Jak zmieniły się oszacowania po zastosowaniu IPW w porównaniu z estymatorem naiwnym? W którą stronę?
+
+b) W jakich sytuacjach praktycznych estymator GEE jest lepszy od MLE?
+
+c) Kiedy w praktyce użyjesz `pop_totals` zamiast danych jednostkowych?
+:::
+
+**Odpowiedź:** *...*
