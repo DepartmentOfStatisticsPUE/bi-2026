@@ -61,3 +61,31 @@ jupyter nbconvert --to html codes/ipynb/03-ipw-1.ipynb
 - **Python packages**: `samplics`, `pandas`, `statsmodels`, `scikit-learn`, `selenium`
 - **Homework submission**: Students submit a single HTML file via Moodle
 - **Git-ignored directories**: `additional/`, `zaliczenie/`, `rozwiazania/` (solutions, student lists)
+- **HTML output location**: notebooks 00–02 render to `codes/`, 03+ render to `codes/qmd/` — follow the existing convention per topic when updating `readme.md` links
+
+## Quarto with Python chunks (reticulate)
+
+When a `.qmd` file mixes R and Python chunks (`panel-tabset`), reticulate by default uses `~/.virtualenvs/r-reticulate/bin/python` which lacks `pandas`/`scipy`/`statsmodels`. Pin the Anaconda Python via a hidden setup chunk at the top:
+
+```r
+#| label: setup
+#| include: false
+library(reticulate)
+use_python("/opt/anaconda3/bin/python3", required = TRUE)
+```
+
+For exercise/homework `.qmd` files where students fill in code, mark each placeholder chunk individually with `#| eval: false` (rather than setting it document-wide) so example chunks still execute and the document compiles end-to-end.
+
+## IPW estimators in `nonprobsvy`
+
+R's `nonprob()` defaults to the **IPW 1 (Horvitz-Thompson)** estimator: $\hat{\mu} = \sum w_i y_i / \hat{N}$ where $\hat{N} = \sum_{i \in S_B} d_i^B = $ `sum(weights(svydesign))`. It is **not** the Hájek estimator ($\sum w_i y_i / \sum w_i$). To replicate R results in Python:
+
+- Compute `N_pop = jvs["weight"].sum()` and use it as the denominator
+- For MLE: solve the pseudo-likelihood score equation `U(γ) = Σ_{S_A} x_i − Σ_{S_B} d_i^B π(x_i, γ) x_i = 0` via `scipy.optimize.fsolve` — `statsmodels.GLM` with `freq_weights` fits a different objective and gives different estimates
+- For GEE: weights are calibrated so `sum(w) == N_pop`; HT and Hájek coincide
+
+## Data quirks (`nonprobsvy::admin` and `nonprobsvy::jvs`)
+
+- `single_shift` (target) exists **only in `admin`**, not in `jvs` — there is no JVS-based "true value" benchmark
+- `region` is stored as zero-padded character (`"02"`, `"04"`, …, `"32"`); when reading from the CSV in Python, convert with `df["region"].astype(str).str.zfill(2)` so dummy encoding matches R's factor levels
+- Treat `size`, `nace`, `region` as categorical (dummy-encode); `private` as numeric (0/1)

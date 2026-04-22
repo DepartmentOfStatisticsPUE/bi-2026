@@ -10,6 +10,8 @@
 | 3 | Wstęp do IPW | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/qmd/03-ipw-1.html) | [qmd](codes/qmd/03-ipw-1.qmd) | [.R](codes/R/03-ipw-1.R) | [.py](codes/python/03-ipw-1.py) | [.ipynb](codes/ipynb/03-ipw-1.ipynb) |
 | 4 | Kalibrowany estymator IPW | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/qmd/04-ipw-2.html) | [qmd](codes/qmd/04-ipw-2.qmd) | [.R](codes/R/04-ipw-2.R) | [.py](codes/python/04-ipw-2.py) | [.ipynb](codes/ipynb/04-ipw-2.ipynb) |
 | 5 | Ćwiczenie: IPW krok po kroku (MLE + CAL) | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/qmd/05-ipw-cwiczenie.html) | [qmd](codes/qmd/05-ipw-cwiczenie.qmd) | [.R](codes/R/05-ipw-cwiczenie.R) | [.py](codes/python/05-ipw-cwiczenie.py) | [.ipynb](codes/ipynb/05-ipw-cwiczenie.ipynb) |
+| 6 | Masowa imputacja: NN i PMM | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/qmd/06-mi-nn.html) | [qmd](codes/qmd/06-mi-nn.qmd) | [.R](codes/R/06-mi-nn.R) | [.py](codes/python/06-mi-nn.py) | [.ipynb](codes/ipynb/06-mi-nn.ipynb) |
+| 7 | Masowa imputacja: model GLM (Kim et al.) | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/qmd/07-mi-glm.html) | [qmd](codes/qmd/07-mi-glm.qmd) | [.R](codes/R/07-mi-glm.R) | [.py](codes/python/07-mi-glm.py) | [.ipynb](codes/ipynb/07-mi-glm.ipynb) |
 
 ## Zadania domowe
 

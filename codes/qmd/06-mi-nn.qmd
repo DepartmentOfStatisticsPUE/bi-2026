@@ -1,0 +1,122 @@
+---
+title: "Masowa imputacja: najbliższy sąsiad (NN) i predictive mean matching (PMM)"
+format:
+  html:
+    embed-resources: true
+    table-of-contents: true
+    number-sections: true
+editor: source
+execute:
+  eval: true
+  warning: false
+  message: false
+lang: pl
+---
+
+```{r}
+#| label: pakiety
+library(nonprobsvy) ## wersja >= 0.2.3
+```
+
+```{r}
+#| label: dane-admin
+data(admin) ## próba nielosowa (S_A)
+head(admin)
+```
+
+```{r}
+#| label: dane-jvs
+data(jvs) ## próba losowa (S_B)
+head(jvs)
+```
+
+```{r}
+#| label: svydesign
+jvs_svy <- svydesign(ids = ~ 1,
+                     weights = ~ weight,
+                     strata = ~ size + nace + region,
+                     data = jvs)
+```
+
++ 1 źródło: próba nielosowa $S_A$ (dane z CBOP)
++ 2 źródło: próba losowa $S_B$ (dane z badania popytu na pracę)
+
+W podejściu masowej imputacji budujemy model dla zmiennej $Y$ na próbie nielosowej $S_A$ i predykujemy/przepisujemy wartości na próbę losową $S_B$. Estymator wartości średniej:
+
+$$
+\hat{\mu}_{y,\text{MI}} = \frac{\sum_{i \in S_B} d_i^B \hat{y}_i}{\sum_{i \in S_B} d_i^B}
+$$
+
+# Podejście I: nearest neighbor matching (NN)
+
+Dla każdej obserwacji $k \in S_B$ szukamy $k$ najbliższych jednostek w $S_A$ (na bazie odległości w przestrzeni $\boldsymbol{x}$) i przypisujemy uśrednione $y$.
+
+**Przykład 1**: NN z jedną zmienną (`size`), domyślne `k=5`, model gaussowski.
+
+```{r}
+#| label: mi-nn-1
+mi_nn1 <- nonprob(data = admin,
+                  outcome = single_shift ~ size,
+                  svydesign = jvs_svy,
+                  method_outcome = "nn")
+mi_nn1
+```
+
+**Przykład 2**: NN z wszystkimi zmiennymi.
+
+```{r}
+#| label: mi-nn-2
+mi_nn2 <- nonprob(data = admin,
+                  outcome = single_shift ~ size + nace + region + private,
+                  svydesign = jvs_svy,
+                  method_outcome = "nn",
+                  family_outcome = "binomial")
+mi_nn2
+```
+
+# Podejście II: predictive mean matching (PMM)
+
+Najpierw budujemy model $m(\boldsymbol{x};\boldsymbol{\beta})$ na $S_A$, a następnie dla każdej obserwacji $k \in S_B$ szukamy najbliższych jednostek w $S_A$ na podstawie $d(\hat{y}_k, \hat{y}_i)$ (a nie $d(\boldsymbol{x}_k, \boldsymbol{x}_i)$ jak w NN).
+
+**Przykład 3**: PMM z jedną zmienną (`size`).
+
+```{r}
+#| label: mi-pmm-1
+mi_pmm1 <- nonprob(data = admin,
+                   outcome = single_shift ~ size,
+                   svydesign = jvs_svy,
+                   method_outcome = "pmm",
+                   se = FALSE)
+mi_pmm1
+```
+
+**Przykład 4**: PMM z wszystkimi zmiennymi i modelem binomialnym.
+
+```{r}
+#| label: mi-pmm-2
+mi_pmm2 <- nonprob(data = admin,
+                   outcome = single_shift ~ size + nace + region + private,
+                   svydesign = jvs_svy,
+                   method_outcome = "pmm",
+                   se = FALSE,
+                   family_outcome = "binomial")
+mi_pmm2
+```
+
+# Porównanie
+
+```{r}
+#| label: porownanie
+rbind(
+  "MI-NN  (~size)"          = extract(mi_nn1),
+  "MI-NN  (pełny, binomial)" = extract(mi_nn2),
+  "MI-PMM (~size)"          = extract(mi_pmm1),
+  "MI-PMM (pełny, binomial)" = extract(mi_pmm2)
+)
+```
+
+# Ćwiczenie
+
+- Sprawdź jak zmienia się oszacowanie gdy zmieniasz liczbę sąsiadów `k` w `control_out(k = ...)`
+- Porównaj wyniki MI-NN i MI-PMM dla tego samego zestawu zmiennych
+- Sprawdź jak wpływa rodzina (gaussian vs binomial) na wynik

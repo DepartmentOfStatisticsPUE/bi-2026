@@ -1,0 +1,125 @@
+---
+title: "Masowa imputacja: model GLM (Kim et al. 2021)"
+format:
+  html:
+    embed-resources: true
+    table-of-contents: true
+    number-sections: true
+editor: source
+execute:
+  eval: true
+  warning: false
+  message: false
+lang: pl
+---
+
+```{r}
+#| label: pakiety
+library(nonprobsvy) ## wersja >= 0.2.3
+```
+
+```{r}
+#| label: dane-admin
+data(admin) ## próba nielosowa (S_A)
+head(admin)
+```
+
+```{r}
+#| label: dane-jvs
+data(jvs) ## próba losowa (S_B)
+head(jvs)
+```
+
+```{r}
+#| label: svydesign
+jvs_svy <- svydesign(ids = ~ 1,
+                     weights = ~ weight,
+                     strata = ~ size + nace + region,
+                     data = jvs)
+```
+
++ 1 źródło: próba nielosowa $S_A$ (dane z CBOP)
++ 2 źródło: próba losowa $S_B$ (dane z badania popytu na pracę)
+
+W podejściu Kim, Park, Chen i Wu (2021) dokonujemy masowej imputacji bez wyszukiwania sąsiadów -- wystarczy dopasować model na próbie $S_A$ i predykować na $S_B$:
+
+1. Dopasuj $m(\boldsymbol{x}_i;\boldsymbol{\beta})$ na próbie nielosowej $S_A$ -- otrzymujemy $\hat{\boldsymbol{\beta}}$.
+2. Predykuj $\hat{y}_k = m(\boldsymbol{x}_k; \hat{\boldsymbol{\beta}})$ na próbie losowej $S_B$.
+3. Estymator wartości średniej:
+
+$$
+\hat{\mu}_{y,\text{MI-K}} = \frac{\sum_{i \in S_B} d_i^B \hat{y}_i}{\sum_{i \in S_B} d_i^B}
+$$
+
+# Przykłady
+
+**Przykład 1**: model regresji liniowej (gaussian) z jedną zmienną.
+
+```{r}
+#| label: mi-glm-1
+mi_glm1 <- nonprob(data = admin,
+                   outcome = single_shift ~ size,
+                   svydesign = jvs_svy,
+                   method_outcome = "glm")
+mi_glm1
+```
+
+**Przykład 2**: model regresji logistycznej (binomial) z jedną zmienną.
+
+Ponieważ `single_shift` jest zmienną binarną (0/1), model logistyczny jest bardziej naturalny.
+
+```{r}
+#| label: mi-glm-2
+mi_glm2 <- nonprob(data = admin,
+                   outcome = single_shift ~ size,
+                   svydesign = jvs_svy,
+                   method_outcome = "glm",
+                   family_outcome = "binomial")
+mi_glm2
+```
+
+**Przykład 3**: pełny model logistyczny ze wszystkimi zmiennymi.
+
+```{r}
+#| label: mi-glm-3
+mi_glm3 <- nonprob(data = admin,
+                   outcome = single_shift ~ size + nace + region + private,
+                   svydesign = jvs_svy,
+                   method_outcome = "glm",
+                   family_outcome = "binomial")
+mi_glm3
+```
+
+# Porównanie
+
+```{r}
+#| label: porownanie
+rbind(
+  "MI-GLM gauss  (~size)"            = extract(mi_glm1),
+  "MI-GLM binom  (~size)"            = extract(mi_glm2),
+  "MI-GLM binom  (pełny)"            = extract(mi_glm3)
+)
+```
+
+# Wariancja: bootstrap
+
+Pakiet `nonprobsvy` umożliwia estymację wariancji metodą bootstrap.
+
+```{r}
+#| label: mi-glm-bootstrap
+#| eval: false
+mi_glm_boot <- nonprob(data = admin,
+                       outcome = single_shift ~ size + nace + region + private,
+                       svydesign = jvs_svy,
+                       method_outcome = "glm",
+                       family_outcome = "binomial",
+                       control_inference = control_inf(var_method = "bootstrap",
+                                                       num_boot = 50))
+mi_glm_boot
+```
+
+# Ćwiczenie
+
+- Porównaj wyniki MI-GLM (binomial) z MI-NN i MI-PMM z poprzedniego notatnika (`06-mi-nn.qmd`)
+- Sprawdź jak rozszerzony model wpływa na oszacowanie -- dodaj kolejne zmienne pomocnicze
+- Porównaj estymator MI-GLM z estymatorami IPW (notatnik `03-ipw-1.qmd`) -- które oszacowanie jest bardziej stabilne?
