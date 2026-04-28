@@ -91,11 +91,11 @@ def mi_pmm(admin, jvs, formula_vars, cat_vars, target,
     return y_hat_final
 
 
-## Przykład 3: PMM, ~size
+## Przykład 3: PMM, ~size, binomial
 y_hat = mi_pmm(admin, jvs, ["size"], ["size"], "single_shift",
-               family="gaussian", k=5)
+               family="binomial", k=5)
 mu_pmm1 = np.sum(w_jvs * y_hat) / np.sum(w_jvs)
-print(f"MI-PMM (~size, k=5):              {mu_pmm1:.4f}")
+print(f"MI-PMM (~size binom, k=5):        {mu_pmm1:.4f}")
 
 
 ## Przykład 4: PMM, pełny model, binomial
@@ -112,8 +112,8 @@ print(f"MI-PMM (pełny binom, k=5):        {mu_pmm2:.4f}")
 ## ======================================================================
 print("\n--- Porównanie ---")
 print(pd.DataFrame({
-    "Metoda": ["MI-NN  (~size)", "MI-NN  (pełny, binom)",
-               "MI-PMM (~size)", "MI-PMM (pełny, binom)"],
+    "Metoda": ["MI-NN  (~size)", "MI-NN  (pełny)",
+               "MI-PMM (~size)", "MI-PMM (pełny, binomial)"],
     "Oszacowanie": [round(mu_nn1, 4), round(mu_nn2, 4),
                     round(mu_pmm1, 4), round(mu_pmm2, 4)]
 }))

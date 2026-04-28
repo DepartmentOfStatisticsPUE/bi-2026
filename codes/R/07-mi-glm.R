@@ -11,18 +11,22 @@ jvs_svy <- svydesign(ids = ~ 1,
                      strata = ~ size + nace + region,
                      data = jvs)
 
+## mi glm z jedną zmienną (gaussian)
 mi_glm1 <- nonprob(data = admin,
                    outcome = single_shift ~ size,
                    svydesign = jvs_svy,
                    method_outcome = "glm")
 mi_glm1
 
+## mi glm z jedną zmienną (binomial)
 mi_glm2 <- nonprob(data = admin,
                    outcome = single_shift ~ size,
                    svydesign = jvs_svy,
                    method_outcome = "glm",
                    family_outcome = "binomial")
 mi_glm2
+
+## mi glm wszystkie zmienne (binomial) 
 
 mi_glm3 <- nonprob(data = admin,
                    outcome = single_shift ~ size + nace + region + private,
@@ -37,11 +41,3 @@ rbind(
   "MI-GLM binom  (pełny)"            = extract(mi_glm3)
 )
 
-# mi_glm_boot <- nonprob(data = admin,
-#                        outcome = single_shift ~ size + nace + region + private,
-#                        svydesign = jvs_svy,
-#                        method_outcome = "glm",
-#                        family_outcome = "binomial",
-#                        control_inference = control_inf(var_method = "bootstrap",
-#                                                        num_boot = 50))
-# mi_glm_boot

@@ -81,9 +81,9 @@ print(pd.Series(model.params, index=["const"] + sorted(
 ## ======================================================================
 print("\n--- Porównanie ---")
 print(pd.DataFrame({
-    "Metoda": ["MI-GLM gauss (~size)",
-               "MI-GLM binom (~size)",
-               "MI-GLM binom (pełny)"],
+    "Metoda": ["MI-GLM gauss  (~size)",
+               "MI-GLM binom  (~size)",
+               "MI-GLM binom  (pełny)"],
     "Oszacowanie": [round(mu_glm1, 4), round(mu_glm2, 4), round(mu_glm3, 4)]
 }))
 

@@ -20,6 +20,7 @@ Rozwiązania oddawać jako **pojedynczy plik HTML** przez **Moodle**.
 | # | Temat | HTML | QMD | Jupyter | Termin |
 |---|-------|------|-----|---------|--------|
 | 1 | Web-scraping ofert pracy (nabory.kprm.gov.pl) | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/homeworks/ps1-webscraping.html) | [qmd](homeworks/ps1-webscraping.qmd) | [ipynb](homeworks/ps1-webscraping.ipynb) | 2026-04-07 23:59 |
+| 2 | Kalibracyjny IPW na danych BKL | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/homeworks/ps2-ipw.html) | [qmd](homeworks/ps2-ipw.qmd) | -- | 2026-05-12 23:59 |
 
 ## Projekt
 

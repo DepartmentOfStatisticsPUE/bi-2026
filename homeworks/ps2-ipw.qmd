@@ -1,0 +1,682 @@
+---
+title: "Zadanie domowe 2: Kalibracyjny IPW na danych BKL"
+author: "Badania Internetowe 2025/26"
+format:
+  html:
+    embed-resources: true
+    number-sections: true
+    df-print: kable
+execute:
+  eval: false
+  message: false
+  warning: false
+lang: pl
+---
+
+## Instrukcje
+
+- Można użyć **R** lub **Python** (wybrać jeden język i stosować konsekwentnie).
+- **Łącznie: 10 punktów. Termin: tydzień od daty zadania.**
+
+::: {.callout-warning}
+## Wymagania dotyczące oddania pracy
+
+1. Oddać **jeden plik HTML** (self-contained) przez **Moodle**.
+2. Nazwa pliku: `ps2-<nr_albumu>.html` (np. `ps2-130149.html`).
+3. Plik **musi zawierać**:
+   - **Nr albumu** na początku.
+   - Cały **kod** (widoczny w dokumencie).
+   - Wszystkie **wyniki** (tabele, ramki danych) wyrenderowane.
+   - Odpowiedzi na pytania interpretacyjne.
+4. **Jak wygenerować plik HTML:**
+   - **R**: Zapisać rozwiązanie w pliku `.qmd`, wyrenderować `quarto render ps2-<nr_albumu>.qmd`.
+   - **Python**: Użyć wersji `.ipynb`, wyeksportować: *File → Download as → HTML*.
+5. **Przed oddaniem** sprawdzić, czy plik HTML otwiera się poprawnie w przeglądarce.
+6. Prace bez widocznego kodu i wyników **nie będą oceniane**.
+
+**Jak korzystać z tego pliku:**
+
+- **R**: Zapisać jako `ps2-<nr_albumu>.qmd`. Usunąć bloki Python, zostawić bloki R. Uzupełnić kod i wyrenderować.
+- **Python**: Użyć wersji `.ipynb`. Usunąć komórki R, zostawić komórki Python. Uzupełnić kod i wyeksportować jako HTML.
+:::
+
+
+## Opis zadania
+
+Celem zadania jest przećwiczenie IPW z wykorzystaniem badania **Bilansu Kapitału Ludzkiego (BKL) edycja 2021** pod kątem powiązania płci, grupy wieku, wykształcenia oraz statusu na rynku pracy (BAEL) ze zmienną opisującą pracę nierejestrowaną (`n1`). Dodatkowo porównujemy odsetki BAEL wyznaczone z BKL z oficjalnymi danymi BAEL (GUS) i stosujemy **kalibracyjny estymator IPW**, traktując BKL jako próbę nielosową, a oficjalne oszacowania BAEL jako dane referencyjne (populacyjne).
+
+**Mój nr albumu:** *XXXXX*
+
+**Dane:** [Baza danych BKL 2021 (.sav)](https://www.parp.gov.pl/images/publications/BKL/nowy-uklad/Baza_danych_z_badania_ludnoci_BKL_edycja_2021_SAV-SPSS.sav)
+
+Wybrane zmienne (dokładne nazwy w bazie należy zweryfikować z kwestionariuszem [`kwestionariusz-2021.docx`](../project/kwestionariusz-2021.docx)):
+
+- **płeć** -- M / K
+- **grupa wieku** -- kategorie wiekowe BAEL
+- **wykształcenie** -- poziom (np. podstawowe / zasadnicze / średnie / wyższe)
+- **status BAEL** -- 3 poziomy: pracujący, bezrobotny, bierny zawodowo
+- **n1** -- czy respondent pracuje "na czarno / na szaro" (binarna 0/1)
+
+
+## Dane referencyjne: oficjalny BAEL, 4. kwartał 2021
+
+Źródło: GUS, *Aktywność ekonomiczna ludności Polski* (BAEL), IV kwartał 2021 (Tablice 5, 7, 9). Wartości w **tysiącach osób** w wieku 15--89 lat.
+
+| Charakterystyka | Pracujący | Bezrobotni | Bierni zawodowo |
+|---|---:|---:|---:|
+| **Ogółem** | **16780** | **497** | **12529** |
+| *Płeć* |  |  |  |
+| mężczyźni | 9172 | 265 | 4839 |
+| kobiety | 7608 | 232 | 7690 |
+| *Miejsce zamieszkania* |  |  |  |
+| miasto | 10055 | 278 | 7434 |
+| wieś | 6726 | 220 | 5095 |
+| *Grupa wiekowa* |  |  |  |
+| 15--24 | 953 | 95 | 2335 |
+| 25--34 | 3855 | 148 | 609 |
+| 35--44 | 4964 | 112 | 596 |
+| 45--59/64 | 6259 | 139 | 1627 |
+| 60/65--89 | 749 | . | 7363 |
+| *Poziom wykształcenia* |  |  |  |
+| wyższe | 6147 | 89 | 1416 |
+| policealne i średnie zawodowe | 4603 | 135 | 2902 |
+| średnie ogólnokształcące | 1586 | 73 | 1356 |
+| zasadnicze zawodowe/branżowe | 3667 | 142 | 3068 |
+| gimnazjalne, podstawowe, niepełne podstawowe i bez wykształcenia | 778 | 58 | 3787 |
+
+"." -- brak danych (cecha statystycznie niemiarodajna z uwagi na małą liczność próby).
+
+**Łączna populacja w wieku 15--89 lat:** 16780 + 497 + 12529 = **29806 tys.** (tj. ok. 29 806 000 osób).
+
+
+## Krok 0: Pakiety
+
+Załadować potrzebne pakiety.
+
+::: panel-tabset
+### R
+
+```{r}
+library(haven)        ## wczytanie pliku .sav
+library(dplyr)
+library(survey)
+library(nonprobsvy)   ## kalibracyjny IPW
+```
+
+### Python
+
+```{python}
+import pyreadstat       ## wczytanie pliku .sav
+import pandas as pd
+import numpy as np
+from scipy import stats
+```
+:::
+
+
+## Krok 1: Wczytanie i przygotowanie danych (kod gotowy)
+
+::: {.callout-note}
+Cały kod w tej sekcji jest **dany** -- wystarczy go uruchomić, nie podlega ocenie. Kategorie BKL są tu mapowane na kategorie zgodne z tabelą referencyjną BAEL z poprzedniej sekcji, dzięki czemu w Częściach A--C nie trzeba się zajmować czyszczeniem danych.
+:::
+
+### a) Wczytanie pliku .sav
+
+::: panel-tabset
+### R
+
+```{r}
+url <- "https://www.parp.gov.pl/images/publications/BKL/nowy-uklad/Baza_danych_z_badania_ludnoci_BKL_edycja_2021_SAV-SPSS.sav"
+if (!file.exists("bkl-2021.sav")) {
+  download.file(url, "bkl-2021.sav", mode = "wb")
+}
+
+bkl <- read_sav("bkl-2021.sav",
+                col_select = c("id", "m2", "wiek_10k", "wykszt_7k",
+                               "BAEL_sytzaw", "n1"), user_na = TRUE)
+head(bkl)
+```
+
+### Python
+
+```{python}
+import os, urllib.request
+
+url = "https://www.parp.gov.pl/images/publications/BKL/nowy-uklad/Baza_danych_z_badania_ludnoci_BKL_edycja_2021_SAV-SPSS.sav"
+if not os.path.exists("bkl-2021.sav"):
+    urllib.request.urlretrieve(url, "bkl-2021.sav")
+
+## user_missing=True -- żeby kategoria 2 w BAEL_sytzaw (nieaktywni) była wczytana
+##                     jako wartość, a nie jako NaN
+bkl, meta = pyreadstat.read_sav(
+    "bkl-2021.sav",
+    usecols=["id", "m2", "wiek_10k", "wykszt_7k", "BAEL_sytzaw", "n1"],
+    user_missing=True
+)
+bkl.head()
+```
+:::
+
+
+### b) Harmonizacja zmiennych BKL → BAEL
+
+Harmonizacja kategorii BKL z kategoriami BAEL z tabeli referencyjnej:
+
+| Zmienna BKL | Kod | Kategoria BAEL |
+|---|---|---|
+| `m2` (płeć) | 0 / 1 | mężczyźni / kobiety |
+| `BAEL_sytzaw` | 0 / 1 / 2 | Pracujący / Bezrobotny / Bierny zawodowo |
+| `wiek_10k` | 1 | 15--24 (BKL nie ma 15--17) |
+|  | 2--3 | 25--34 |
+|  | 4--5 | 35--44 |
+|  | 6--8 | 45--59/64 |
+|  | 9 | 45--59/64 (M) lub 60/65--89 (K) |
+|  | 10 | 60/65--89 |
+| `wykszt_7k` | 1 | gimnazjalne i poniżej |
+|  | 2 | zasadnicze zawodowe/branżowe |
+|  | 3 | średnie ogólnokształcące |
+|  | 4--5 | policealne i średnie zawodowe |
+|  | 6--7 | wyższe |
+| `n1` | -3, -1 | NA |
+|  | 0 / 1 | 0 / 1 |
+
+::: panel-tabset
+### R
+
+```{r}
+bkl <- bkl |>
+  mutate(
+    plec = factor(m2, levels = c(0, 1),
+                  labels = c("mężczyźni", "kobiety")),
+
+    ## w BAEL_sytzaw NA = nieaktywni zawodowo (kategoria 2 nie występuje w danych)
+    status = case_when(
+      BAEL_sytzaw == 0   ~ "Pracujący",
+      BAEL_sytzaw == 1   ~ "Bezrobotny",
+      BAEL_sytzaw == 2   ~ "Bierny zawodowo"
+    ),
+    status = factor(status, levels = c("Pracujący", "Bezrobotny", "Bierny zawodowo")),
+
+    ## wiek_10k -> grupy wiekowe BAEL
+    ## (kategoria 9 = 60-64 dzieli się po płci: M produkcyjny, K poprodukcyjna)
+    wiek = case_when(
+      wiek_10k == 1            ~ "15-24",     ## 18-24 (BKL nie ma 15-17)
+      wiek_10k %in% 2:3        ~ "25-34",
+      wiek_10k %in% 4:5        ~ "35-44",
+      wiek_10k %in% 6:8        ~ "45-59/64",  ## 45-59
+      wiek_10k == 9  & m2 == 0 ~ "45-59/64",  ## M 60-64: produkcyjny
+      wiek_10k == 9  & m2 == 1 ~ "60/65-89",  ## K 60-64: poprodukcyjna
+      wiek_10k == 10           ~ "60/65-89"   ## 65-69
+    ),
+    wiek = factor(wiek, levels = c("15-24", "25-34", "35-44",
+                                   "45-59/64", "60/65-89")),
+
+    ## wykszt_7k -> 5 kategorii BAEL
+    wyksztalcenie = case_when(
+      wykszt_7k == 1     ~ "gimnazjalne i poniżej",
+      wykszt_7k == 2     ~ "zasadnicze zawodowe/branżowe",
+      wykszt_7k == 3     ~ "średnie ogólnokształcące",
+      wykszt_7k %in% 4:5 ~ "policealne i średnie zawodowe",
+      wykszt_7k %in% 6:7 ~ "wyższe"
+    ),
+    wyksztalcenie = factor(wyksztalcenie,
+                           levels = c("wyższe",
+                                      "policealne i średnie zawodowe",
+                                      "średnie ogólnokształcące",
+                                      "zasadnicze zawodowe/branżowe",
+                                      "gimnazjalne i poniżej")),
+
+    ## n1: -3 (brak danych) i -1 (NDT) -> NA, reszta 0/1
+    n1 = if_else(n1 %in% c(-3, -1), NA_real_, as.numeric(n1))
+  ) |>
+    filter(!is.na(wiek)) |>
+    filter(!is.na(wyksztalcenie)) |>
+    filter(!is.na(n1)) |>
+    ## zostawiamy tylko kolumny zmapowane do BAEL + zmienną wynikową n1
+    select(plec, wiek, wyksztalcenie, status, n1)
+
+
+head(bkl)
+table(bkl$plec)
+table(bkl$wiek)
+table(bkl$wyksztalcenie)
+table(bkl$status)
+table(bkl$n1)
+```
+
+### Python
+
+```{python}
+## płeć i status BAEL
+bkl["plec"] = bkl["m2"].map({0: "mężczyźni", 1: "kobiety"})
+
+## BAEL_sytzaw: 0/1/2 -> Pracujący/Bezrobotny/Bierny zawodowo
+## (z user_missing=True kategoria 2 jest widoczna)
+bkl["status"] = bkl["BAEL_sytzaw"].map(
+    {0: "Pracujący", 1: "Bezrobotny", 2: "Bierny zawodowo"}
+)
+
+## grupa wiekowa (kategoria 9 = 60-64 dzieli się po płci)
+def map_wiek(wiek_10k, m2):
+    if wiek_10k == 1:                  return "15-24"   ## 18-24
+    if wiek_10k in (2, 3):             return "25-34"
+    if wiek_10k in (4, 5):             return "35-44"
+    if wiek_10k in (6, 7, 8):          return "45-59/64"
+    if wiek_10k == 9 and m2 == 0:      return "45-59/64"  ## M 60-64
+    if wiek_10k == 9 and m2 == 1:      return "60/65-89"  ## K 60-64
+    if wiek_10k == 10:                 return "60/65-89"
+    return np.nan
+
+bkl["wiek"] = bkl.apply(lambda r: map_wiek(r["wiek_10k"], r["m2"]), axis=1)
+
+## wykształcenie -> 5 kategorii BAEL
+wyksztal_map = {
+    1: "gimnazjalne i poniżej",
+    2: "zasadnicze zawodowe/branżowe",
+    3: "średnie ogólnokształcące",
+    4: "policealne i średnie zawodowe",
+    5: "policealne i średnie zawodowe",
+    6: "wyższe",
+    7: "wyższe",
+}
+bkl["wyksztalcenie"] = bkl["wykszt_7k"].map(wyksztal_map)
+
+## n1: -3 (brak danych) i -1 (NDT) -> NA
+bkl["n1"] = bkl["n1"].replace({-3: np.nan, -1: np.nan})
+
+## uporządkowane kategorie (zgodne z BAEL)
+bkl["plec"] = pd.Categorical(bkl["plec"],
+    categories=["mężczyźni", "kobiety"])
+bkl["status"] = pd.Categorical(bkl["status"],
+    categories=["Pracujący", "Bezrobotny", "Bierny zawodowo"])
+bkl["wiek"] = pd.Categorical(bkl["wiek"],
+    categories=["15-24", "25-34", "35-44", "45-59/64", "60/65-89"])
+bkl["wyksztalcenie"] = pd.Categorical(bkl["wyksztalcenie"],
+    categories=["wyższe",
+                "policealne i średnie zawodowe",
+                "średnie ogólnokształcące",
+                "zasadnicze zawodowe/branżowe",
+                "gimnazjalne i poniżej"])
+
+## zostawiamy tylko kolumny zmapowane do BAEL + zmienną wynikową n1,
+## a następnie usuwamy wiersze z brakami w tych kolumnach
+bkl = bkl[["plec", "wiek", "wyksztalcenie", "status", "n1"]].dropna()
+
+print(bkl.head())
+for col in ["plec", "wiek", "wyksztalcenie", "status", "n1"]:
+    print(bkl[col].value_counts())
+```
+:::
+
+
+## Część A: Zadanie 1 -- Korelacje (3 punkty)
+
+Sprawdzić siłę powiązania zmiennej `n1` (praca na czarno/szaro) z każdą z czterech zmiennych grupujących: **płeć**, **grupa wieku**, **wykształcenie**, **status BAEL**.
+
+### a) Tabele kontyngencji (1 pkt)
+
+Dla każdej pary (`n1` × zmienna grupująca) zbudować tabelę liczebności oraz tabelę odsetków wierszowych (lub kolumnowych -- wybór uzasadnić).
+
+::: panel-tabset
+### R
+
+```{r}
+## Tutaj kod (R)
+## Wskazówka: table(), prop.table(), addmargins()
+
+```
+
+### Python
+
+```{python}
+## Tutaj kod (Python)
+## Wskazówka: pd.crosstab(..., normalize="index")
+
+```
+:::
+
+
+### b) Test niezależności i miara siły związku (2 pkt)
+
+Dla każdej z czterech tabel:
+
+- przeprowadzić **test $\chi^2$** niezależności i podać p-wartość,
+- obliczyć **V Craméra** jako miarę siły związku.
+
+::: panel-tabset
+### R
+
+```{r}
+## Tutaj kod (R)
+## Wskazówka: chisq.test(); pakiet vcd
+
+```
+
+### Python
+
+```{python}
+## Tutaj kod (Python)
+## Wskazówka: stats.chi2_contingency(); V Craméra wyliczyć ręcznie
+
+```
+:::
+
+**Odpowiedź (interpretacja):**
+
+- Płeć vs `n1`: V Craméra = *...*, p = *...*
+- Grupa wieku vs `n1`: V Craméra = *...*, p = *...*
+- Wykształcenie vs `n1`: V Craméra = *...*, p = *...*
+- Status BAEL vs `n1`: V Craméra = *...*, p = *...*
+
+Która zmienna grupująca jest **najsilniej** powiązana z pracą nierejestrowaną? *...*
+
+
+## Część B: Zadanie 2 -- Porównanie odsetków BAEL z oficjalnymi danymi (3 punkty)
+
+### a) Odsetki w BKL (1 pkt)
+
+Obliczyć odsetki kategorii **czterech** zmiennych w próbie BKL:
+
+- **status BAEL** -- pracujący / bezrobotny / bierny zawodowo,
+- **płeć** -- mężczyźni / kobiety,
+- **grupa wiekowa** -- 5 kategorii BAEL,
+- **wykształcenie** -- 5 kategorii BAEL.
+
+::: panel-tabset
+### R
+
+```{r}
+## Tutaj kod (R)
+## Wskazówka: prop.table(table(...)) albo podobne
+
+```
+
+### Python
+
+```{python}
+## Tutaj kod (Python)
+## Wskazówka: bkl["status"].value_counts(normalize=True)
+
+```
+:::
+
+
+### b) Porównanie z oficjalnymi danymi BAEL (2 pkt)
+
+Oficjalne odsetki BAEL (GUS, IV kw. 2021), obliczone z tabeli referencyjnej:
+
+**Status BAEL** (mianownik: 29806 tys.):
+
+| Kategoria | Odsetek BAEL (%) |
+|---|---:|
+| Pracujący | 56,30 |
+| Bezrobotny | 1,67 |
+| Bierny zawodowo | 42,03 |
+
+**Płeć** (mianownik: 29806 tys.):
+
+| Kategoria | Odsetek BAEL (%) |
+|---|---:|
+| mężczyźni | 47,90 |
+| kobiety | 52,10 |
+
+**Grupa wiekowa** (mianownik: 29807 tys., suma wierszowa):
+
+| Kategoria | Odsetek BAEL (%) |
+|---|---:|
+| 15--24 | 11,35 |
+| 25--34 | 15,47 |
+| 35--44 | 19,03 |
+| 45--59/64 | 26,92 |
+| 60/65--89 | 27,22 |
+
+**Poziom wykształcenia** (mianownik: 29807 tys., suma wierszowa):
+
+| Kategoria | Odsetek BAEL (%) |
+|---|---:|
+| wyższe | 25,67 |
+| policealne i średnie zawodowe | 25,63 |
+| średnie ogólnokształcące | 10,11 |
+| zasadnicze zawodowe/branżowe | 23,07 |
+| gimnazjalne i poniżej | 15,51 |
+
+Zestawić w jednej (lub osobnych) tabelach odsetki BKL vs oficjalne BAEL dla każdej z 4 zmiennych. Skomentować różnice.
+
+::: panel-tabset
+### R
+
+```{r}
+## Tutaj kod (R)
+
+```
+
+### Python
+
+```{python}
+## Tutaj kod (Python)
+
+```
+:::
+
+**Odpowiedź:** *2--3 zdania interpretacji: dla których zmiennych BKL jest najbliżej oficjalnego BAEL? W którą stronę BKL "przesadza", a w którą "niedoszacowuje"? Czy próba BKL jest reprezentatywna pod względem rozważanych zmiennych?*
+
+
+## Część C: Zadanie 3 -- Kalibracyjny IPW do statusu BAEL (4 punkty)
+
+Traktujemy próbę BKL jako **próbę nielosową** $S_A$ i kalibrujemy ją do **znanych wartości globalnych BAEL** (GUS, IV kw. 2021). Ponieważ dysponujemy tylko wartościami globalnymi (a nie danymi jednostkowymi z BAEL), używamy estymatora **GEE** z argumentem `pop_totals` -- por. notatnik [`04-ipw-2.qmd`](../codes/qmd/04-ipw-2.qmd).
+
+Wartości globalne BAEL (z tabeli referencyjnej, w **tysiącach**):
+
+| Kategoria statusu BAEL | Liczba osób (tys.) |
+|---|---:|
+| Pracujący | 16 780 |
+| Bezrobotny | 497 |
+| Bierny zawodowo | 12 529 |
+| **Razem** | **29 806** |
+
+W razie potrzeby do kalibracji można też wykorzystać wartości globalne z innych charakterystyk z tabeli referencyjnej (płeć, grupa wieku, miasto/wieś, wykształcenie).
+
+
+### a) Kalibracja wag (2 pkt)
+
+Wykorzystać `nonprob()` z parametrami:
+
+- `selection = ~ <zmienna_kalibracyjna>`,
+- `target = ~ n1`,
+- `pop_totals = <wektor z BAEL>` (z `(Intercept)` jako sumą populacji),
+- `method_selection = "logit"`,
+- `control_selection = control_sel(est_method = "gee", gee_h_fun = 1)`.
+
+::: {.callout-tip}
+## Skąd biorą się nazwy w wektorze `pop_totals`?
+
+Nazwy elementów `pop_totals` muszą zgadzać się z kolumnami macierzy projektowej `model.matrix(~ <zmienna>, data = bkl)`, którą `nonprob()` buduje wewnętrznie. Konwencja R dla zmiennych typu `factor`:
+
+- **`(Intercept)`** -- wyraz wolny, równy **łącznej liczebności populacji** $N$.
+- Pierwszy poziom factora jest **referencyjny** -- "wchłonięty" w `(Intercept)`. Pozostałe poziomy stają się zmiennymi 0/1 o nazwach `<zmienna><poziom>`:
+  - dla `status` (poziomy: Pracujący / Bezrobotny / Bierny zawodowo) → `statusBezrobotny`, `statusBierny zawodowo` (referencyjny: `Pracujący`),
+  - dla `wiek` (poziomy: 15-24 / 25-34 / ... / 60/65-89) → `wiek25-34`, `wiek35-44`, `wiek45-59/64`, `wiek60/65-89` (referencyjny: `15-24`).
+- Liczebność poziomu referencyjnego odtwarzamy z reszty: `(Intercept) - sum(pozostałe)`.
+- Można sprawdzić nazwy kolumn ręcznie: `colnames(model.matrix(~ status, data = bkl))`.
+:::
+
+#### (i) Kalibracja do statusu BAEL
+
+::: panel-tabset
+### R
+
+```{r}
+## wartości globalne BAEL Q4 2021 (w tys.)
+pop_totals_status <- c(`(Intercept)`           = 16780 + 497 + 12529,  # = 29806
+                       `statusBezrobotny`      = 497,
+                       `statusBierny zawodowo` = 12529)
+
+ipw_status <- nonprob(selection = ~ status,
+                      target = ~ n1,
+                      pop_totals = pop_totals_status,
+                      data = bkl,
+                      method_selection = "logit",
+                      control_selection = control_sel(est_method = "gee"))
+ipw_status
+```
+
+### Python
+
+```{python}
+## nonprobsvy nie ma bezpośredniego odpowiednika -- rozwiązanie GEE liczymy
+## ręcznie przez fsolve, analogicznie jak w 04-ipw-2.py / 05-ipw-cwiczenie.py
+
+import statsmodels.api as sm
+from scipy.optimize import fsolve
+from scipy.special import expit
+
+## wartości globalne BAEL Q4 2021 (w tys.)
+N_pop = 16780 + 497 + 12529   # = 29806
+
+pop_totals_status = {
+    "const":                  N_pop,
+    "status_Bezrobotny":      497,
+    "status_Bierny zawodowo": 12529,
+}
+
+## macierz projektowa dla zmiennej status
+admin_dum = pd.get_dummies(bkl[["status"]], columns=["status"],
+                           dtype=float, drop_first=True)
+X_admin_status   = sm.add_constant(admin_dum).values.astype(float)
+col_names_status = ["const"] + sorted(admin_dum.columns.tolist())
+
+## wektor wartości globalnych w kolejności kolumn macierzy projektowej
+tau_x_status = np.array([pop_totals_status.get(c, 0) for c in col_names_status])
+
+## równanie GEE:  G(gamma) = sum_{S_A} x_i / pi(x_i, gamma) - tau_x = 0
+def gee_eq_status(gamma):
+    pi_a = np.clip(expit(X_admin_status @ gamma), 1e-10, 1 - 1e-10)
+    return (X_admin_status / pi_a[:, None]).sum(axis=0) - tau_x_status
+
+gamma_status = fsolve(gee_eq_status, np.zeros(X_admin_status.shape[1]))
+ps_status    = expit(X_admin_status @ gamma_status)
+w_status     = 1.0 / ps_status
+
+## estymator HT (jak w nonprob() w R): mu = sum(w * y) / N_pop
+mu_n1_status = np.sum(w_status * bkl["n1"].values) / N_pop
+
+print(f"IPW-GEE do statusu BAEL:  mu_n1 = {mu_n1_status:.4f}")
+print(f"sum(wagi) = {w_status.sum():.0f}  (powinno być {N_pop})")
+print("gamma:")
+print(pd.Series(gamma_status, index=col_names_status).round(4))
+```
+:::
+
+#### (ii) Kalibracja do grupy wiekowej + statusu BAEL + płci
+
+**Zadanie**: powtórzyć analogiczną kalibrację z **trzema zmiennymi pomocniczymi** -- `selection = ~ wiek + status + plec`. Wynik zapisać do obiektu `ipw_wiek`.
+
+Wektor `pop_totals` powinien zawierać:
+
+- `(Intercept)` -- łączną wartość globalną populacji $N$,
+- 4 dummies dla `wiek` (referencyjny: `15-24`),
+- 2 dummies dla `status` (referencyjny: `Pracujący`),
+- 1 dummy dla `plec` (referencyjny: `mężczyźni`; nazwa kolumny: `pleckobiety`).
+
+Wartości globalne grup wiekowych obliczamy jako sumy wierszowe (pracujący + bezrobotni + bierni) z tabeli referencyjnej:
+
+| Grupa wiekowa | Suma (tys.) |
+|---|---:|
+| 15--24 | 953 + 95 + 2335 = 3383 |
+| 25--34 | 3855 + 148 + 609 = 4612 |
+| 35--44 | 4964 + 112 + 596 = 5672 |
+| 45--59/64 | 6259 + 139 + 1627 = 8025 |
+| 60/65--89 | 749 + 3 + 7363 = 8115 |
+
+(wartość 3 dla bezrobotnych 60/65--89 to różnica między sumą bezrobotnych $497$ a widocznymi w tabeli 95+148+112+139=494)
+
+Wartości globalne dla statusu BAEL są w sekcji (i): 16780 / 497 / 12529.
+
+Wartość globalna dla `pleckobiety` (suma wierszowa dla kobiet): 7608 + 232 + 7690 = **15530**.
+
+::: panel-tabset
+### R
+
+```{r}
+## Tutaj kod (R) -- zbudować pop_totals_wiek (z dummies dla wiek + status + plec),
+##                  uruchomić nonprob() z selection = ~ wiek + status + plec,
+##                  wynik zapisać do `ipw_wiek`.
+
+```
+
+### Python
+
+```{python}
+## Tutaj kod (Python)
+
+```
+:::
+
+
+### b) Walidacja kalibracji i porównanie oszacowań (1 pkt)
+
+#### (i) Walidacja: `check_balance()`
+
+Sprawdzić, czy nowe wagi odtwarzają wartości globalne podane w `pop_totals` -- różnica powinna wynosić zero (lub być zaniedbywalnie mała).
+
+::: panel-tabset
+### R
+
+```{r}
+## walidacja kalibracji do statusu (sekcja a.i)
+check_balance(~ status - 1, ipw_status)
+
+## walidacja kalibracji do wieku + statusu + płci (sekcja a.ii)
+check_balance(~ wiek + status + plec - 1, ipw_wiek)
+
+## ręczna weryfikacja:
+sum(weights(ipw_status))                         ## powinno być ≈ 29806
+tapply(weights(ipw_status), bkl$status, sum)     ## powinno odtwarzać 16780 / 497 / 12529
+
+sum(weights(ipw_wiek))                           ## powinno być ≈ 29807
+tapply(weights(ipw_wiek), bkl$wiek, sum)         ## powinno odtwarzać 3383 / 4612 / 5672 / 8025 / 8115
+tapply(weights(ipw_wiek), bkl$status, sum)       ## powinno odtwarzać 16780 / 497 / 12529
+tapply(weights(ipw_wiek), bkl$plec, sum)         ## powinno odtwarzać 14276 / 15530
+```
+
+### Python
+
+```{python}
+## Tutaj kod (Python) -- ręczna agregacja wag w grupach
+
+```
+:::
+
+#### (ii) Porównanie oszacowań
+
+Zestawić oszacowanie odsetka pracujących na czarno/szaro (`n1 = 1`) w trzech wariantach:
+
+| Metoda | $\hat{\mu}_{n1}$ |
+|---|---:|
+| BKL bez wag | *...* |
+| Kalibracja IPW do statusu BAEL | *...* |
+| Kalibracja IPW do wieku + statusu + płci | *...* |
+
+::: panel-tabset
+### R
+
+```{r}
+## bez wag (naiwne)
+mean(bkl$n1)
+
+## skalibrowane oszacowania -- mean + SE + CI bezpośrednio z extract()
+rbind(
+  "do BAEL"               = extract(ipw_status),
+  "do wiek + BAEL + płeć" = extract(ipw_wiek)
+)
+```
+
+### Python
+
+```{python}
+## Tutaj kod (Python)
+
+```
+:::
+
+**Odpowiedź (wnioski):** *2--3 zdania: jak kalibracja (po statusie / po wieku + statusie + płci) zmienia oszacowanie odsetka `n1`? Która kalibracja daje większy efekt? Czy kierunek zmian jest zgodny z różnicami z Części B?*

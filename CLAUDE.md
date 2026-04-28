@@ -19,11 +19,13 @@ Materials exist in parallel across four formats with a consistent `NN-topic` nam
 
 The Quarto files are the canonical source for R code. R scripts in `codes/R/` are derived artifacts.
 
+Numbered topics (`00`–`07`) cover: `survey`/`sampling`/`samplics` packages → web scraping → representativeness measures → IPW (intro, calibrated, exercise) → mass imputation (NN/PMM, GLM). `codes/qmd/00-wykresy-wyklady.qmd` is a separate notebook used to generate figures for the lecture slides (not student-facing material) — leave it out of the `readme.md` notebook table.
+
 Other directories:
-- `slides/` — LaTeX Beamer presentation (`bi.tex`) with figures in `fig-*` subdirectories
-- `project/` — Student project description, templates (`.qmd`, `.ipynb`), and example report
+- `slides/` — LaTeX Beamer presentation (`bi.tex`, compiles with `pdflatex` from inside `slides/`); figures are pre-generated PNGs in `fig-*` subdirectories
+- `project/` — Student project description (`opis-projektu.md`), templates (`szablon.qmd`, `szablon.ipynb`), and example report (`projekt-przyklad.qmd` → `projekt-przyklad.html`)
 - `homeworks/` — Problem sets in `.qmd` and `.ipynb` format
-- `codes/data/` — CSV datasets used in examples
+- `codes/data/` — CSV datasets used in examples (`admin.csv`, `jvs.csv`, `g2016.csv`)
 
 ## Key Commands
 
@@ -59,7 +61,7 @@ jupyter nbconvert --to html codes/ipynb/03-ipw-1.ipynb
 - **Language**: All prose, variable names in data, and comments are in Polish
 - **R packages**: `survey`, `sampling`, `nonprobsvy` (survey estimation); `rvest` (scraping)
 - **Python packages**: `samplics`, `pandas`, `statsmodels`, `scikit-learn`, `selenium`
-- **Homework submission**: Students submit a single HTML file via Moodle
+- **Homework submission**: Students submit a single HTML file via Moodle — keep `embed-resources: true` (or `self-contained: true` on older `.qmd` files) in YAML headers so renders are portable
 - **Git-ignored directories**: `additional/`, `zaliczenie/`, `rozwiazania/` (solutions, student lists)
 - **HTML output location**: notebooks 00–02 render to `codes/`, 03+ render to `codes/qmd/` — follow the existing convention per topic when updating `readme.md` links
 

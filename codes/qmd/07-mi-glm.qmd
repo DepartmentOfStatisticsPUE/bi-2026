@@ -101,23 +101,6 @@ rbind(
 )
 ```
 
-# Wariancja: bootstrap
-
-Pakiet `nonprobsvy` umożliwia estymację wariancji metodą bootstrap.
-
-```{r}
-#| label: mi-glm-bootstrap
-#| eval: false
-mi_glm_boot <- nonprob(data = admin,
-                       outcome = single_shift ~ size + nace + region + private,
-                       svydesign = jvs_svy,
-                       method_outcome = "glm",
-                       family_outcome = "binomial",
-                       control_inference = control_inf(var_method = "bootstrap",
-                                                       num_boot = 50))
-mi_glm_boot
-```
-
 # Ćwiczenie
 
 - Porównaj wyniki MI-GLM (binomial) z MI-NN i MI-PMM z poprzedniego notatnika (`06-mi-nn.qmd`)

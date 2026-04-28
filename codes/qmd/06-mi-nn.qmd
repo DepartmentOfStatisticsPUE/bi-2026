@@ -69,8 +69,7 @@ mi_nn1
 mi_nn2 <- nonprob(data = admin,
                   outcome = single_shift ~ size + nace + region + private,
                   svydesign = jvs_svy,
-                  method_outcome = "nn",
-                  family_outcome = "binomial")
+                  method_outcome = "nn")
 mi_nn2
 ```
 
@@ -78,7 +77,7 @@ mi_nn2
 
 Najpierw budujemy model $m(\boldsymbol{x};\boldsymbol{\beta})$ na $S_A$, a następnie dla każdej obserwacji $k \in S_B$ szukamy najbliższych jednostek w $S_A$ na podstawie $d(\hat{y}_k, \hat{y}_i)$ (a nie $d(\boldsymbol{x}_k, \boldsymbol{x}_i)$ jak w NN).
 
-**Przykład 3**: PMM z jedną zmienną (`size`).
+**Przykład 3**: PMM z jedną zmienną (`size`), model binomialny.
 
 ```{r}
 #| label: mi-pmm-1
@@ -86,6 +85,7 @@ mi_pmm1 <- nonprob(data = admin,
                    outcome = single_shift ~ size,
                    svydesign = jvs_svy,
                    method_outcome = "pmm",
+                   family_outcome = "binomial",
                    se = FALSE)
 mi_pmm1
 ```
@@ -109,7 +109,7 @@ mi_pmm2
 #| label: porownanie
 rbind(
   "MI-NN  (~size)"          = extract(mi_nn1),
-  "MI-NN  (pełny, binomial)" = extract(mi_nn2),
+  "MI-NN  (pełny)"          = extract(mi_nn2),
   "MI-PMM (~size)"          = extract(mi_pmm1),
   "MI-PMM (pełny, binomial)" = extract(mi_pmm2)
 )
