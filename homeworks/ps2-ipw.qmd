@@ -624,19 +624,6 @@ Sprawdzić, czy nowe wagi odtwarzają wartości globalne podane w `pop_totals` -
 
 ```{r}
 ## walidacja kalibracji do statusu (sekcja a.i)
-check_balance(~ status - 1, ipw_status)
-
-## walidacja kalibracji do wieku + statusu + płci (sekcja a.ii)
-check_balance(~ wiek + status + plec - 1, ipw_wiek)
-
-## ręczna weryfikacja:
-sum(weights(ipw_status))                         ## powinno być ≈ 29806
-tapply(weights(ipw_status), bkl$status, sum)     ## powinno odtwarzać 16780 / 497 / 12529
-
-sum(weights(ipw_wiek))                           ## powinno być ≈ 29807
-tapply(weights(ipw_wiek), bkl$wiek, sum)         ## powinno odtwarzać 3383 / 4612 / 5672 / 8025 / 8115
-tapply(weights(ipw_wiek), bkl$status, sum)       ## powinno odtwarzać 16780 / 497 / 12529
-tapply(weights(ipw_wiek), bkl$plec, sum)         ## powinno odtwarzać 14276 / 15530
 ```
 
 ### Python

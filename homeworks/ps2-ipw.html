@@ -2900,7 +2900,7 @@ Adnotacja
 <div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Tutaj kod (R)</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="do">## Wskazówka: chisq.test(); V Craméra: sqrt(chisq/(n*(min(r,c)-1)))</span></span></code></pre></div><button title="Kopiuj do schowka" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="do">## Wskazówka: chisq.test(); pakiet vcd</span></span></code></pre></div><button title="Kopiuj do schowka" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
@@ -2938,9 +2938,7 @@ Adnotacja
 <div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Tutaj kod (R)</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="do">## Wskazówka: prop.table(table(bkl$status))</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="do">##           lub: lapply(c(&quot;status&quot;,&quot;plec&quot;,&quot;wiek&quot;,&quot;wyksztalcenie&quot;),</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="do">##                       \(v) prop.table(table(bkl[[v]])))</span></span></code></pre></div><button title="Kopiuj do schowka" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="do">## Wskazówka: prop.table(table(...)) albo podobne</span></span></code></pre></div><button title="Kopiuj do schowka" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
@@ -3165,8 +3163,47 @@ Adnotacja
 </div>
 <div id="tabset-8-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-2-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">## Tutaj kod (Python) -- nonprobsvy nie ma bezpośredniego odpowiednika;</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co">## rozwiązanie GEE liczymy ręcznie jak w 04-ipw-2.py / 05-ipw-cwiczenie.py</span></span></code></pre></div><button title="Kopiuj do schowka" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">## nonprobsvy nie ma bezpośredniego odpowiednika -- rozwiązanie GEE liczymy</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co">## ręcznie przez fsolve, analogicznie jak w 04-ipw-2.py / 05-ipw-cwiczenie.py</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.api <span class="im">as</span> sm</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> fsolve</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.special <span class="im">import</span> expit</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="co">## wartości globalne BAEL Q4 2021 (w tys.)</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>N_pop <span class="op">=</span> <span class="dv">16780</span> <span class="op">+</span> <span class="dv">497</span> <span class="op">+</span> <span class="dv">12529</span>   <span class="co"># = 29806</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>pop_totals_status <span class="op">=</span> {</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;const&quot;</span>:                  N_pop,</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;status_Bezrobotny&quot;</span>:      <span class="dv">497</span>,</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;status_Bierny zawodowo&quot;</span>: <span class="dv">12529</span>,</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a><span class="co">## macierz projektowa dla zmiennej status</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>admin_dum <span class="op">=</span> pd.get_dummies(bkl[[<span class="st">&quot;status&quot;</span>]], columns<span class="op">=</span>[<span class="st">&quot;status&quot;</span>],</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>                           dtype<span class="op">=</span><span class="bu">float</span>, drop_first<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>X_admin_status   <span class="op">=</span> sm.add_constant(admin_dum).values.astype(<span class="bu">float</span>)</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>col_names_status <span class="op">=</span> [<span class="st">&quot;const&quot;</span>] <span class="op">+</span> <span class="bu">sorted</span>(admin_dum.columns.tolist())</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a><span class="co">## wektor wartości globalnych w kolejności kolumn macierzy projektowej</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>tau_x_status <span class="op">=</span> np.array([pop_totals_status.get(c, <span class="dv">0</span>) <span class="cf">for</span> c <span class="kw">in</span> col_names_status])</span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a><span class="co">## równanie GEE:  G(gamma) = sum_{S_A} x_i / pi(x_i, gamma) - tau_x = 0</span></span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> gee_eq_status(gamma):</span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>    pi_a <span class="op">=</span> np.clip(expit(X_admin_status <span class="op">@</span> gamma), <span class="fl">1e-10</span>, <span class="dv">1</span> <span class="op">-</span> <span class="fl">1e-10</span>)</span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (X_admin_status <span class="op">/</span> pi_a[:, <span class="va">None</span>]).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">-</span> tau_x_status</span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>gamma_status <span class="op">=</span> fsolve(gee_eq_status, np.zeros(X_admin_status.shape[<span class="dv">1</span>]))</span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>ps_status    <span class="op">=</span> expit(X_admin_status <span class="op">@</span> gamma_status)</span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>w_status     <span class="op">=</span> <span class="fl">1.0</span> <span class="op">/</span> ps_status</span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a><span class="co">## estymator HT (jak w nonprob() w R): mu = sum(w * y) / N_pop</span></span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a>mu_n1_status <span class="op">=</span> np.<span class="bu">sum</span>(w_status <span class="op">*</span> bkl[<span class="st">&quot;n1&quot;</span>].values) <span class="op">/</span> N_pop</span>
+<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;IPW-GEE do statusu BAEL:  mu_n1 = </span><span class="sc">{</span>mu_n1_status<span class="sc">:.4f}</span><span class="ss">&quot;</span>)</span>
+<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;sum(wagi) = </span><span class="sc">{</span>w_status<span class="sc">.</span><span class="bu">sum</span>()<span class="sc">:.0f}</span><span class="ss">  (powinno być </span><span class="sc">{</span>N_pop<span class="sc">}</span><span class="ss">)&quot;</span>)</span>
+<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;gamma:&quot;</span>)</span>
+<span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(pd.Series(gamma_status, index<span class="op">=</span>col_names_status).<span class="bu">round</span>(<span class="dv">4</span>))</span></code></pre></div><button title="Kopiuj do schowka" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -3245,20 +3282,7 @@ Adnotacja
 <div class="tab-content">
 <div id="tabset-10-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-10-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="do">## walidacja kalibracji do statusu (sekcja a.i)</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">check_balance</span>(<span class="sc">~</span> status <span class="sc">-</span> <span class="dv">1</span>, ipw_status)</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="do">## walidacja kalibracji do wieku + statusu + płci (sekcja a.ii)</span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="fu">check_balance</span>(<span class="sc">~</span> wiek <span class="sc">+</span> status <span class="sc">+</span> plec <span class="sc">-</span> <span class="dv">1</span>, ipw_wiek)</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="do">## ręczna weryfikacja:</span></span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(<span class="fu">weights</span>(ipw_status))                         <span class="do">## powinno być ≈ 29806</span></span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="fu">tapply</span>(<span class="fu">weights</span>(ipw_status), bkl<span class="sc">$</span>status, sum)     <span class="do">## powinno odtwarzać 16780 / 497 / 12529</span></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(<span class="fu">weights</span>(ipw_wiek))                           <span class="do">## powinno być ≈ 29807</span></span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="fu">tapply</span>(<span class="fu">weights</span>(ipw_wiek), bkl<span class="sc">$</span>wiek, sum)         <span class="do">## powinno odtwarzać 3383 / 4612 / 5672 / 8025 / 8115</span></span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="fu">tapply</span>(<span class="fu">weights</span>(ipw_wiek), bkl<span class="sc">$</span>status, sum)       <span class="do">## powinno odtwarzać 16780 / 497 / 12529</span></span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="fu">tapply</span>(<span class="fu">weights</span>(ipw_wiek), bkl<span class="sc">$</span>plec, sum)         <span class="do">## powinno odtwarzać 14276 / 15530</span></span></code></pre></div><button title="Kopiuj do schowka" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="do">## walidacja kalibracji do statusu (sekcja a.i)</span></span></code></pre></div><button title="Kopiuj do schowka" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <div id="tabset-10-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-2-tab">
