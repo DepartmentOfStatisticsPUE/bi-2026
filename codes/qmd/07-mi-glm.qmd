@@ -103,6 +103,40 @@ rbind(
 
 # Ćwiczenie
 
-- Porównaj wyniki MI-GLM (binomial) z MI-NN i MI-PMM z poprzedniego notatnika (`06-mi-nn.qmd`)
-- Sprawdź jak rozszerzony model wpływa na oszacowanie -- dodaj kolejne zmienne pomocnicze
-- Porównaj estymator MI-GLM z estymatorami IPW (notatnik `03-ipw-1.qmd`) -- które oszacowanie jest bardziej stabilne?
+## Ćwiczenie 1: Porównanie MI-GLM z MI-NN i MI-PMM
+
+Dopasuj cztery modele masowej imputacji z pełnym zestawem zmiennych (`~ size + nace + region + private`) i zestawienie wyniki w jednej tabeli za pomocą `rbind(extract(...))`:
+
+- MI-NN (method `"nn"`)
+- MI-PMM z rodziną `"binomial"` (method `"pmm"`, `se = FALSE`)
+- MI-GLM z rodziną `"gaussian"` (method `"glm"`)
+- MI-GLM z rodziną `"binomial"` (method `"glm"`)
+
+Pytania:
+
+a) Który estymator daje najwęższą wartość SE (błędu standardowego)?
+b) Jak bardzo różnią się oszacowania `mean` pomiędzy metodami? Czy różnice są istotne w stosunku do SE?
+
+## Ćwiczenie 2: Rola specyfikacji modelu
+
+Dopasuj cztery modele MI-GLM (`family_outcome = "binomial"`) z rosnącą liczbą zmiennych objaśniających:
+
+- Model A: `~ private`
+- Model B: `~ private + size`
+- Model C: `~ private + size + nace`
+- Model D: `~ size + nace + region + private` (pełny)
+
+Zestawienie wyniki w jednej tabeli i odpowiedz na pytania:
+
+a) Jak zmienia się oszacowanie `mean` wraz z dodawaniem zmiennych?
+b) Czy SE maleje monotonicznie? Jeśli nie — dlaczego?
+
+## Ćwiczenie 3: Porównanie MI-GLM z estymatorami IPW
+
+Dopasuj estymator IPW z pełnym modelem selekcji (`selection = ~ size + nace + region + private`, `method_selection = "logit"`) -- por. notatnik `03-ipw-1.qmd` -- i zestawienie go z MI-GLM (binomial, pełny model) w jednej tabeli.
+
+Pytania:
+
+a) Które podejście (IPW czy MI-GLM) daje mniejszy błąd standardowy przy pełnym zestawie zmiennych?
+b) Czy oszacowania `mean` są zbliżone? Co to mówi o spójności obu metod?
+c) IPW modeluje mechanizm selekcji $P(R=1|\boldsymbol{x})$, a MI-GLM modeluje zmienną celu $E(Y|\boldsymbol{x})$. W jakiej sytuacji jedno podejście będzie lepsze od drugiego?

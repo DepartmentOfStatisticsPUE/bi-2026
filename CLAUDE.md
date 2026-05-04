@@ -49,6 +49,11 @@ Rscript codes/R/03-ipw-1.R
 python3 codes/python/03-ipw-1.py
 ```
 
+**Compile slides (must run from inside `slides/`):**
+```bash
+cd slides && pdflatex bi.tex && cd ..
+```
+
 **Convert Jupyter notebook to HTML:**
 ```bash
 jupyter nbconvert --to html codes/ipynb/03-ipw-1.ipynb
@@ -62,7 +67,7 @@ jupyter nbconvert --to html codes/ipynb/03-ipw-1.ipynb
 - **R packages**: `survey`, `sampling`, `nonprobsvy` (survey estimation); `rvest` (scraping)
 - **Python packages**: `samplics`, `pandas`, `statsmodels`, `scikit-learn`, `selenium`
 - **Homework submission**: Students submit a single HTML file via Moodle — keep `embed-resources: true` (or `self-contained: true` on older `.qmd` files) in YAML headers so renders are portable
-- **Git-ignored directories**: `additional/`, `zaliczenie/`, `rozwiazania/` (solutions, student lists)
+- **Git-ignored**: `additional/`, `zaliczenie/`, `rozwiazania/` (solutions, student lists), `bkl-2021.sav` (SPSS data file used in homework 2 — not in repo, students download it separately)
 - **HTML output location**: notebooks 00–02 render to `codes/`, 03+ render to `codes/qmd/` — follow the existing convention per topic when updating `readme.md` links
 
 ## Quarto with Python chunks (reticulate)

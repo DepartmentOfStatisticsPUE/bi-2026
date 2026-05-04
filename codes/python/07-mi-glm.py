@@ -88,7 +88,43 @@ print(pd.DataFrame({
 }))
 
 
-## Ćwiczenie:
-## - Porównaj wyniki MI-GLM (binomial) z MI-NN i MI-PMM z 06-mi-nn.py
-## - Dodaj kolejne zmienne pomocnicze i sprawdź jak zmienia się oszacowanie
-## - Porównaj estymator MI-GLM z estymatorami IPW (03-ipw-1.py)
+## ======================================================================
+## Ćwiczenie 1: Porównanie MI-GLM z MI-NN i MI-PMM
+## ======================================================================
+## Dopasuj cztery modele z pełnym zestawem zmiennych
+## (size, nace, region, private) i zestawienie wyniki w jednej tabeli:
+##   - MI-NN (por. 06-mi-nn.py — dopasowanie na admin, predykcja na jvs)
+##   - MI-PMM z rodziną binomial (por. 06-mi-nn.py)
+##   - MI-GLM z rodziną gaussian
+##   - MI-GLM z rodziną binomial
+##
+## Pytania:
+## a) Który estymator daje najwęższą wartość SE?
+## b) Jak bardzo różnią się oszacowania mean pomiędzy metodami?
+
+## ======================================================================
+## Ćwiczenie 2: Rola specyfikacji modelu
+## ======================================================================
+## Dopasuj cztery modele MI-GLM (binomial) z rosnącą liczbą zmiennych:
+##   - Model A: private
+##   - Model B: private + size
+##   - Model C: private + size + nace
+##   - Model D: size + nace + region + private (pełny)
+##
+## Zestawienie wyniki w jednej tabeli i odpowiedz na pytania:
+## a) Jak zmienia się oszacowanie mean wraz z dodawaniem zmiennych?
+## b) Czy SE maleje monotonicznie? Jeśli nie — dlaczego?
+
+## ======================================================================
+## Ćwiczenie 3: Porównanie MI-GLM z estymatorami IPW
+## ======================================================================
+## Dopasuj estymator IPW z pełnym modelem selekcji
+## (por. 03-ipw-1.py) i zestawienie go z MI-GLM (binomial, pełny)
+## w jednej tabeli.
+##
+## Pytania:
+## a) Które podejście (IPW czy MI-GLM) daje mniejszy SE?
+## b) Czy oszacowania mean są zbliżone? Co to mówi o spójności obu metod?
+## c) IPW modeluje mechanizm selekcji P(R=1|x), a MI-GLM modeluje
+##    zmienną celu E(Y|x). W jakiej sytuacji jedno podejście będzie
+##    lepsze od drugiego?
