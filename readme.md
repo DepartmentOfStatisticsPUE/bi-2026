@@ -12,6 +12,7 @@
 | 5 | Ćwiczenie: IPW krok po kroku (MLE + CAL) | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/qmd/05-ipw-cwiczenie.html) | [qmd](codes/qmd/05-ipw-cwiczenie.qmd) | [.R](codes/R/05-ipw-cwiczenie.R) | [.py](codes/python/05-ipw-cwiczenie.py) | [.ipynb](codes/ipynb/05-ipw-cwiczenie.ipynb) |
 | 6 | Masowa imputacja: NN i PMM | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/qmd/06-mi-nn.html) | [qmd](codes/qmd/06-mi-nn.qmd) | [.R](codes/R/06-mi-nn.R) | [.py](codes/python/06-mi-nn.py) | [.ipynb](codes/ipynb/06-mi-nn.ipynb) |
 | 7 | Masowa imputacja: model GLM (Kim et al.) | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/qmd/07-mi-glm.html) | [qmd](codes/qmd/07-mi-glm.qmd) | [.R](codes/R/07-mi-glm.R) | [.py](codes/python/07-mi-glm.py) | [.ipynb](codes/ipynb/07-mi-glm.ipynb) |
+| 8 | Estymator podwójnie odporny (DR) | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/qmd/08-dr.html) | [qmd](codes/qmd/08-dr.qmd) | [.R](codes/R/08-dr.R) | [.py](codes/python/08-dr.py) | [.ipynb](codes/ipynb/08-dr.ipynb) |
 
 ## Zadania domowe
 
