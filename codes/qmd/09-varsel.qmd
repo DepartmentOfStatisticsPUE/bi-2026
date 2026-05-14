@@ -1,0 +1,411 @@
+---
+title: "Dobór zmiennych do modelu (LASSO / SCAD / MCP)"
+format:
+  html:
+    embed-resources: true
+    table-of-contents: true
+    number-sections: true
+editor: source
+execute:
+  eval: true
+  warning: false
+  message: false
+lang: pl
+---
+
+```{r}
+#| label: pakiety
+library(ncvreg)     # LASSO, SCAD, MCP w jednym pakiecie
+library(nonprobsvy) # wersja >= 0.2.3 -- wspiera vars_selection
+library(survey)
+set.seed(2026)
+```
+
+# Wprowadzenie
+
+W tym notatniku pokazujemy jak **automatycznie** wybierać zmienne do modelu z wykorzystaniem regularyzacji L1 (LASSO) i kar niewypukłych (SCAD, MCP).
+
+Po co? W praktyce mamy często **dużo** zmiennych pomocniczych (np. po zakodowaniu kategorycznych przez dummies), a tylko **niektóre** z nich są istotnie powiązane:
+
+-   z mechanizmem selekcji do próby nielosowej $R^A$,
+-   ze zmienną badaną $y$.
+
+Zmienne nieistotne **zwiększają wariancję** estymatorów (IPW, MI, DR), a nie redukują obciążenia. Chcemy więc znaleźć rzadki ("sparse") podzbiór ważnych zmiennych.
+
+Trzy popularne funkcje kary:
+
+-   **LASSO** ($p_\lambda(x) = \lambda|x|$) -- wypukła, szybka, ale obciąża duże współczynniki.
+-   **SCAD** -- niewypukła, ma własność wyroczni (Fan, Li 2001).
+-   **MCP** -- niewypukła, agresywniejsze odcinanie niż SCAD (Zhang 2010).
+
+Plan notatnika:
+
+A.  Sztuczny przykład regresji liniowej -- porównanie LASSO/SCAD/MCP w pakiecie `ncvreg`.
+B.  Sztuczny przykład z próbą nielosową i losową -- dobór zmiennych w IPW przez `nonprobsvy`.
+C.  Realne dane `admin` i `jvs` -- selekcja zmiennych w IPW, MI i DR.
+
+# Część A: Sztuczny przykład regresji liniowej
+
+## Generowanie danych
+
+Tworzymy zbiór z $n = 200$ obserwacji i $p = 50$ zmiennych pomocniczych. Tylko **pięć** z nich ma niezerowy wpływ na $y$:
+
+$$
+y_i = 3\,x_{i,1} + 1{,}5\,x_{i,2} + 2\,x_{i,5} - 2{,}5\,x_{i,10} + 1\,x_{i,20} + \varepsilon_i,
+$$
+
+gdzie $\varepsilon_i \sim N(0, 1)$ a $\bx_i \sim N(\mathbf{0}, \mathbf{I}_{50})$.
+
+```{r}
+#| label: dgp-a
+n <- 200
+p <- 50
+X <- matrix(rnorm(n*p), n, p)
+
+# wektor prawdziwych współczynników -- tylko 5 niezerowych
+beta_true <- rep(0, p)
+beta_true[1]  <-  3.0
+beta_true[2]  <-  1.5
+beta_true[5]  <-  2.0
+beta_true[10] <- -2.5
+beta_true[20] <-  1.0
+
+y <- as.numeric(X %*% beta_true) + rnorm(n)
+which_active <- which(beta_true != 0)
+which_active
+```
+
+## LASSO, SCAD, MCP -- dopasowanie
+
+Pakiet `ncvreg` dopasowuje **ścieżkę** rozwiązań dla różnych wartości $\lambda$. Funkcja `ncvreg()` przyjmuje argument `penalty` z wartościami `"lasso"`, `"SCAD"` lub `"MCP"`.
+
+```{r}
+#| label: varsel-fit
+fit_lasso <- ncvreg(X, y, penalty = "lasso")
+fit_scad  <- ncvreg(X, y, penalty = "SCAD")
+fit_mcp   <- ncvreg(X, y, penalty = "MCP")
+```
+
+## Ścieżki rozwiązań
+
+Wykres ścieżki pokazuje, jak współczynniki zmieniają się wraz ze spadkiem $\lambda$ (z lewa na prawo: silna kara → słaba kara).
+
+```{r}
+#| label: varsel-paths
+#| fig-width: 9
+#| fig-height: 3
+par(mfrow = c(1, 3))
+plot(fit_lasso, main = "LASSO")
+plot(fit_scad,  main = "SCAD")
+plot(fit_mcp,   main = "MCP")
+```
+
+## Wybór $\lambda$ przez walidację krzyżową
+
+`cv.ncvreg` automatycznie wybiera $\lambda$ minimalizujące błąd CV (domyślnie 10-krotny).
+
+```{r}
+#| label: varsel-cv
+cv_lasso <- cv.ncvreg(X, y, penalty = "lasso", seed = 2026)
+cv_scad  <- cv.ncvreg(X, y, penalty = "SCAD",  seed = 2026)
+cv_mcp   <- cv.ncvreg(X, y, penalty = "MCP",   seed = 2026)
+
+cat("Optymalne lambda:\n")
+cat("  LASSO:", round(cv_lasso$lambda.min, 4), "\n")
+cat("  SCAD: ", round(cv_scad$lambda.min,  4), "\n")
+cat("  MCP:  ", round(cv_mcp$lambda.min,   4), "\n")
+```
+
+## Porównanie wybranych zmiennych
+
+Wyciągamy wektor współczynników w optimum CV (`coef()` zwraca wyraz wolny + współczynniki).
+
+```{r}
+#| label: varsel-coef
+get_selected <- function(cv_fit) {
+  b <- coef(cv_fit)         # wyraz wolny + 50 współczynników
+  which(b[-1] != 0)         # indeksy niezerowych (pomijamy intercept)
+}
+
+sel_lasso <- get_selected(cv_lasso)
+sel_scad  <- get_selected(cv_scad)
+sel_mcp   <- get_selected(cv_mcp)
+
+cat("Prawdziwe aktywne zmienne:", which_active, "\n")
+cat("LASSO wybrał (", length(sel_lasso), "):", sel_lasso, "\n")
+cat("SCAD  wybrał (", length(sel_scad), "): ", sel_scad,  "\n")
+cat("MCP   wybrał (", length(sel_mcp), "): ",  sel_mcp,   "\n")
+```
+
+Krótko: LASSO zwykle wybiera **więcej** zmiennych niż jest aktywnych (\emph{false positives}); SCAD i MCP -- mniej, bliżej prawdy.
+
+```{r}
+#| label: varsel-podsum
+data.frame(
+  metoda       = c("LASSO", "SCAD", "MCP"),
+  n_wybranych  = c(length(sel_lasso), length(sel_scad), length(sel_mcp)),
+  prawdziwe_TP = c(sum(which_active %in% sel_lasso),
+                   sum(which_active %in% sel_scad),
+                   sum(which_active %in% sel_mcp)),
+  falszywe_FP  = c(sum(!sel_lasso %in% which_active),
+                   sum(!sel_scad  %in% which_active),
+                   sum(!sel_mcp   %in% which_active))
+)
+```
+
+# Część B: Sztuczny przykład z próbami losową i nielosową
+
+## Generowanie populacji
+
+Symulujemy populację $N = 10000$ z $p = 20$ ciągłymi zmiennymi pomocniczymi $\bx_i \sim N(0, 1)$. Zmienna $y$ zależy **tylko od pierwszych dwóch**:
+
+$$
+y_i = 1 + 2\,x_{i,1} - 1{,}5\,x_{i,2} + \varepsilon_i, \quad \varepsilon_i \sim N(0, 1).
+$$
+
+Średnia w populacji (do oszacowania):
+
+$$
+\mu_y = E(y) \approx 1.
+$$
+
+Mechanizm selekcji do próby nielosowej $S_A$ zależy z kolei **tylko od $x_3$ i $x_4$**:
+
+$$
+P(R^A_i = 1 \mid \bx_i) = \frac{\exp(-2 + x_{i,3} - 0{,}5 x_{i,4})}{1 + \exp(-2 + x_{i,3} - 0{,}5 x_{i,4})}.
+$$
+
+Pozostałe 16 zmiennych ($x_5, \ldots, x_{20}$) jest **nieistotne** -- ani dla $y$, ani dla $R^A$.
+
+```{r}
+#| label: dgp-b
+N <- 10000
+p <- 20
+X_pop <- matrix(rnorm(N*p), N, p)
+
+# zmienna y zależy od x1, x2
+y_pop <- 1 + 2*X_pop[,1] - 1.5*X_pop[,2] + rnorm(N)
+mu_true <- mean(y_pop)
+
+# prawdopodobieństwo włączenia do S_A zależy od x3, x4
+eta <- -2 + X_pop[,3] - 0.5*X_pop[,4]
+pi_A <- 1/(1 + exp(-eta))
+R_A  <- rbinom(N, 1, pi_A)
+
+# próba probabilistyczna S_B: SRS o liczebności n_B = 500
+n_B <- 500
+idx_B <- sample.int(N, n_B)
+
+cat("Średnia w populacji mu_y:", round(mu_true, 3), "\n")
+cat("Liczebność S_A:", sum(R_A), "\n")
+cat("Liczebność S_B:", n_B, "\n")
+```
+
+## Przygotowanie danych
+
+```{r}
+#| label: dane-b
+S_A <- data.frame(X_pop[R_A == 1, ], y = y_pop[R_A == 1])
+colnames(S_A) <- c(paste0("x", 1:p), "y")
+
+S_B <- data.frame(X_pop[idx_B, ], d = N/n_B) # waga = N/n_B (SRS)
+colnames(S_B) <- c(paste0("x", 1:p), "d")
+
+# obiekt survey design dla S_B
+sb_svy <- svydesign(ids = ~1, weights = ~d, data = S_B)
+```
+
+## Naiwna średnia z próby nielosowej
+
+Wprost z $S_A$, bez korekty -- powinno być obciążone, bo zmienne $x_3, x_4$ wpływają zarówno na selekcję, jak i (poprzez korelację z $y$ -- tu zerową, więc obciążenie wynika z selekcji warunkowej) na rozkład $y$ w próbie.
+
+```{r}
+#| label: naive-b
+mean(S_A$y)
+```
+
+## IPW z pełnym zestawem 20 zmiennych
+
+```{r}
+#| label: ipw-pelny
+form_pelny <- as.formula(paste("~", paste0("x", 1:p, collapse = " + ")))
+ipw_full <- nonprob(data      = S_A,
+                    selection = form_pelny,
+                    target    = ~ y,
+                    svydesign = sb_svy,
+                    method_selection = "logit")
+ipw_full
+```
+
+## IPW z doborem zmiennych (SCAD)
+
+Włączamy `vars_selection = TRUE` w `control_inference` i wskazujemy karę SCAD w `control_selection`.
+
+```{r}
+#| label: ipw-scad
+ipw_scad <- nonprob(data      = S_A,
+                    selection = form_pelny,
+                    target    = ~ y,
+                    svydesign = sb_svy,
+                    method_selection = "logit",
+                    control_inference = control_inf(vars_selection = TRUE),
+                    control_selection = control_sel(penalty = "SCAD"))
+ipw_scad
+```
+
+## IPW z doborem zmiennych (MCP i LASSO)
+
+```{r}
+#| label: ipw-mcp-lasso
+ipw_mcp <- nonprob(data      = S_A,
+                   selection = form_pelny,
+                   target    = ~ y,
+                   svydesign = sb_svy,
+                   method_selection = "logit",
+                   control_inference = control_inf(vars_selection = TRUE),
+                   control_selection = control_sel(penalty = "MCP"))
+
+ipw_lasso <- nonprob(data      = S_A,
+                     selection = form_pelny,
+                     target    = ~ y,
+                     svydesign = sb_svy,
+                     method_selection = "logit",
+                     control_inference = control_inf(vars_selection = TRUE),
+                     control_selection = control_sel(penalty = "lasso"))
+```
+
+## Porównanie -- punktowe oszacowania i SE
+
+```{r}
+#| label: porownanie-b
+porownanie_b <- rbind(
+  "IPW pełny model (20 zm.)" = extract(ipw_full),
+  "IPW + SCAD"               = extract(ipw_scad),
+  "IPW + MCP"                = extract(ipw_mcp),
+  "IPW + LASSO"              = extract(ipw_lasso)
+)
+porownanie_b
+cat("\nPrawdziwa wartość mu_y =", round(mu_true, 3), "\n")
+```
+
+Zauważ, że **estymatory z doborem zmiennych** zwykle mają porównywalne lub mniejsze SE niż pełny model -- bo wyrzucają z modelu zmienne niezwiązane z selekcją.
+
+# Część C: Realne dane `admin` i `jvs`
+
+## Wczytanie danych
+
+```{r}
+#| label: dane-realne
+data(admin)
+data(jvs)
+
+# obiekt survey design dla S_B
+jvs_svy <- svydesign(ids = ~ 1,
+                     weights = ~ weight,
+                     strata = ~ size + nace + region,
+                     data = jvs)
+```
+
+Na surowych danych mamy tylko 4 zmienne (`size`, `nace`, `region`, `private`). Po zakodowaniu zmiennych kategorycznych przez dummies (`nace` ma kilka poziomów, `region` -- kilkanaście) liczba kolumn w macierzy modelu jest dużo większa -- i wtedy dobór zmiennych jest naprawdę użyteczny.
+
+## IPW z pełnym zestawem i z doborem zmiennych (SCAD)
+
+```{r}
+#| label: ipw-real-pelny
+ipw_real_full <- nonprob(data      = admin,
+                         selection = ~ size + nace + region + private,
+                         target    = ~ single_shift,
+                         svydesign = jvs_svy,
+                         method_selection = "logit")
+```
+
+```{r}
+#| label: ipw-real-scad
+ipw_real_scad <- nonprob(data      = admin,
+                         selection = ~ size + nace + region + private,
+                         target    = ~ single_shift,
+                         svydesign = jvs_svy,
+                         method_selection = "logit",
+                         control_inference = control_inf(vars_selection = TRUE),
+                         control_selection = control_sel(penalty = "SCAD"))
+```
+
+## MI z doborem zmiennych
+
+Dla masowej imputacji (model wynikowy) używamy `control_outcome` zamiast `control_selection`.
+
+```{r}
+#| label: mi-real-scad
+mi_real_scad <- nonprob(data      = admin,
+                        outcome   = single_shift ~ size + nace + region + private,
+                        svydesign = jvs_svy,
+                        method_outcome = "glm",
+                        family_outcome = "binomial",
+                        control_inference = control_inf(vars_selection = TRUE),
+                        control_outcome  = control_out(penalty = "SCAD"))
+```
+
+## DR z doborem zmiennych w obu modelach
+
+Dla estymatora podwójnie odpornego selekcja odbywa się **niezależnie** w modelu PS i w modelu wynikowym. Końcowy zestaw zmiennych jest sumą obu (`vars_combine = TRUE` w nowszych wersjach pakietu).
+
+```{r}
+#| label: dr-real-scad
+dr_real_scad <- nonprob(data      = admin,
+                        selection = ~ size + nace + region + private,
+                        outcome   = single_shift ~ size + nace + region + private,
+                        svydesign = jvs_svy,
+                        method_outcome = "glm",
+                        family_outcome = "binomial",
+                        control_inference = control_inf(vars_selection = TRUE),
+                        control_selection = control_sel(penalty = "SCAD"),
+                        control_outcome  = control_out(penalty = "SCAD"))
+```
+
+## Porównanie -- realne dane
+
+```{r}
+#| label: porownanie-real
+rbind(
+  "IPW pełny"     = extract(ipw_real_full),
+  "IPW + SCAD"    = extract(ipw_real_scad),
+  "MI + SCAD"     = extract(mi_real_scad),
+  "DR + SCAD"     = extract(dr_real_scad)
+)
+```
+
+# Zadania do samodzielnego rozwiązania
+
+## Zadanie 1: ścieżki kar (dane sztuczne)
+
+Wykorzystując dane z **Części A**:
+
+a)  Narysuj na jednym wykresie ścieżki współczynników dla LASSO i MCP (`plot(fit_lasso)` i `plot(fit_mcp)`). Co zauważasz w okolicy $\lambda$ bliskiego zeru?
+b)  Zmień rozmiar próby na $n = 1000$ (zachowując $p = 50$) i powtórz CV. Czy SCAD/MCP wybierają mniej zmiennych przy większej próbie?
+c)  Zwiększ szum: $\varepsilon \sim N(0, 4)$ zamiast $N(0, 1)$. Jak zmienia się liczba wybranych zmiennych?
+
+## Zadanie 2: dobór zmiennych w próbach (dane sztuczne)
+
+Wykorzystując DGP z **Części B**, ale zmieniając go tak, że:
+
+-   $y$ zależy od $x_1, x_2, x_3$ (a nie tylko $x_1, x_2$),
+-   prawdopodobieństwo włączenia do $S_A$ zależy od $x_3, x_4$ (jak wcześniej).
+
+a)  Czyli $x_3$ jest teraz **prawdziwym czynnikiem zakłócającym** (związany z y i z R\^A). Wygeneruj dane, dopasuj IPW + SCAD i IPW + LASSO. Czy obie kary zachowują $x_3$ w modelu?
+b)  Porównaj punktowe oszacowania z pełnym modelem (20 zmiennych) i prawdziwym $\mu_y$. Który estymator jest najbliżej prawdy?
+
+## Zadanie 3: MCP vs SCAD na realnych danych
+
+Wykorzystując dane `admin` i `jvs`:
+
+a)  Dopasuj IPW z `penalty = "MCP"`, `selection = ~ size + nace + region + private`.
+b)  Porównaj liczbę niezerowych współczynników (`fit$coefficients`) między MCP i SCAD.
+c)  Czy oba dają zbliżone oszacowanie `single_shift`?
+
+## Zadanie 4: MI + LASSO vs MI bez selekcji
+
+Wykorzystując dane `admin` i `jvs`:
+
+a)  Dopasuj MI (`single_shift ~ size + nace + region + private`, binomial) **bez** selekcji oraz z `penalty = "lasso"`.
+b)  Porównaj punktowe oszacowanie i SE. Czy SE jest mniejsze po selekcji?
+c)  Sprawdź, które zmienne zostały usunięte przez LASSO (porównaj nazwy w `coef(...)`).

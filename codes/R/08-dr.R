@@ -80,7 +80,7 @@ rbind(
 ## ======================================================================
 ## Zadanie 1: różne specyfikacje modelu wynikowego
 ## ======================================================================
-## Zafiksuj model selekcji jako ~ size + nace + region + private i dopasuj
+## Ustal model selekcji jako ~ size + nace + region + private i dopasuj
 ## cztery estymatory DR z rosnącą specyfikacją modelu wynikowego
 ## (wszystkie z family_outcome = "binomial"):
 ##   - DR-A: outcome = single_shift ~ size
@@ -95,10 +95,28 @@ rbind(
 ## c) Porównaj DR-D z czystym IPW (~ size + nace + region + private) --
 ##    który ma mniejsze SE?
 
+dr_a <- nonprob(data = admin,
+                selection = ~ size + nace + region + private,
+                outcome = single_shift ~ size,
+                svydesign = jvs_svy,
+                method_outcome = "glm",
+                family_outcome = "binomial")
+dr_b <- update(dr_d, outcome = single_shift ~ size + nace)
+dr_c <- update(dr_c, outcome = single_shift ~ size + nace + region)
+dr_d <- update(dr_b, outcome = single_shift ~ size + nace + region + private)
+
+rbind(
+  "DR-A" = extract(dr_a),
+  "DR-B" = extract(dr_b),
+  "DR-C" = extract(dr_c),
+  "DR-D" = extract(dr_d),
+  "IPW" = extract(ipw_full)
+)
+
 ## ======================================================================
 ## Zadanie 2: różne specyfikacje modelu selekcji
 ## ======================================================================
-## Zafiksuj model wynikowy jako single_shift ~ size + nace + region + private
+## Ustal model wynikowy jako single_shift ~ size + nace + region + private
 ## (binomial) i zmieniaj tylko model selekcji:
 ##   - DR-S1: selection = ~ size
 ##   - DR-S2: selection = ~ size + nace
@@ -107,6 +125,22 @@ rbind(
 ## a) Jak zmienia się mean? Czy efekt jest mniejszy niż w Zadaniu 1?
 ## b) Sformułuj wniosek: który z dwóch modeli (PS czy wynikowy) ma większy
 ##    wpływ na oszacowanie DR w tym przykładzie?
+
+dr_s1 <- nonprob(data = admin,
+                selection = ~ size,
+                outcome = single_shift ~ size + nace + region + private,
+                svydesign = jvs_svy,
+                method_outcome = "glm",
+                family_outcome = "binomial")
+
+dr_s2 <- update(dr_s1, selection = ~ size + nace)
+dr_s3 <- update(dr_s1, selection = ~ size + nace + region + private)
+
+rbind(
+  "DR-S1" = extract(dr_s1),
+  "DR-S2" = extract(dr_s2),
+  "DR-S3" = extract(dr_s3)
+)
 
 ## ======================================================================
 ## Zadanie 3: celowe zepsucie jednego z modeli
@@ -118,15 +152,47 @@ rbind(
 ## a) Zły PS, dobry model wynikowy:
 ##    selection = ~ private,
 ##    outcome = single_shift ~ size + nace + region + private (binomial).
+
+z1 <- nonprob(data = admin,
+              selection = ~ private,
+              outcome = single_shift ~ size + nace + region + private,
+              svydesign = jvs_svy,
+              method_outcome = "glm",
+              family_outcome = "binomial")
+
 ## b) Dobry PS, zły model wynikowy:
 ##    selection = ~ size + nace + region + private,
 ##    outcome = single_shift ~ private (binomial).
+
+z2 <- nonprob(data = admin,
+              selection = ~ size + nace + region + private,
+              outcome = single_shift ~ private,
+              svydesign = jvs_svy,
+              method_outcome = "glm",
+              family_outcome = "binomial")
+
+
 ## c) Oba złe:
 ##    selection = ~ private, outcome = single_shift ~ private (binomial).
 ##
+
+z3 <- nonprob(data = admin,
+              selection = ~ private,
+              outcome = single_shift ~ private,
+              svydesign = jvs_svy,
+              method_outcome = "glm",
+              family_outcome = "binomial")
+
+
 ## Zestawienie oszacowania mean w tabeli i porównaj z DR-D z Zadania 1
 ## (oba modele dobre). Czy w wariantach (a) i (b) oszacowania są zbliżone
 ## do (d)? Co dzieje się w wariancie (c)?
+
+rbind(
+  "DR-Z1" = extract(z1),
+  "DR-Z2" = extract(z2),
+  "DR-Z3" = extract(z3)
+)
 
 ## ======================================================================
 ## Zadanie 4: GEE vs MLE w roli PS

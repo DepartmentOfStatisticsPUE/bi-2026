@@ -19,7 +19,7 @@ Materials exist in parallel across four formats with a consistent `NN-topic` nam
 
 The Quarto files are the canonical source for R code. R scripts in `codes/R/` are derived artifacts.
 
-Numbered topics (`00`–`07`) cover: `survey`/`sampling`/`samplics` packages → web scraping → representativeness measures → IPW (intro, calibrated, exercise) → mass imputation (NN/PMM, GLM). `codes/qmd/00-wykresy-wyklady.qmd` is a separate notebook used to generate figures for the lecture slides (not student-facing material) — leave it out of the `readme.md` notebook table.
+Numbered topics (`00`–`08`) cover: `survey`/`sampling`/`samplics` packages → web scraping → representativeness measures → IPW (intro, calibrated, exercise) → mass imputation (NN/PMM, GLM) → doubly robust. `codes/qmd/00-wykresy-wyklady.qmd` is a separate notebook used to generate figures for the lecture slides (not student-facing material) — leave it out of the `readme.md` notebook table. New topics typically start as R-only `.qmd` (e.g. `08-dr.qmd`) and only later acquire matching `.R`/`.py`/`.ipynb` siblings — don't assume a topic has all four formats.
 
 Other directories:
 - `slides/` — LaTeX Beamer presentation (`bi.tex`, compiles with `pdflatex` from inside `slides/`); figures are pre-generated PNGs in `fig-*` subdirectories

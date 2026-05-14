@@ -2238,10 +2238,394 @@ To podejście w literaturze nazywa się \textit{predictive mean matching}.
 
 \begin{frame}{Masowa imputacja -- przykład empiryczny}
 \begin{center}
-Przejdźmy do przykładu    
+Przejdźmy do przykładu
 \end{center}
 \end{frame}
 
+\subsection{Estymatory podwójnie odporne}
+
+\begin{frame}{Idea estymatora podwójnie odpornego}
+\begin{itemize}
+\justifying
+    \item Dotychczas poznaliśmy dwa podejścia:
+    \begin{itemize}
+        \item \textbf{quasi-randomizacyjne} (IPW) -- modelujemy mechanizm selekcji $\pi(\bx_i, \bgamma) = P(R_i^A=1\mid \bx_i)$,
+        \item \textbf{predykcyjne} (masowa imputacja) -- modelujemy zmienną wynikową $E_{\xi}(y_i \mid \bx_i) = m(\bx_i, \bbeta)$.
+    \end{itemize}
+    \item Estymator \textbf{podwójnie odporny} (\textit{doubly robust}, DR) łączy oba modele tak, by uzyskać szacunki zgodne, gdy \textbf{przynajmniej jeden} z modeli ($\pi$ \emph{lub} $m$) jest poprawnie wyspecyfikowany.
+    \item Pierwsze sformułowania: Robins, Rotnitzky i Zhao (1994) dla braków danych; Bang i Robins (2005) dla efektów przyczynowych; Kim i Haziza (2014), Chen, Li i Wu (2020) dla prób nielosowych.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Estymator DR -- definicja}
+\begin{itemize}
+\justifying
+    \item Niech $\hat{\pi}_i^A=\pi(\bx_i, \hat{\bgamma})$ oraz $\hat{m}_i = m(\bx_i, \hat{\bbeta})$. Estymator DR (Chen, Li, Wu 2020) ma postać:
+    \begin{equation}
+        \hat{\mu}_{y,\text{DR}} = \frac{1}{\hat{N}^B}\left\{ \sum_{i \in S_A} \frac{y_i - \hat{m}_i}{\hat{\pi}_i^A} + \sum_{i \in S_B} d_i^B \hat{m}_i \right\},
+    \end{equation}
+    gdzie $\hat{N}^B = \sum_{i \in S_B} d_i^B$ (lub $N$ gdy znamy liczebność populacji).
+    \item Pierwszy człon to \emph{korekta} IPW na resztach $y_i - \hat{m}_i$, drugi to \emph{predykcja} masowej imputacji na $S_B$.
+    \item Gdy $\hat{m}_i \equiv 0$, estymator redukuje się do $\hat{\mu}_{y,\text{IPW}}$. Gdy $\hat{\pi}_i^A \to \infty$ (brak korekty IPW), redukuje się do $\hat{\mu}_{y,\text{MI-K}}$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Dlaczego \emph{podwójnie odporny}?}
+\begin{itemize}
+\justifying
+    \item Niech $\pi^*(\bx)$ i $m^*(\bx)$ oznaczają granice (probability limits) estymatorów $\hat{\pi}_i^A$ i $\hat{m}_i$.
+    \item Można pokazać, że $\hat{\mu}_{y,\text{DR}}$ jest asymptotycznie nieobciążony, gdy:
+    \begin{itemize}
+        \item[(a)] model PS jest poprawny: $\pi^*(\bx) = \pi^A(\bx)$, \emph{lub}
+        \item[(b)] model wynikowy jest poprawny: $m^*(\bx) = E(y\mid \bx)$.
+    \end{itemize}
+    \item \textbf{Tylko jeden z dwóch} modeli musi być prawidłowo wyspecyfikowany -- stąd \emph{podwójna} odporność.
+    \item Zauważmy, że estymator GEE-IPW (Kim, Riddles 2012), który poznaliśmy w \S Metody quasi-randomizacyjne, jest \emph{specjalnym przypadkiem} DR, w którym $m(\bx_i, \bbeta) = \bx_i^{\prime}\bbeta$ jest zaszyte w warunku kalibracji.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Wariancja i implementacja}
+\begin{itemize}
+\justifying
+    \item Wariancja $\hat{\mu}_{y,\text{DR}}$ ma postać zlinearyzowaną i uwzględnia niepewność wynikającą z obu modeli (PS i wynikowego) -- por. Chen, Li, Wu (2020), wzór (3.4).
+    \item Alternatywnie -- jak w pozostałych estymatorach -- można zastosować bootstrap.
+    \item W pakiecie \texttt{nonprobsvy} estymator DR wywołujemy podając \emph{równocześnie} \texttt{selection} i \texttt{outcome}:
+\begin{verbatim}
+nonprob(data = admin,
+        selection = ~ size + nace,
+        outcome   = single_shift ~ size + nace,
+        svydesign = jvs_svy,
+        method_outcome = "glm",
+        family_outcome = "binomial")
+\end{verbatim}
+    \item Domyślnie wykorzystywana jest forma analityczna wariancji.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{DR -- praktyczne uwagi}
+\begin{itemize}
+\justifying
+    \item DR \textbf{nie} chroni przed sytuacją, w której \emph{oba} modele są źle wyspecyfikowane -- daje wtedy obciążenie zazwyczaj większe niż osobne IPW/MI.
+    \item Ekstremalne wagi $1/\hat{\pi}_i^A$ (małe $\hat{\pi}_i^A$) silnie zwiększają wariancję pierwszego członu -- diagnoza wag pozostaje istotna jak w IPW.
+    \item Gdy $\hat{m}_i$ dobrze przybliża $y_i$ na $S_A$, reszty $y_i - \hat{m}_i$ są małe i pierwszy człon stabilizuje się -- DR jest wtedy bardziej efektywny niż czyste IPW.
+    \item Wybór zmiennych: zmienne $\bx$ powinny być \emph{predyktorami obu} -- mechanizmu selekcji \emph{i} zmiennej $y$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{DR -- przykład empiryczny}
+\begin{center}
+Przejdźmy do przykładu w R
+\end{center}
+\end{frame}
+
+\subsection{Tematy zaawansowane}
+
+\subsubsection{Dobór zmiennych do modelu}
+
+\begin{frame}{Dlaczego dobór zmiennych jest istotny?}
+\begin{itemize}
+\justifying
+    \item Obciążenie i precyzja estymatorów IPW, MI i DR zależy od poprawnej specyfikacji modeli ($\pi$ i/lub $m$) -- a~w~szczególności od doboru zmiennych pomocniczych $\bx_i$.
+    \item Trzy typy zmiennych mają różny wpływ na własności estymatora:
+    \begin{itemize}
+        \item zmienne związane wyłącznie z~mechanizmem selekcji $R_i^A$ -- zwiększają wariancję, nie redukują obciążenia,
+        \item zmienne związane wyłącznie ze zmienną wynikową $y_i$ -- redukują wariancję części wynikowej (MI), ale są zbędne dla modelu PS,
+        \item zmienne związane z obydwoma ($R_i^A$ i $y_i$) -- \emph{prawdziwe} czynniki zakłócające; redukują zarówno obciążenie, jak i wariancję.
+    \end{itemize}
+    \item W praktyce wymiar $\bx_i$ może duży.
+    \item Klasyczne procedury (AIC/BIC, selekcja krokowa) nie nadają się do dużych wymiarów $\bx_i$ i~mogą być niestabilne.
+    \item Spójną teorię doboru zmiennych dla połączenia prób probabilistycznych i nieprobabilistycznych w wysokim wymiarze przedstawili Yang, Kim i Song (2020, JRSSB).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Własność wyroczni (\emph{oracle property})}
+\begin{itemize}
+\justifying
+    \item Niech $M_0 = \{j : \beta_j \neq 0\}$ oznacza prawdziwy (nieznany) zbiór \emph{aktywnych} zmiennych.
+    \item \emph{Estymator-wyrocznia} (\emph{oracle estimator}) to hipotetyczny estymator, który \emph{zna} zbiór $M_0$ z góry i~dopasowuje model bez kary, używając wyłącznie zmiennych z~$M_0$.
+    \item Estymator z karą $p_\lambda$ ma \textbf{własność wyroczni}, gdy asymptotycznie zachowuje się jak estymator-wyrocznia:
+    \begin{itemize}
+        \item[(P1)] \emph{zgodność selekcji}: $P(\hat{M} = M_0) \rightarrow 1$, gdy $n \rightarrow \infty$,
+        \item[(P2)] \emph{asymptotyczna normalność}: niezerowe współczynniki $\hat{\bbeta}_{M_0}$ są asymptotycznie normalne z tą samą wariancją, co estymator-wyrocznia.
+    \end{itemize}
+    \item Konsekwencja praktyczna: po doborze zmiennych można stosować klasyczne wnioskowanie statystyczne -- standardowe błędy i testy są (asymptotycznie) poprawne, jak gdyby zbiór $M_0$ był znany.
+    \item Fan i Li (2001) pokazali, że \textbf{LASSO nie ma} własności wyroczni; SCAD i MCP -- mają (Fan, Li 2001; Zhang 2010).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Podejście penalizacyjne -- ogólna idea}
+\begin{itemize}
+\justifying
+    \item Zamiast rozwiązywać $\bU(\bgamma)=\bZero$ (PS) lub $\bU(\bbeta)=\bZero$ (model wynikowy), wprowadzamy \emph{karę} (penalty) za niezerowe współczynniki (Yang, Kim, Song 2020):
+    \begin{equation}
+        \bU^p\!\left(\bgamma, \bbeta\right) = \bU\!\left(\bgamma, \bbeta\right) - \begin{pmatrix} q_{\lambda_\gamma}\!\left(|\bgamma|\right) \operatorname{sgn}(\bgamma) \\ q_{\lambda_\beta}\!\left(|\bbeta|\right) \operatorname{sgn}(\bbeta) \end{pmatrix} = \bZero,
+    \end{equation}
+    gdzie $q_{\lambda}(x) = \partial p_{\lambda}(x)/\partial x$ jest pochodną funkcji kary $p_{\lambda}$, a $\lambda$ to parametr regularyzacji.
+    \item Rozwiązanie $(\hat{\bgamma}, \hat{\bbeta})$ jest \emph{rzadkie} -- część współczynników jest dokładnie równa zero; odpowiadające im zmienne zostają usunięte z modelu.
+    \item Końcowy estymator (IPW, MI lub DR) jest następnie wyznaczany na zbiorze wybranych zmiennych $\hat{M} = \hat{M}_\gamma \cup \hat{M}_\beta$ (suma zbiorów wybranych w PS i w modelu wynikowym).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{LASSO (Tibshirani 1996)}
+\begin{itemize}
+\justifying
+    \item Kara $L_1$:
+    \begin{equation*}
+        p_{\lambda}(x) = \lambda |x|, \qquad q_{\lambda}(x) = \lambda \operatorname{sgn}(x).
+    \end{equation*}
+    \item Pochodna $q_\lambda$ jest \emph{stała} -- kara rośnie liniowo również dla dużych współczynników, co prowadzi do ich systematycznego \emph{przesunięcia w stronę zera} (\emph{shrinkage bias}).
+    \item Funkcja kary $p_\lambda$ jest \emph{wypukła} -- estymacja szybka i stabilna (LARS, coordinate descent).
+    \item \textbf{Nie posiada własności wyroczni}.
+    \item \emph{Kiedy stosować:}
+    \begin{itemize}
+        \item bardzo duża liczba zmiennych ($p \gg n$, \emph{screening}),
+        \item szybka eksploracja wstępna,
+        \item gdy ważniejszy jest sam dobór zmiennych niż dokładne oszacowanie współczynników.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{SCAD -- \emph{smoothly clipped absolute deviation} (Fan, Li 2001)}
+\begin{itemize}
+\justifying
+    \item Funkcja kary:
+    \begin{equation*}
+    \small
+        p_{\lambda}(x; \gamma) = \begin{cases} \lambda|x| & |x| \leq \lambda, \\ \dfrac{2\gamma\lambda|x| - x^2 - \lambda^2}{2(\gamma-1)} & \lambda < |x| < \gamma\lambda, \\ \dfrac{\lambda^2(\gamma+1)}{2} & |x| \geq \gamma\lambda. \end{cases}
+    \end{equation*}
+    \item Pochodna $q_\lambda(x)$ \emph{maleje do zera} dla $|x| \geq \gamma\lambda$ -- duże współczynniki nie są dodatkowo penalizowane.
+    \item \textbf{Posiada własność wyroczni}. Cena: $p_\lambda$ niewypukła, estymacja wymaga algorytmów MM lub linearyzacji (LQA).
+    \item Domyślnie $\gamma=3{,}7$ (Fan, Li 2001).
+    \item \emph{Kiedy stosować:}
+    \begin{itemize}
+        \item gdy zależy nam na nieobciążonych oszacowaniach zachowanych współczynników,
+        \item standardowy wybór w literaturze prób nielosowych (Yang, Kim, Song 2020),
+        \item gdy oczekujemy umiarkowanie rzadkiej struktury.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{MCP -- \emph{minimax concave penalty} (Zhang 2010)}
+\begin{itemize}
+\justifying
+    \item Funkcja kary:
+    \begin{equation*}
+        p_{\lambda}(x; \gamma) = \begin{cases} \lambda|x| - \dfrac{x^2}{2\gamma} & |x| \leq \gamma\lambda, \\ \dfrac{1}{2}\gamma\lambda^2 & |x| > \gamma\lambda. \end{cases}
+    \end{equation*}
+    \item Pochodna $q_\lambda(x) = \left(\lambda - |x|/\gamma\right)\operatorname{sgn}(x)$ \emph{liniowo maleje} do zera w przedziale $[0, \gamma\lambda]$ -- bardziej agresywne odcinanie (\emph{thresholding}) niż SCAD.
+    \item \textbf{Posiada własność wyroczni}; niewypukła -- analogiczne algorytmy jak SCAD.
+    \item Domyślnie $\gamma=3$ (Zhang 2010).
+    \item \emph{Kiedy stosować:}
+    \begin{itemize}
+        \item gdy oczekujemy bardzo rzadkiej struktury (mało zmiennych aktywnych),
+        \item gdy SCAD wybiera zbyt wiele zmiennych (\emph{false positives}),
+        \item gdy zależy nam na ostrzejszej selekcji bez utraty własności wyroczni.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Wybór parametru regularyzacji $\lambda$}
+\begin{itemize}
+\justifying
+    \item Parametr $\lambda$ kontroluje stopień rzadkości: $\lambda \to 0$ daje pełny model, $\lambda \to \infty$ daje model pusty.
+    \item Wybierany przez $K$-krotną walidację krzyżową minimalizującą funkcje straty dopasowane do struktury problemu (Yang, Kim, Song 2020):
+    \begin{equation*}
+        \text{Loss}(\lambda_\gamma) = \sum_{j=1}^{p}\left(\sum_{i=1}^{N}\left[\frac{R_i^A}{\pi(\bx_i, \hat{\bgamma}(\lambda_\gamma))} - \frac{R_i^B}{\pi_i^B}\right] \bx_{ij}\right)^{\!2},
+    \end{equation*}
+    \begin{equation*}
+        \text{Loss}(\lambda_\beta) = \sum_{i \in S_A}\left[y_i - m(\bx_i, \hat{\bbeta}(\lambda_\beta))\right]^{2}.
+    \end{equation*}
+    \item Procedura jest \emph{dwuetapowa}: (1) penalizowane dopasowanie z wybranym $\lambda$ identyfikuje zbiór $\hat{M}$; (2) końcowa estymacja $\hat{\mu}_y$ odbywa się na nieregularyzowanym modelu zawierającym tylko zmienne ze zbioru $\hat{M}$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Dobór zmiennych w pakiecie \texttt{nonprobsvy}}
+\begin{itemize}
+\justifying
+    \item Penalizowana estymacja dostępna dla \emph{wszystkich trzech} estymatorów: IPW, MI (GLM) oraz DR.
+    \item Konfiguracja przez argumenty kontrolne funkcji \texttt{nonprob()}:
+    \begin{itemize}
+        \item \texttt{control\_selection = controlSel(penalty = "lasso" | "SCAD" | "MCP")} -- kara dla modelu PS,
+        \item \texttt{control\_outcome = controlOut(penalty = ...)} -- kara dla modelu wynikowego,
+        \item \texttt{control\_inference = controlInf(vars\_selection = TRUE)} -- włącza dobór zmiennych.
+    \end{itemize}
+    \item Dla DR wybór zmiennych w obu modelach prowadzi do estymatora \emph{podwójnie odpornego po doborze zmiennych} (Yang, Kim, Song 2020); istotne pod warunkiem zachowania własności wyroczni przez przynajmniej jedną z kar.
+    \item Rekomendacja: SCAD lub MCP zamiast LASSO, gdy zależy nam na nieobciążonych szacunkach efektów dla zmiennych zachowanych w modelu.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Dobór zmiennych -- przykład empiryczny}
+
+\begin{center}
+Przejdźmy do przykładu  (trzeba zainstalować wersję z branch dev).
+\end{center}
+
+\end{frame}
+
+\begin{frame}{Dobór zmiennych -- literatura}
+\begin{itemize}
+\scriptsize
+    \item Tibshirani, R. (1996). Regression shrinkage and selection via the lasso. \textit{Journal of the Royal Statistical Society: Series B (Methodological)}, 58(1), 267--288. doi:10.1111/j.2517-6161.1996.tb02080.x.
+    \item Fan, J., and Li, R. (2001). Variable selection via nonconcave penalized likelihood and its oracle properties. \textit{Journal of the American Statistical Association}, 96(456), 1348--1360. doi:10.1198/016214501753382273.
+    \item Zou, H. (2006). The adaptive lasso and its oracle properties. \textit{Journal of the American Statistical Association}, 101(476), 1418--1429. doi:10.1198/016214506000000735.
+    \item Zhang, C.-H. (2010). Nearly unbiased variable selection under minimax concave penalty. \textit{The Annals of Statistics}, 38(2), 894--942. doi:10.1214/09-AOS729.
+    \item Yang, S., Kim, J. K., and Song, R. (2020). Doubly robust inference when combining probability and non-probability samples with high dimensional data. \textit{Journal of the Royal Statistical Society: Series B (Statistical Methodology)}, 82(2), 445--465. doi:10.1111/rssb.12354.
+\end{itemize}
+\end{frame}
+
+\subsubsection{Estymacja wariancji -- ujęcie ogólne}
+
+\begin{frame}{Bootstrap -- intuicja}
+\begin{itemize}
+\justifying
+    \item Bootstrap (Efron 1979) -- nieparametryczna metoda szacowania wariancji (i rozkładu) estymatora przez \emph{resampling} z obserwowanej próby.
+    \item \textbf{Idea:} traktujemy próbę jako reprezentację populacji; losowanie ze zwracaniem z próby naśladuje losowanie z populacji.
+    \item \textbf{Ogólna procedura} dla statystyki $\hat{\theta} = T(x_1, \ldots, x_n)$:
+    \begin{enumerate}
+        \item Dla $b = 1, \ldots, B$: losujemy ze zwracaniem $\{x_1^{*(b)}, \ldots, x_n^{*(b)}\}$ z próby oryginalnej.
+        \item Wyznaczamy $\hat{\theta}^{*(b)} = T(x_1^{*(b)}, \ldots, x_n^{*(b)})$.
+        \item Estymator wariancji:
+        \begin{equation*}
+            \hat{V}_{\text{boot}}(\hat{\theta}) = \frac{1}{B-1}\sum_{b=1}^{B}\left(\hat{\theta}^{*(b)} - \bar{\hat{\theta}}^*\right)^{\!2}, \quad \bar{\hat{\theta}}^* = \frac{1}{B}\sum_{b=1}^B \hat{\theta}^{*(b)}.
+        \end{equation*}
+    \end{enumerate}
+    \item Zaleta: nie wymaga jawnych wzorów ani silnych założeń o rozkładzie. Wada: koszt obliczeniowy.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Bootstrap -- prosty przykład 1: średnia z próby}
+\begin{itemize}
+\justifying
+    \item Próba $x_1, \ldots, x_n$ ze zmiennej o nieznanym rozkładzie $F$. Estymator: $\bar{x}_n = n^{-1}\sum_i x_i$.
+    \item \textbf{Klasycznie}: $\hat{V}(\bar{x}_n) = s^2/n$, gdzie $s^2 = (n-1)^{-1}\sum_i (x_i - \bar{x}_n)^2$.
+    \item \textbf{Bootstrap}: dla $b = 1, \ldots, B$ losujemy ze zwracaniem $n$ obserwacji, liczymy $\bar{x}^{*(b)}$, a następnie:
+    \begin{equation*}
+        \hat{V}_{\text{boot}}(\bar{x}_n) = \frac{1}{B-1}\sum_{b=1}^{B}\left(\bar{x}^{*(b)} - \bar{\bar{x}}^*\right)^{\!2}.
+    \end{equation*}
+    \item Dla dużych $n$ i $B$ oba estymatory są (asymptotycznie) równoważne.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Bootstrap -- prosty przykład 2: współczynnik regresji}
+\begin{itemize}
+\justifying
+    \item Próba $\{(\bx_i, y_i)\}_{i=1}^n$, estymator MNK: $\hat{\bbeta} = (\bX^\prime \bX)^{-1} \bX^\prime \by$.
+    \item \textbf{Klasycznie}: $\widehat{\operatorname{Var}}(\hat{\bbeta}) = \hat{\sigma}^2 (\bX^\prime \bX)^{-1}$ -- wymaga założeń (homoskedastyczność, niezależność).
+    \item \textbf{Bootstrap par} (\emph{paired bootstrap}): dla $b=1,\ldots,B$ losujemy ze zwracaniem pary $(\bx_i^{*(b)}, y_i^{*(b)})$, liczymy $\hat{\bbeta}^{*(b)}$, a następnie:
+    \begin{equation*}
+        \hat{V}_{\text{boot}}(\hat{\bbeta}) = \frac{1}{B-1}\sum_{b=1}^{B}(\hat{\bbeta}^{*(b)} - \bar{\hat{\bbeta}}^*)(\hat{\bbeta}^{*(b)} - \bar{\hat{\bbeta}}^*)^{\!\prime}.
+    \end{equation*}
+    \item Zaleta: poprawny także przy heteroskedastyczności lub naruszeniu założeń klasycznych.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Bootstrap w kontekście prób (nielosowych i losowych)}
+\begin{itemize}
+\justifying
+    \item W przypadku prób losowych ($S_B$) prosty bootstrap (\emph{i.i.d.}) \textbf{nie wystarcza} -- nie odtwarza struktury schematu losowania.
+    \item Istnieją wyspecjalizowane procedury (Rao-Wu 1988, mirror-match, BRR, jackknife) -- dobierane do typu schematu (SRS, stratyfikacja, próba zespołowa).
+    \item W kontekście prób nielosowych musimy resamplingować \emph{równocześnie}: $S_A$ (i.i.d. ze zwracaniem) oraz $S_B$ (z odtworzeniem schematu losowania).
+    \item Re-estymacja w każdej replikacji obejmuje \emph{całą} procedurę -- dopasowanie modeli PS/wynikowego, ewentualną selekcję zmiennych, kalibrację.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Dwa podejścia do estymacji wariancji}
+\begin{itemize}
+\justifying
+    \item Wszystkie estymatory poznane wcześniej ($\hat{\mu}_{y,\text{IPW}}$, $\hat{\mu}_{y,\text{MI-K}}$, $\hat{\mu}_{y,\text{DR}}$) wymagają wariancji do konstrukcji przedziałów ufności i testów.
+    \item Dwa źródła niepewności trzeba uwzględnić:
+    \begin{itemize}
+        \item[(i)] wariancja modelu (PS i/lub wynikowego) -- estymacja $\hat{\bgamma}$, $\hat{\bbeta}$ na próbie nielosowej $S_A$,
+        \item[(ii)] wariancja losowania -- design-based, z próby losowej $S_B$ (gdy używamy $d_i^B$, $\bx_i$ z $S_B$).
+    \end{itemize}
+    \item Dwa standardowe podejścia implementowane w \texttt{nonprobsvy}:
+    \begin{itemize}
+        \item \textbf{analityczne} -- wzory zlinearyzowane (Taylor / sandwich),
+        \item \textbf{bootstrap} -- replikacje obu prób z odtworzeniem schematu losowania.
+    \end{itemize}
+    \item Wybór przez argument \texttt{control\_inference = controlInf(...)} z opcją \texttt{var\_method = "analytic"} lub \texttt{var\_method = "bootstrap"}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Wariancja analityczna -- IPW}
+\begin{itemize}
+\justifying
+    \item Dla $\hat{\mu}_{y,\text{IPW}}$ (Chen, Li, Wu 2020) zlinearyzowana wariancja rozkłada się na dwa składniki:
+    \begin{equation}
+        \hat{V}(\hat{\mu}_{y,\text{IPW}}) = \hat{V}_1 + \hat{V}_2,
+    \end{equation}
+    gdzie:
+    \begin{itemize}
+        \item $\hat{V}_1$ -- wkład \emph{próby nielosowej} $S_A$, związany z modelem PS i estymacją $\hat{\bgamma}$,
+        \item $\hat{V}_2$ -- wkład \emph{próby losowej} $S_B$, czyli wariancja design-based wynikająca ze schematu losowania.
+    \end{itemize}
+    \item Intuicja: $\hat{V}_1$ rośnie wraz ze zmiennością wag $1/\hat{\pi}_i^A$ na $S_A$; $\hat{V}_2$ rośnie wraz z wariancją losowania w $S_B$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Wariancja analityczna -- MI i DR}
+\begin{itemize}
+\justifying
+    \item Dla $\hat{\mu}_{y,\text{MI-K}}$ (Kim, Park, Chen, Wu 2021):
+    \begin{equation*}
+        \hat{V}(\hat{\mu}_{y,\text{MI-K}}) = \hat{V}_1 + \hat{V}_2,
+    \end{equation*}
+    \begin{itemize}
+        \item $\hat{V}_1$ -- niepewność estymacji modelu wynikowego $\hat{\bbeta}$ na $S_A$,
+        \item $\hat{V}_2$ -- design-based wariancja z $S_B$.
+    \end{itemize}
+    \item Dla $\hat{\mu}_{y,\text{DR}}$ (Chen, Li, Wu 2020, równanie 3.4) -- analogiczna dekompozycja:
+    \begin{equation*}
+        \hat{V}(\hat{\mu}_{y,\text{DR}}) = \hat{V}_1 + \hat{V}_2,
+    \end{equation*}
+    gdzie $\hat{V}_1$ łączy wkład obu modeli (PS i wynikowego), a $\hat{V}_2$ -- wkład schematu losowania.
+    \item Ograniczenie: wzory pomijają niepewność wprowadzaną przez \emph{procedurę doboru zmiennych} (SCAD/LASSO/MCP) -- w takich przypadkach preferowany jest bootstrap.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Wariancja bootstrap -- ogólna procedura}
+Niech $\hat{\mu}_y$ oznacza dowolny z estymatorów IPW/MI/DR. Dla $b = 1, \ldots, B$:
+\begin{enumerate}
+\justifying
+    \item Losujemy ze zwracaniem $n_A$ jednostek z $S_A$ $\rightarrow$ $S_A^{(b)}$.
+    \item Losujemy $n_B$ jednostek z $S_B$ z odtworzeniem schematu losowania (np. Rao-Wu 1988 dla SRS lub stratified design) $\rightarrow$ $S_B^{(b)}$.
+    \item Re-estymujemy parametry modeli $(\hat{\bgamma}^{(b)}, \hat{\bbeta}^{(b)})$ -- \emph{wraz z ewentualną procedurą doboru zmiennych} -- i obliczamy $\hat{\mu}_y^{(b)}$.
+\end{enumerate}
+Estymator wariancji bootstrap:
+\begin{equation}
+    \hat{V}_{\text{boot}}(\hat{\mu}_y) = \frac{1}{B-1} \sum_{b=1}^{B} \left(\hat{\mu}_y^{(b)} - \bar{\hat{\mu}}_y\right)^{\!2}, \qquad \bar{\hat{\mu}}_y = \frac{1}{B}\sum_{b=1}^{B}\hat{\mu}_y^{(b)}.
+\end{equation}
+Liczba replikacji: typowo $B \in [500, 1000]$ (domyślnie \texttt{num\_boot = 500}).
+\end{frame}
+
+\begin{frame}{Bootstrap -- uwagi praktyczne i porównanie}
+\begin{itemize}
+\justifying
+    \item \textbf{Krok 2} jest kluczowy -- bootstrap próby losowej musi odtwarzać oryginalny schemat:
+    \begin{itemize}
+        \item SRS, stratyfikacja: Rao-Wu (1988),
+        \item próba zespołowa, dwustopniowa: mirror-match, BRR lub jackknife,
+        \item w \texttt{nonprobsvy} wspierany przez integrację z \texttt{svydesign}/\texttt{as.svrepdesign} z pakietu \texttt{survey}.
+    \end{itemize}
+    \item \textbf{Analityczne vs bootstrap}:
+    \begin{itemize}
+        \item analityczne -- szybkie, jawny rozkład wkładów $S_A$/$S_B$; wrażliwe na specyfikację modelu,
+        \item bootstrap -- uniwersalne, uwzględnia całą procedurę (selekcja, kalibracja); kosztowne obliczeniowo, wymaga ostrożności przy złożonych schematach losowania.
+    \end{itemize}
+    \item \textbf{Rekomendacja:} bootstrap, gdy stosujemy regularyzację (SCAD/LASSO/MCP), nieparametryczne modele $m(\cdot, \cdot)$ lub w małych próbach; analityczne -- gdy zależy nam na szybkości i znamy strukturę modelu.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Estymacja wariancji -- literatura}
+\begin{itemize}
+\scriptsize
+    \item Efron, B. (1979). Bootstrap methods: another look at the jackknife. \textit{The Annals of Statistics}, 7(1), 1--26. doi:10.1214/aos/1176344552.
+    \item Freedman, D. A. (1981). Bootstrapping regression models. \textit{The Annals of Statistics}, 9(6), 1218--1228. doi:10.1214/aos/1176345638.
+    \item Rao, J. N. K., and Wu, C. F. J. (1988). Resampling inference with complex survey data. \textit{Journal of the American Statistical Association}, 83(401), 231--241. doi:10.1080/01621459.1988.10478591.
+    \item Shao, J., and Tu, D. (1995). \textit{The Jackknife and Bootstrap}. Springer-Verlag, New York. doi:10.1007/978-1-4612-0795-5.
+    \item Chen, Y., Li, P., and Wu, C. (2020). Doubly robust inference with nonprobability survey samples. \textit{Journal of the American Statistical Association}, 115(532), 2011--2021. doi:10.1080/01621459.2019.1677241.
+    \item Kim, J. K., Park, S., Chen, Y., and Wu, C. (2021). Combining non-probability and probability survey samples through mass imputation. \textit{Journal of the Royal Statistical Society: Series A (Statistics in Society)}, 184(3), 941--963. doi:10.1111/rssa.12696.
+\end{itemize}
+\end{frame}
+
 \end{document}
-
-

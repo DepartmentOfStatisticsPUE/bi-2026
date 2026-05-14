@@ -36,6 +36,7 @@ jvs_svy <- svydesign(ids = ~ 1,
                      weights = ~ weight,
                      strata = ~ size + nace + region,
                      data = jvs)
+jvs_svy              
 ```
 
 + 1 źródło: próba nielosowa $S_A$ (dane z CBOP)

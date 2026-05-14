@@ -13,6 +13,8 @@
 | 6 | Masowa imputacja: NN i PMM | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/qmd/06-mi-nn.html) | [qmd](codes/qmd/06-mi-nn.qmd) | [.R](codes/R/06-mi-nn.R) | [.py](codes/python/06-mi-nn.py) | [.ipynb](codes/ipynb/06-mi-nn.ipynb) |
 | 7 | Masowa imputacja: model GLM (Kim et al.) | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/qmd/07-mi-glm.html) | [qmd](codes/qmd/07-mi-glm.qmd) | [.R](codes/R/07-mi-glm.R) | [.py](codes/python/07-mi-glm.py) | [.ipynb](codes/ipynb/07-mi-glm.ipynb) |
 | 8 | Estymator podwójnie odporny (DR) | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/qmd/08-dr.html) | [qmd](codes/qmd/08-dr.qmd) | [.R](codes/R/08-dr.R) | [.py](codes/python/08-dr.py) | [.ipynb](codes/ipynb/08-dr.ipynb) |
+| 9 | Dobór zmiennych (LASSO / SCAD / MCP) | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/qmd/09-varsel.html) | [qmd](codes/qmd/09-varsel.qmd) | [.R](codes/R/09-varsel.R) | [.py](codes/python/09-varsel.py) | [.ipynb](codes/ipynb/09-varsel.ipynb) |
+| 10 | Estymacja wariancji przez bootstrap | [html](https://htmlpreview.github.io/?https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/bi-2026/refs/heads/main/codes/qmd/10-bootstrap.html) | [qmd](codes/qmd/10-bootstrap.qmd) | [.R](codes/R/10-bootstrap.R) | [.py](codes/python/10-bootstrap.py) | [.ipynb](codes/ipynb/10-bootstrap.ipynb) |
 
 ## Zadania domowe
 

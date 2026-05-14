@@ -1,0 +1,357 @@
+---
+title: "Estymacja wariancji przez bootstrap"
+format:
+  html:
+    embed-resources: true
+    table-of-contents: true
+    number-sections: true
+editor: source
+execute:
+  eval: true
+  warning: false
+  message: false
+lang: pl
+---
+
+```{r}
+#| label: pakiety
+library(boot)        # klasyczny bootstrap
+library(nonprobsvy)  # >= 0.2.3 -- wbudowany bootstrap dla IPW/MI/DR
+library(survey)
+set.seed(2026)
+```
+
+# Wprowadzenie
+
+**Bootstrap** (Efron 1979) to nieparametryczna metoda szacowania wariancji estymatora poprzez **resampling** z obserwowanej próby. Idea:
+
+> Skoro próba jest reprezentatywna dla populacji, losowanie ze zwracaniem z próby naśladuje powtórne losowanie z populacji.
+
+Procedura ogólna dla statystyki $\hat\theta = T(x_1, \ldots, x_n)$:
+
+1. Dla $b = 1, \ldots, B$: wylosuj **ze zwracaniem** $n$ obserwacji z $\{x_1, \ldots, x_n\}$, otrzymując $\{x_1^{*(b)}, \ldots, x_n^{*(b)}\}$.
+2. Oblicz $\hat\theta^{*(b)} = T(x_1^{*(b)}, \ldots, x_n^{*(b)})$.
+3. Estymuj wariancję:
+
+$$
+\hat V_{\text{boot}}(\hat\theta) = \frac{1}{B-1}\sum_{b=1}^{B}\bigl(\hat\theta^{*(b)} - \bar{\hat\theta}^*\bigr)^{\!2}.
+$$
+
+Plan notatnika:
+
+A.  Bootstrap dla średniej -- prosty przykład.
+B.  Bootstrap dla współczynników regresji -- przy heteroskedastyczności.
+C.  Bootstrap w próbach nielosowych (sztuczny przykład) -- analityczne vs bootstrap.
+D.  Realne dane `admin`/`jvs` -- bootstrap dla IPW, MI, DR.
+
+# Część A: Bootstrap dla średniej
+
+## Generowanie danych
+
+Tworzymy $n = 100$ obserwacji z mieszanki rozkładu normalnego z odstającymi (10% obserwacji ma 5-krotnie większą wariancję):
+
+```{r}
+#| label: dgp-a
+n <- 100
+contam <- rbinom(n, 1, 0.1)               # 10% odstających
+x <- rnorm(n, mean = 5, sd = ifelse(contam, 5, 1))
+hist(x, breaks = 20, main = "Próba z odstającymi", col = "lightblue")
+abline(v = mean(x), col = "red", lwd = 2)
+```
+
+Naszą statystyką jest średnia $\bar x$.
+
+```{r}
+#| label: mean-classical
+xbar  <- mean(x)
+se_cl <- sd(x)/sqrt(n)
+cat("Średnia:", round(xbar, 3), "\n")
+cat("Klasyczne SE:", round(se_cl, 3), "\n")
+cat("Klasyczne 95% CI: [", round(xbar - 1.96*se_cl, 3),
+    ",", round(xbar + 1.96*se_cl, 3), "]\n")
+```
+
+## Bootstrap z pakietu `boot`
+
+Funkcja `boot::boot()` wymaga funkcji `statistic(data, indices)` zwracającej wartość statystyki dla próbki indeksów `indices`.
+
+```{r}
+#| label: boot-mean
+mean_stat <- function(data, idx) mean(data[idx])
+
+B <- 1000
+boot_res <- boot(data = x, statistic = mean_stat, R = B)
+boot_res
+```
+
+Wariancja bootstrap to wariancja replikacji `boot_res$t`:
+
+```{r}
+#| label: boot-mean-summary
+se_boot <- sd(boot_res$t)
+cat("Bootstrap SE:", round(se_boot, 3), "\n")
+
+ci_perc <- quantile(boot_res$t, c(0.025, 0.975))
+cat("Bootstrap 95% percentile CI: [",
+    round(ci_perc[1], 3), ",", round(ci_perc[2], 3), "]\n")
+
+# rozkład replikacji
+hist(boot_res$t, breaks = 30, main = "Rozkład replikacji bootstrap",
+     xlab = expression(bar(x)^"*"), col = "lightgreen")
+abline(v = xbar, col = "red", lwd = 2)
+```
+
+Dla średniej z dużej próby klasyczne SE i bootstrap SE są zwykle bardzo zbliżone.
+
+# Część B: Bootstrap dla regresji (heteroskedastyczność)
+
+## Generowanie danych z heteroskedastycznym błędem
+
+```{r}
+#| label: dgp-b
+n <- 200
+x <- runif(n, 0, 10)
+# wariancja błędu rośnie z x -- heteroskedastyczność
+sigma_i <- 0.5 + 0.3 * x
+y <- 1 + 2*x + rnorm(n, sd = sigma_i)
+
+plot(x, y, pch = 16, col = "gray40",
+     main = "Regresja z heteroskedastycznym błędem")
+abline(coef = c(1, 2), col = "red", lwd = 2)
+```
+
+## Klasyczne SE z `lm`
+
+```{r}
+#| label: lm-classical
+fit <- lm(y ~ x)
+summary(fit)$coefficients
+```
+
+## Paired bootstrap
+
+W \emph{paired bootstrap} losujemy ze zwracaniem **pary** $(x_i, y_i)$, a następnie dopasowujemy regresję na próbce.
+
+```{r}
+#| label: boot-lm
+beta_stat <- function(data, idx) {
+  m <- lm(y ~ x, data = data[idx, ])
+  coef(m)
+}
+
+dat <- data.frame(x = x, y = y)
+boot_lm <- boot(dat, beta_stat, R = 1000)
+boot_lm
+```
+
+```{r}
+#| label: boot-lm-summary
+se_boot_lm <- apply(boot_lm$t, 2, sd)
+data.frame(
+  parametr = c("intercept", "x"),
+  est        = coef(fit),
+  se_klasyczne = sqrt(diag(vcov(fit))),
+  se_bootstrap = se_boot_lm
+)
+```
+
+Pod heteroskedastycznością klasyczne SE są **zaniżone** (zakładają stałą wariancję), a bootstrap daje większe, bardziej realistyczne oszacowania.
+
+# Część C: Bootstrap w próbach nielosowych (sztuczny przykład)
+
+## Generowanie populacji i prób
+
+Używamy tego samego DGP co w notatniku `09-varsel` (Część B).
+
+```{r}
+#| label: dgp-c
+N <- 5000
+p <- 5
+X_pop <- matrix(rnorm(N*p), N, p)
+y_pop <- 1 + 2*X_pop[,1] - 1.5*X_pop[,2] + rnorm(N)
+mu_true <- mean(y_pop)
+
+# selekcja zależy od x3, x4
+eta  <- -2 + X_pop[,3] - 0.5*X_pop[,4]
+pi_A <- 1/(1 + exp(-eta))
+R_A  <- rbinom(N, 1, pi_A)
+
+# próba probabilistyczna S_B: SRS o n_B = 300
+n_B <- 300
+idx_B <- sample.int(N, n_B)
+
+S_A <- data.frame(X_pop[R_A == 1, ], y = y_pop[R_A == 1])
+colnames(S_A) <- c(paste0("x", 1:p), "y")
+S_B <- data.frame(X_pop[idx_B, ], d = N/n_B)
+colnames(S_B) <- c(paste0("x", 1:p), "d")
+
+sb_svy <- svydesign(ids = ~1, weights = ~d, data = S_B)
+
+cat("mu_y =", round(mu_true, 3), "; |S_A| =", sum(R_A), "; |S_B| =", n_B, "\n")
+```
+
+## IPW z wariancją analityczną i bootstrap
+
+W pakiecie `nonprobsvy` wybieramy `var_method = "analytic"` lub `"bootstrap"` w `control_inf()`.
+
+```{r}
+#| label: ipw-analytic
+ipw_analyt <- nonprob(data      = S_A,
+                      selection = ~ x1 + x2 + x3 + x4 + x5,
+                      target    = ~ y,
+                      svydesign = sb_svy,
+                      control_inference = control_inf(var_method = "analytic"))
+ipw_analyt
+```
+
+```{r}
+#| label: ipw-bootstrap
+#| cache: true
+ipw_boot <- nonprob(data      = S_A,
+                    selection = ~ x1 + x2 + x3 + x4 + x5,
+                    target    = ~ y,
+                    svydesign = sb_svy,
+                    control_inference = control_inf(var_method = "bootstrap",
+                                                    num_boot = 200))
+ipw_boot
+```
+
+## Porównanie
+
+```{r}
+#| label: porownanie-c
+rbind(
+  "IPW analityczne" = extract(ipw_analyt),
+  "IPW bootstrap"   = extract(ipw_boot)
+)
+cat("\nPrawdziwa wartość mu_y =", round(mu_true, 3), "\n")
+```
+
+Dla poprawnie wyspecyfikowanego modelu PS oba podejścia powinny dawać zbliżone SE. Bootstrap jest **wolniejszy** (tu 200 replikacji × pełne dopasowanie modelu).
+
+## Rozkład replikacji bootstrap
+
+Argument `keep_boot = TRUE` (domyślnie) zachowuje wektor estymatorów z każdej replikacji w `ipw_boot$boot_sample`.
+
+```{r}
+#| label: boot-dist
+if (!is.null(ipw_boot$boot_sample)) {
+  hist(ipw_boot$boot_sample, breaks = 30,
+       main = "Rozkład estymatora IPW w replikacjach bootstrap",
+       xlab = expression(hat(mu)[y]^"*"), col = "lightblue")
+  abline(v = ipw_boot$output$mean, col = "red", lwd = 2)
+}
+```
+
+# Część D: Realne dane `admin` i `jvs`
+
+## Wczytanie
+
+```{r}
+#| label: dane-real
+data(admin)
+data(jvs)
+
+jvs_svy <- svydesign(ids = ~ 1,
+                     weights = ~ weight,
+                     strata = ~ size + nace + region,
+                     data = jvs)
+```
+
+## IPW -- analityczne vs bootstrap
+
+```{r}
+#| label: ipw-real-analyt
+ipw_real_a <- nonprob(data      = admin,
+                      selection = ~ size + nace + region + private,
+                      target    = ~ single_shift,
+                      svydesign = jvs_svy,
+                      method_selection = "logit",
+                      control_inference = control_inf(var_method = "analytic"))
+```
+
+```{r}
+#| label: ipw-real-boot
+#| cache: true
+ipw_real_b <- nonprob(data      = admin,
+                      selection = ~ size + nace + region + private,
+                      target    = ~ single_shift,
+                      svydesign = jvs_svy,
+                      method_selection = "logit",
+                      control_inference = control_inf(var_method = "bootstrap",
+                                                      num_boot = 200))
+```
+
+## MI z bootstrapem
+
+```{r}
+#| label: mi-real-boot
+#| cache: true
+mi_real_b <- nonprob(data      = admin,
+                     outcome   = single_shift ~ size + nace + region + private,
+                     svydesign = jvs_svy,
+                     method_outcome = "glm",
+                     family_outcome = "binomial",
+                     control_inference = control_inf(var_method = "bootstrap",
+                                                     num_boot = 200))
+```
+
+## DR z bootstrapem
+
+```{r}
+#| label: dr-real-boot
+#| cache: true
+dr_real_b <- nonprob(data      = admin,
+                     selection = ~ size + nace + region + private,
+                     outcome   = single_shift ~ size + nace + region + private,
+                     svydesign = jvs_svy,
+                     method_outcome = "glm",
+                     family_outcome = "binomial",
+                     control_inference = control_inf(var_method = "bootstrap",
+                                                     num_boot = 200))
+```
+
+## Porównanie
+
+```{r}
+#| label: porownanie-real
+rbind(
+  "IPW analityczne" = extract(ipw_real_a),
+  "IPW bootstrap"   = extract(ipw_real_b),
+  "MI bootstrap"    = extract(mi_real_b),
+  "DR bootstrap"    = extract(dr_real_b)
+)
+```
+
+# Zadania do samodzielnego rozwiązania
+
+## Zadanie 1: bootstrap a rozmiar próby
+
+Wykorzystując DGP z **Części A** (mieszanka z 10% odstających):
+
+a)  Powtórz analizę dla $n \in \{30, 100, 500\}$. Jak zmienia się stosunek bootstrap SE / klasyczne SE?
+b)  Porównaj kształty rozkładu replikacji (histogram) dla różnych $n$. Czy rozkład staje się bliższy normalnemu?
+c)  Zmień frakcję odstających z 10% na 30%. Jak zmienia się różnica między klasycznym a bootstrap SE?
+
+## Zadanie 2: bootstrap dla mediany
+
+Mediana nie ma wzorów analitycznych SE w prostej formie. Bootstrap jest naturalnym wyborem.
+
+a)  Wykorzystując dane z Części A, oblicz bootstrap SE dla mediany.
+b)  Porównaj z bootstrap SE dla średniej. Która statystyka ma mniejszą wariancję dla tych danych z odstającymi?
+c)  Powtórz dla danych **bez** odstających (czyste $N(5, 1)$, $n = 100$). Czy wniosek się zmienia?
+
+## Zadanie 3: liczba replikacji $B$
+
+Wykorzystując IPW na realnych danych (Część D):
+
+a)  Powtórz oszacowanie z `num_boot = 50, 100, 500, 1000`. Jak stabilizuje się bootstrap SE?
+b)  Wybierz minimalną wartość $B$, przy której SE nie zmienia się więcej niż o 5% pomiędzy dwoma kolejnymi uruchomieniami z różnymi `set.seed()`.
+
+## Zadanie 4: bootstrap przy złym modelu PS
+
+Wykorzystując DGP z **Części C** (sztuczny przykład):
+
+a)  Dopasuj IPW z modelem PS zawierającym **tylko** zmienne nieistotne (np. `~ x1 + x2 + x5`) -- pomijając $x_3, x_4$ sterujące selekcją.
+b)  Porównaj analityczne i bootstrap SE. Czy bootstrap "łapie" obciążenie wynikające ze złej specyfikacji modelu?
+c)  Sprawdź przedział ufności -- czy zawiera prawdziwe $\mu_y \approx 1$?
