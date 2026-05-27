@@ -1,0 +1,210 @@
+---
+title: "Zadanie domowe 3: Dobór zmiennych i ocena jego jakości"
+author: "Badania Internetowe 2025/26"
+format:
+  html:
+    embed-resources: true
+    number-sections: true
+    df-print: kable
+execute:
+  eval: true
+  message: false
+  warning: false
+lang: pl
+---
+
+## Instrukcje
+
+- Praca domowa dotyczy wyłącznie **R**.
+- **Łącznie: 7 punktów. Termin: 2026-06-09 23:59.**
+
+::: {.callout-warning}
+## Wymagania dotyczące oddania pracy
+
+1. Oddać **jeden plik HTML** (samowystarczalny) przez **Moodle**.
+2. Nazwa pliku: `ps3-<nr_albumu>.html` (np. `ps3-130149.html`).
+3. Plik **musi zawierać**:
+   - **Nr albumu** na początku.
+   - Cały **kod** (widoczny w dokumencie).
+   - Wszystkie **wyniki** (tabele, ramki danych) wyrenderowane.
+   - Odpowiedzi na pytania interpretacyjne.
+4. **Jak wygenerować plik HTML:**
+   - Zapisać rozwiązanie w pliku `.qmd`, wyrenderować `quarto render ps3-<nr_albumu>.qmd`.
+5. **Przed oddaniem** sprawdzić, czy plik HTML otwiera się poprawnie w przeglądarce.
+6. Prace bez widocznego kodu i wyników **nie będą oceniane**.
+:::
+
+## Opis zadania
+
+Celem zadania jest przećwiczenie **automatycznego doboru zmiennych** (LASSO, SCAD, MCP) oraz **oceny jego jakości** na danych, dla których znamy prawdziwy model. W Części A oceniamy trafność doboru w regresji liniowej (miary TP, FP, FN, czułość, precyzja, miara F1), a w Części B sprawdzamy, czy dobór zmiennych w estymatorze IPW dla próby nielosowej odzyskuje właściwe zmienne (w tym czynnik zakłócający) i jak wpływa to na obciążenie oraz błąd standardowy oszacowania. Zadanie nawiązuje do notatnika [`09-varsel.qmd`](../codes/qmd/09-varsel.qmd).
+
+**Mój nr albumu:** *XXXXX*
+
+## Krok 0: Pakiety (kod gotowy)
+
+```{r}
+#| label: pakiety
+library(ncvreg)
+library(nonprobsvy)
+library(survey)
+set.seed(2026)
+```
+
+## Część A: Trafność doboru na danych sztucznych ze znaną prawdą (4 pkt)
+
+Pracujemy z zestawem danych regresyjnych, w którym **znamy** prawdziwe aktywne zmienne. Pozwala to obiektywnie ocenić jakość doboru przez porównanie wybranych zmiennych z prawdą.
+
+### Generowanie danych (kod gotowy)
+
+Poniższy kod generujący dane jest inny niż w notatniku `09-varsel.qmd` (inne `n`, `p` i aktywne zmienne).
+
+```{r}
+#| label: dgp-a
+set.seed(2026)
+n <- 300; p <- 40
+X <- matrix(rnorm(n * p), n, p)
+beta_true        <- rep(0, p)
+beta_true[c(3, 8, 15, 22, 35)] <- c(2.5, -2.0, 1.5, 3.0, -1.0)
+y                <- as.numeric(X %*% beta_true) + rnorm(n)
+aktywne          <- which(beta_true != 0)   # prawdziwie aktywne: 3, 8, 15, 22, 35
+aktywne
+
+# helper do wyciągania wybranych zmiennych z obiektu cv.ncvreg:
+get_selected <- function(cv_fit) {
+  b <- coef(cv_fit)   # wyraz wolny + współczynniki zmiennych
+  which(b[-1] != 0)   # indeksy niezerowych (pomijamy wyraz wolny)
+}
+```
+
+### a) Dopasowanie LASSO, SCAD, MCP i wybrany zestaw zmiennych (1 pkt)
+
+Dopasuj `cv.ncvreg()` dla każdej z trzech kar. Dla każdej kary wypisz **liczbę wybranych zmiennych** oraz **ich indeksy**. Porównaj z prawdziwym zbiorem aktywnym `aktywne`.
+
+```{r}
+#| label: varsel-cv-a
+#| eval: false
+## Tutaj kod (R)
+## Wskazówka: cv.ncvreg() z argumentem penalty; do wyboru zmiennych funkcja get_selected().
+```
+
+### b) Metryki trafności doboru dla każdej kary (2 pkt)
+
+Dla każdej z trzech kar oblicz następujące metryki trafności doboru względem zbioru `aktywne`:
+
+- **TP** — liczba poprawnie wybranych aktywnych zmiennych ($|\hat{S} \cap S^*|$),
+- **FP** — liczba błędnie wybranych nieaktywnych zmiennych ($|\hat{S} \setminus S^*|$),
+- **FN** — liczba pominiętych aktywnych zmiennych ($|S^* \setminus \hat{S}|$),
+- **czułość** = TP / (TP + FN),
+- **precyzja** = TP / (TP + FP),
+- **miara F1** = 2 · precyzja · czułość / (precyzja + czułość),
+- **dokładne odtworzenie** — TRUE/FALSE: czy $\hat{S} = S^*$ (wybrany zbiór pokrywa się dokładnie z aktywnymi).
+
+Zestawić wyniki w jednej ramce danych (wiersze: LASSO, SCAD, MCP).
+
+```{r}
+#| label: metryki-a
+#| eval: false
+## Tutaj kod (R)
+## Wskazówka: przydatne funkcje to %in%, sum(), setequal(); wyniki zbierz w data.frame().
+```
+
+### c) Interpretacja (1 pkt)
+
+**Odpowiedź (interpretacja):**
+
+*Która kara najlepiej odtwarza prawdziwy model? Dlaczego LASSO zwykle przeszacowuje liczbę zmiennych (więcej FP, niższa precyzja), a SCAD/MCP są oszczędniejsze? Co to znaczy, że SCAD i MCP mają **własność wyroczni**? Odnieś odpowiedź do konkretnych wartości TP, FP i F1 z Części A.b.*
+
+---
+
+## Część B: Jakość doboru w IPW na próbie nielosowej (3 pkt)
+
+Sprawdzamy, czy automatyczny dobór zmiennych w modelu selekcji poprawnie identyfikuje zmienne wpływające na dobór do próby, a w szczególności **czynnik zakłócający** — zmienną związaną zarówno z $y$, jak i z mechanizmem selekcji.
+
+### Generowanie danych (kod gotowy)
+
+W tych danych:
+
+- $y$ zależy od **x1, x2, x3**,
+- dobór do próby $S_A$ zależy od **x3, x4, x5**,
+- **x3 jest czynnikiem zakłócającym** — wpływa zarówno na $y$, jak i na prawdopodobieństwo inkluzji.
+
+```{r}
+#| label: dgp-b
+set.seed(2026)
+N <- 20000; pp <- 15
+Xp <- matrix(rnorm(N * pp), N, pp)
+
+# y zależy od x1, x2, x3
+y_pop  <- 2 + 1.5 * Xp[, 1] - 1.0 * Xp[, 2] + 0.8 * Xp[, 3] + rnorm(N)
+mu_true <- mean(y_pop)
+
+# dobór do próby S_A zależy od x3, x4, x5  (x3 = czynnik zakłócający)
+eta  <- -1.5 + 0.7 * Xp[, 3] + 0.9 * Xp[, 4] - 0.6 * Xp[, 5]
+pi_A <- plogis(eta)
+R_A  <- rbinom(N, 1, pi_A)
+
+# próba probabilistyczna S_B: SRS, n_B = 700
+n_B   <- 700
+idx_B <- sample.int(N, n_B)
+
+S_A <- data.frame(Xp[R_A == 1, ], y = y_pop[R_A == 1])
+colnames(S_A) <- c(paste0("x", 1:pp), "y")
+
+S_B <- data.frame(Xp[idx_B, ], d = N / n_B)
+colnames(S_B) <- c(paste0("x", 1:pp), "d")
+
+sb_svy   <- svydesign(ids = ~1, weights = ~d, data = S_B)
+form_pelny <- as.formula(paste("~", paste0("x", 1:pp, collapse = " + ")))
+
+cat("mu_true =", round(mu_true, 3),
+    "| n_A =", sum(R_A),
+    "| zmienne wpływające na dobór do próby: x3, x4, x5\n")
+```
+
+### a) Modele IPW: pełny, SCAD, LASSO (1 pkt)
+
+Dopasuj trzy modele IPW za pomocą `nonprob()`:
+
+1. model pełny (wszystkie 15 zmiennych, bez penalizacji),
+2. IPW z doborem zmiennych i karą SCAD,
+3. IPW z doborem zmiennych i karą LASSO.
+
+Dla każdego modelu pokaż wynik `extract()`.
+
+```{r}
+#| label: ipw-b
+#| eval: false
+## Tutaj kod (R)
+## Wskazówka: nonprob(); dobór zmiennych włącza się argumentami control_inf() i control_sel().
+## Wzorzec użycia: notatnik 09-varsel.qmd.
+```
+
+### b) Które zmienne zostały zachowane? (1 pkt)
+
+Dla modeli SCAD i LASSO wypisz nazwy zachowanych zmiennych w modelu selekcji (niezerowe współczynniki). Sprawdź, czy dobór zmiennych odzyskał prawdziwe zmienne wpływające na dobór do próby (**x3, x4, x5**), a w szczególności czynnik zakłócający **x3**. Oblicz:
+
+- **czułość** względem zbioru {x3, x4, x5},
+- liczbę **FP** (zmiennych szumowych x6–x15 błędnie włączonych do modelu).
+
+```{r}
+#| label: zmienne-b
+#| eval: false
+## Tutaj kod (R)
+## Wskazówka: współczynniki modelu selekcji znajdziesz w fit$selection$coefficients
+## (strukturę obiektu obejrzysz przez str()). Czułość i FP policz samodzielnie.
+```
+
+### c) Porównanie oszacowań (1 pkt)
+
+**Odpowiedź:**
+
+*Zestawić poniżej wyniki (uzupełnij wartości ze swojego kodu):*
+
+| Metoda | $\hat{\mu}$ | SE | $|\hat{\mu} - \mu_\text{true}|$ |
+|---|---:|---:|---:|
+| Pełny model (15 zm.) | *...* | *...* | *...* |
+| IPW + SCAD | *...* | *...* | *...* |
+| IPW + LASSO | *...* | *...* | *...* |
+
+*Odpowiedz na pytania: Czy odrzucenie zmiennych nieistotnych zmniejszyło SE? Czy któraś kara usunęła ważny czynnik zakłócający x3 i zmieniła oszacowanie w stosunku do modelu pełnego? Czy redukcja SE odbyła się bez istotnej zmiany oszacowania (porównaj $|\hat{\mu} - \mu_\text{true}|$)?*
+
