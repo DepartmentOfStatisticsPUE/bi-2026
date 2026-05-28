@@ -50,13 +50,13 @@ library(survey)
 set.seed(2026)
 ```
 
-## Część A: Trafność doboru na danych sztucznych ze znaną prawdą (4 pkt)
+## Część A: Trafność doboru na sztucznych danych (4 pkt)
 
-Pracujemy z zestawem danych regresyjnych, w którym **znamy** prawdziwe aktywne zmienne. Pozwala to obiektywnie ocenić jakość doboru przez porównanie wybranych zmiennych z prawdą.
+Pracujemy z zestawem danych, w którym **znamy** prawdziwe aktywne zmienne (czyli takie, które są związane z $Y$). Pozwala to ocenić jakość doboru przez porównanie wybranych zmiennych z prawdziwym zestawem zmiennych.
 
 ### Generowanie danych (kod gotowy)
 
-Poniższy kod generujący dane jest inny niż w notatniku `09-varsel.qmd` (inne `n`, `p` i aktywne zmienne).
+Poniższy kod generuje dane do przykładu.
 
 ```{r}
 #| label: dgp-a
@@ -69,7 +69,7 @@ y                <- as.numeric(X %*% beta_true) + rnorm(n)
 aktywne          <- which(beta_true != 0)   # prawdziwie aktywne: 3, 8, 15, 22, 35
 aktywne
 
-# helper do wyciągania wybranych zmiennych z obiektu cv.ncvreg:
+# funkcja do wybrania zmiennych z obiektu cv.ncvreg:
 get_selected <- function(cv_fit) {
   b <- coef(cv_fit)   # wyraz wolny + współczynniki zmiennych
   which(b[-1] != 0)   # indeksy niezerowych (pomijamy wyraz wolny)
